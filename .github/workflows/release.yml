@@ -32,7 +32,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: secure-workflow-api-ecr
-          template: cfn/ecr.yml
+          template: cloudformation/ecr.yml
           parameter-overrides: "ResourceName=secure-workflow-api"
           no-fail-on-empty-changeset: "1"
       
@@ -53,7 +53,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: secure-workflow-api
-          template: cfn/resources.yml
+          template: cloudformation/resources.yml
           parameter-overrides: >-
             ResourceName=secure-workflow-api,
             ImageTag=${{ github.sha }}            
