@@ -10,7 +10,7 @@ import (
 )
 
 type FixWorkflowPermsReponse struct {
-	finalOutput           string
+	FinalOutput           string
 	IsChanged             bool
 	HasErrors             bool
 	AlreadyHasPermissions bool
@@ -106,7 +106,7 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 			fixWorkflowPermsReponse.MissingActions = append(fixWorkflowPermsReponse.MissingActions, jobState.MissingActions...)
 			continue // skip fixing this job
 		} else {
-			if strings.Compare(inputYaml, fixWorkflowPermsReponse.finalOutput) != 0 {
+			if strings.Compare(inputYaml, fixWorkflowPermsReponse.FinalOutput) != 0 {
 				fixWorkflowPermsReponse.IsChanged = true
 
 				// This is to add on the fixes for jobs
@@ -122,7 +122,7 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 		}
 
 	}
-	fixWorkflowPermsReponse.finalOutput = out
+	fixWorkflowPermsReponse.FinalOutput = out
 	//fixWorkflowPermsReponse.JobFixes = fixes
 	fixWorkflowPermsReponse.JobErrors = errors
 

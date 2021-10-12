@@ -24,7 +24,7 @@ func TestFixWorkflows(t *testing.T) {
 		}
 
 		fixWorkflowPermsResponse, err := FixWorkflowPermissions(string(input), &mockDynamoDBClient{})
-		output := fixWorkflowPermsResponse.finalOutput
+		output := fixWorkflowPermsResponse.FinalOutput
 		jobErrors := fixWorkflowPermsResponse.JobErrors
 
 		// some test cases return a job error for known issues

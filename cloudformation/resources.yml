@@ -127,11 +127,11 @@ Resources:
       Type: "AWS::DynamoDB::Table"
       Properties:
         AttributeDefinitions: 
-          - AttributeName: "name"
+          - AttributeName: "Name"
             AttributeType: "S"
         TableName: "ActionPermissions"
         KeySchema: 
-          - AttributeName: "name"
+          - AttributeName: "Name"
             KeyType: "HASH"
         ProvisionedThroughput: 
             ReadCapacityUnits: 1
@@ -141,11 +141,11 @@ Resources:
       Type: "AWS::DynamoDB::Table"
       Properties:
         AttributeDefinitions: 
-          - AttributeName: "name"
+          - AttributeName: "Name"
             AttributeType: "S"
         TableName: "MissingActions"
         KeySchema: 
-          - AttributeName: "name"
+          - AttributeName: "Name"
             KeyType: "HASH"
         ProvisionedThroughput: 
             ReadCapacityUnits: 1
