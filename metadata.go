@@ -12,7 +12,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const ActionPermissionsTable = "ActionPermissions"
+const (
+	ActionPermissionsTable = "ActionPermissions"
+	MissingActionsTable    = "MissingActions"
+)
 
 func getActionPermissions(svc dynamodbiface.DynamoDBAPI) (*ActionPermissions, error) {
 
@@ -84,4 +87,35 @@ func importActions(svc dynamodbiface.DynamoDBAPI) {
 			return
 		}
 	}
+}
+
+func storeMissingActions(missingActions []string, svc dynamodbiface.DynamoDBAPI) error {
+
+	for _, action := range missingActions {
+
+		atIndex := strings.Index(action, "@")
+
+		if atIndex == -1 {
+			continue
+		}
+
+		actionKey := action[0:atIndex]
+
+		input := dynamodb.PutItemInput{
+			TableName: aws.String(MissingActionsTable),
+			Item: map[string]*dynamodb.AttributeValue{
+				"Name": {
+					S: aws.String(actionKey),
+				},
+			},
+		}
+
+		_, err := svc.PutItem(&input)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }

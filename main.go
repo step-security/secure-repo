@@ -41,6 +41,11 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				Body:       err.Error(),
 			}
 		} else {
+
+			if len(fixResponse.MissingActions) > 0 {
+				storeMissingActions(fixResponse.MissingActions, dynamoDbSvc)
+			}
+
 			output, _ := json.Marshal(fixResponse)
 			response = events.APIGatewayProxyResponse{
 				StatusCode: http.StatusOK,
@@ -56,29 +61,6 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 
 	return nil, fmt.Errorf("request was neither APIGatewayV2HTTPRequest nor SQSEvent")
 }
-
-func serverResponse(response *events.APIGatewayProxyResponse, err error) ([]byte, error) {
-
-	if err != nil {
-
-		response = &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       err.Error(),
-		}
-
-	}
-
-	returnValue, _ := json.Marshal(&response)
-
-	return returnValue, nil
-}
-
-/*func clientError(status int) (*events.APIGatewayProxyResponse, error) {
-	return &events.APIGatewayProxyResponse{
-		StatusCode: status,
-		Body:       http.StatusText(status),
-	}, nil
-}*/
 
 func main() {
 	lambda.StartHandler(Handler{})
