@@ -1,0 +1,62 @@
+name: cfnrelease
+
+on:
+  push: 
+    branches:    
+     - main
+    
+jobs:
+  publish-test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Go 
+        uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+      
+      - run: go test
+      
+      - name: Deploy to AWS CloudFormation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: secure-workflow-api-ecr
+          template: cfn/ecr.yml
+          parameter-overrides: "ResourceName=secure-workflow-api"
+          no-fail-on-empty-changeset: "1"
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: secure-workflow-api
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      
+      - name: Deploy to AWS CloudFormation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: secure-workflow-api
+          template: cfn/resources.yml
+          parameter-overrides: >-
+            ResourceName=secure-workflow-api,
+            ImageTag=${{ github.sha }}            
+          no-fail-on-empty-changeset: "1"
+      
+        

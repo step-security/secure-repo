@@ -1,0 +1,24 @@
+actions:
+  actions-labeler:
+    name: actions/labeler
+    permissions:
+      contents: read
+      pull-requests: write
+  timonvs-pr-labeler-action:
+    name: timonvs/pr-labeler-action
+    permissions:
+      contents: read
+      pull-requests: write
+  actions-checkout:
+    name: actions/checkout
+    default-token: token
+    permissions:
+      contents: read
+  peter-evans-create-or-update-comment:
+    name: peter-evans/create-or-update-comment
+    default-token: token
+    permissions:
+      issues: write
+      pull-requests: write
+  actions-upload-artifact:
+    name: actions/upload-artifact

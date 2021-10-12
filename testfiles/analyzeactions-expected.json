@@ -1,0 +1,1 @@
+{"actionsWithNoSecretUse":["actions/upload-artifact"],"actionsWithSecretUse":["actions/checkout","actions/labeler","TimonVS/pr-labeler-action","github/codeql-action/init"]}

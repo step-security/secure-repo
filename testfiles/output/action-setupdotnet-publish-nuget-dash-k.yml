@@ -1,0 +1,80 @@
+name: Push Nuget Packages to NuGet Package Registry
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+env:
+    BUILD_CONFIGURATION: "Release"
+    DOTNET_VERSION: "5.0.x"
+    GITHUB_PACKAGE_REGISTRY_URL: https://api.nuget.org/v3/index.json
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.101
+          source-url: https://nuget.pkg.github.com/myjetwallet/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}  
+
+      - name: Build
+        run: dotnet build --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/client-}
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+
+      - name: Create the package
+        run: dotnet pack --configuration Release src/Service.WalletEngine.Client /p:Version=${GITHUB_REF#refs/tags/client-}
+
+      - name: Publish the package to GPR
+        run: dotnet nuget push src/Service.WalletEngine.Client/bin/Release/*.nupkg -s "https://api.nuget.org/v3/index.json" -k ${{ secrets.NUGET_TOCKEN }}
+
+      - name: Publish the package to GitHub
+        uses: MyJetWallet/nuget-publish-to-github-packages-action@v2.1
+        with:
+          nupkg-path:  './src/Service.WalletEngine.Client/bin/Release/*.nupkg'
+          repo-owner:  'myjetwallet'
+          gh-user:  ${{ github.actor }}
+          token:  ${{ secrets.GITHUB_TOKEN }}  
+  gpr-build-and-deploy:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            fetch-depth: 0
+
+      - name: Generate build number
+        id: build_number
+        uses: paulhatch/semantic-version@v4.0.2
+        with:
+            tag_prefix: "v"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: ${{ env.DOTNET_VERSION }}
+            source-url: ${{ env.GITHUB_PACKAGE_REGISTRY_URL }}
+        env:
+            NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: dotnet build and publish
+        run: |
+            dotnet restore Api/BccPay.Core.sln
+            dotnet build Api/BccPay.Core.Domain/BccPay.Core.Domain.csproj -c ${{ env.BUILD_CONFIGURATION }} -p:PackageVersion=${{ steps.build_number.outputs.major }}.${{ steps.build_number.outputs.minor }}.${{ steps.build_number.outputs.increment }}
+
+      - name: nuget publish
+        run: |
+            dotnet nuget push Api/BccPay.Core.Infrastructure/bin/Release/*.nupkg -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+            dotnet nuget push Api/BccPay.Core.Domain/bin/Release/*.nupkg -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate

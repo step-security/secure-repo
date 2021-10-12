@@ -1,0 +1,23 @@
+---
+
+name: PR Comment
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  comment:
+    name: Comment on new PR
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Create URL safe version of GITHUB_REF
+        run: echo "GITHUB_REF_SLUG=$(echo '${{ github.event.pull_request.head.ref }}' | iconv -t ascii//TRANSLIT | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr A-Z a-z)" >> "${GITHUB_ENV}"
+
+      - name: Add comment to PR with useful information
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.REPOTOKEN }}
+          issue-number: ${{ github.event.number }}
+          body: |
+            Thank you for opening a pull request.

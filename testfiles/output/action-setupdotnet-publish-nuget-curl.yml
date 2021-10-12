@@ -1,0 +1,73 @@
+name: Push Nuget Packages to NuGet Package Registry
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+env:
+    BUILD_CONFIGURATION: "Release"
+    DOTNET_VERSION: "5.0.x"
+    GITHUB_PACKAGE_REGISTRY_URL: https://api.nuget.org/v3/index.json
+
+jobs:
+    publish-on-nuget:
+      permissions:
+        contents: read
+        packages: write
+      name: Publish on NuGet (Stable)
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@master
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@master
+        with:
+          dotnet-version: 3.1.x
+
+      - name: Setup BUTR GPR
+        uses: actions/setup-dotnet@master
+        with:
+          source-url: https://nuget.pkg.github.com/BUTR/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Pack Bannerlord.ButterLib (Release)
+        run: dotnet pack src/Bannerlord.ButterLib/Bannerlord.ButterLib.csproj --configuration Release -o "./packages"
+        shell: pwsh
+
+      - name: Install Bannerlord.ChangelogParser
+        run: dotnet tool install -g Bannerlord.ChangelogParser;
+        shell: pwsh
+
+      - name: Run ChangelogParser
+        id: changelog
+        run: |
+          vers="$(bannerlord_changelog_parser latestversion -f "$PWD/changelog.txt")"
+          echo "::set-output name=mod_version::$vers"
+          desc="$(bannerlord_changelog_parser fulldescription -f "$PWD/changelog.txt")"
+          desc="${desc//'%'/'%25'}"
+          desc="${desc//$'\n'/'%0A'}"
+          desc="${desc//$'\r'/'%0D'}"
+          echo "::set-output name=mod_description::$desc"
+        shell: bash
+
+      - name: Push to NuGet
+        run: dotnet nuget push "./packages/*.nupkg" -k ${{secrets.NUGET_API_KEY}} -s https://www.nuget.org
+        shell: pwsh
+
+      - name: Push to GPR
+        run: |
+            for f in ./packages/*.nupkg
+            do
+              curl -vX PUT -u "vslee:${{secrets.GITHUB_TOKEN}}" -F package=@$f https://nuget.pkg.github.com/BUTR/
+            done
+        shell: bash

@@ -1,0 +1,116 @@
+name: private-packages
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+  push:
+    branches:
+      - main
+      - releases/*
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+    - uses: actions/checkout@v2
+    # Authenticates packages to push to GPR
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use.
+        source-url: https://nuget.pkg.github.com/<owner>/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    - run: dotnet build <my project>
+    - name: Create the package
+      run: dotnet pack --configuration Release <my project>
+    - name: Publish the package to GPR
+      run: dotnet nuget push <my project>/bin/Release/*.nupkg
+  build1:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: actions/setup-dotnet@v1.5.0
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use.
+        source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      env:
+        NUGET_AUTH_TOKEN: '%NUGET_AUTH_TOKEN%'
+
+    - name: Create the package
+      run: dotnet pack --configuration Release -p:Version=${{ env.version }} -p:RepositoryUrl=${{ env.RepositoryUrl }}
+
+    - name: Publish the package to GPR
+      run: dotnet nuget push bin/Release/*.nupkg
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  api-key:
+    permissions:
+      contents: read
+      packages: write
+    env:
+      RepositoryUrl: https://github.com/${{ github.repository }}
+      source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      version: 0.0.0-g${{ github.sha }}-${{ github.job }}
+      
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: actions/setup-dotnet@v1.5.0
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use.
+        source-url: ${{ env.source-url }}
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create the package
+      run: dotnet pack --configuration Release -p:Version=${{ env.version }} -p:RepositoryUrl=${{ env.RepositoryUrl }}
+
+    - name: Publish the package to GPR
+      run: dotnet nuget push bin/Release/*.nupkg --source ${{ env.source-url }} -k ${{ secrets.GITHUB_TOKEN }}
+  api-key1:
+    permissions:
+      contents: read
+      packages: write
+    env:
+      RepositoryUrl: https://github.com/${{ github.repository }}
+      source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      version: 0.0.0-g${{ github.sha }}-${{ github.job }}
+      
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: actions/setup-dotnet@v1.5.0
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use.
+        source-url: ${{ env.source-url }}
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push to GitHub Packages
+      run: dotnet nuget push ./artifacts/packages/*.nupkg --skip-duplicate --source "github" --api-key ${GITHUB_TOKEN}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Push to Nuget
+      run: dotnet nuget push ./artifacts/packages/*.nupkg --skip-duplicate --source "nuget" --api-key ${NUGET_API_KEY}
+      env:
+        NUGET_API_KEY: ${{secrets.NUGET_API_KEY}}

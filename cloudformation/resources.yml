@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy SecureWorkflow API
+Parameters: 
+    ResourceName:
+        Description: Name used across resources
+        Type: String
+        Default: secure-workflow-api
+    ImageTag:
+      Description: Image tag
+      Type: String   
+
+Resources: 
+    FunctionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AWSLambdaExecute
+          - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+          - arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess
+        Path: /
+
+    LambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Description: SecureWorkflow API lambda
+        FunctionName: !Ref ResourceName
+        PackageType: Image
+        Code: 
+            ImageUri: 
+                !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ResourceName}:${ImageTag}' 
+        MemorySize: 128
+        Role: !GetAtt 'FunctionRole.Arn'
+        Timeout: 180        
+      
+    ApiGatewayV2Api:
+        Type: "AWS::ApiGatewayV2::Api"
+        Properties:
+            Description: "SecureWorkflow API"
+            Name: !Ref ResourceName
+            ProtocolType: "HTTP"
+            RouteSelectionExpression: "$request.method $request.path"
+            Version: "2021-09-16 00:11:13UTC"
+            CorsConfiguration: 
+                AllowCredentials: false
+                AllowHeaders: 
+                  - "*"
+                AllowMethods: 
+                  - "*"
+                AllowOrigins: 
+                  - "*"
+                MaxAge: 0
+            DisableExecuteApiEndpoint: false
+
+    ApiGatewayV2Stage:
+        Type: "AWS::ApiGatewayV2::Stage"
+        Properties:
+            StageName: "default"
+            ApiId: !Ref ApiGatewayV2Api
+            AutoDeploy: true
+
+    ApiGatewayV2Stage2:
+        Type: "AWS::ApiGatewayV2::Stage"
+        Properties:
+            StageName: "v1"
+            ApiId: !Ref ApiGatewayV2Api
+            AutoDeploy: true
+
+    ApiGatewayV2Route:
+        Type: "AWS::ApiGatewayV2::Route"
+        Properties:
+            ApiId: !Ref ApiGatewayV2Api
+            ApiKeyRequired: false
+            AuthorizationType: "NONE"
+            RequestParameters: {}
+            RouteKey: !Sub "$${ApiGatewayV2Stage}"
+            Target: !Join
+              - /
+              - - integrations
+                - !Ref ApiGatewayV2Integration
+
+    ApiGatewayV2Route2:
+        Type: "AWS::ApiGatewayV2::Route"
+        Properties:
+            ApiId: !Ref ApiGatewayV2Api
+            ApiKeyRequired: false
+            AuthorizationType: "NONE"
+            RouteKey: "ANY /secure-workflow"
+            Target: !Join
+              - /
+              - - integrations
+                - !Ref ApiGatewayV2Integration
+
+    ApiGatewayV2Integration:
+        Type: "AWS::ApiGatewayV2::Integration"
+        Properties:
+            ApiId: !Ref ApiGatewayV2Api
+            ConnectionType: "INTERNET"
+            IntegrationMethod: "POST"
+            IntegrationType: "AWS_PROXY"
+            IntegrationUri: !Join
+              - ''
+              - - 'arn:'
+                - !Ref 'AWS::Partition'
+                - ':apigateway:'
+                - !Ref 'AWS::Region'
+                - ':lambda:path/2015-03-31/functions/'
+                - !GetAtt LambdaFunction.Arn
+                - /invocations
+            TimeoutInMillis: 30000
+            PayloadFormatVersion: "2.0"
+    
+    LambdaInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref LambdaFunction
+        Action: "lambda:InvokeFunction"
+        Principal: apigateway.amazonaws.com
+    
+    ActionPermissions:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions: 
+          - AttributeName: "name"
+            AttributeType: "S"
+        TableName: "ActionPermissions"
+        KeySchema: 
+          - AttributeName: "name"
+            KeyType: "HASH"
+        ProvisionedThroughput: 
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      
+    MissingActions:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions: 
+          - AttributeName: "name"
+            AttributeType: "S"
+        TableName: "ActionPermissions"
+        KeySchema: 
+          - AttributeName: "name"
+            KeyType: "HASH"
+        ProvisionedThroughput: 
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1

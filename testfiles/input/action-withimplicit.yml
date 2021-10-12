@@ -1,0 +1,9 @@
+name: one-action
+on:
+  workflow_dispatch
+jobs:
+  list-directory:
+    runs-on: ubuntu-latest
+    steps:
+     - uses: actions/checkout@v2
+     - run: ls -R

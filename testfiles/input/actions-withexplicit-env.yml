@@ -1,0 +1,22 @@
+name: "Pull Request Labeler"
+on:
+  - pull_request
+
+jobs:
+  app-labeler:
+    name: Label based on changed files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v3
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/app-labeler.yaml
+  pr-type-labeler:
+    name: Label based on branch name
+    runs-on: ubuntu-latest
+    steps:
+      - uses: TimonVS/pr-labeler-action@v3
+        with:
+          configuration-path: .github/type-labeler.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

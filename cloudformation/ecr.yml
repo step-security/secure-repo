@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy ECR
+Parameters: 
+    ResourceName:
+        Description: Name used across resources
+        Type: String
+        Default: secure-workflow  
+    
+Resources: 
+    APIRepository:
+      Type: 'AWS::ECR::Repository'
+      Properties:
+        RepositoryName: !Ref ResourceName
+    

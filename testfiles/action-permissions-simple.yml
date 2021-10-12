@@ -1,0 +1,5 @@
+actions:
+  actions-labeler:
+    name: actions/labeler
+    permissions:
+      contents: read

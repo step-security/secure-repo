@@ -1,0 +1,11 @@
+name: Create Pull Request
+on:
+  workflow_dispatch:
+  
+jobs:
+  job-with-error:
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Use local my-action
+        uses: ./.github/actions/my-action
