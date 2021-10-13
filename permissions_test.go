@@ -29,14 +29,16 @@ func TestFixWorkflows(t *testing.T) {
 
 		// some test cases return a job error for known issues
 		if len(jobErrors) > 0 {
-
-			jobError := jobErrors["job-with-error"]
-
-			if jobError != nil && strings.Contains(jobError[0], "KnownIssue") {
-				output = jobError[0]
-			} else {
-				t.Errorf("test failed. unexpected job error %s, error: %v", f.Name(), jobErrors)
+			for _, je := range jobErrors {
+				if strings.Compare(je.JobName, "job-with-error") == 0 {
+					if strings.Contains(je.Errors[0], "KnownIssue") {
+						output = je.Errors[0]
+					} else {
+						t.Errorf("test failed. unexpected job error %s, error: %v", f.Name(), jobErrors)
+					}
+				}
 			}
+
 		}
 
 		if fixWorkflowPermsResponse.AlreadyHasPermissions {

@@ -16,8 +16,13 @@ type FixWorkflowPermsReponse struct {
 	AlreadyHasPermissions bool
 	IncorrectYaml         bool
 	//	JobFixes              map[string]string
-	JobErrors      map[string][]string
+	JobErrors      []JobError
 	MissingActions []string
+}
+
+type JobError struct {
+	JobName string
+	Errors  []string
 }
 
 const errorSecretInRunStep = "KnownIssue-1: Jobs with run steps that use token are not supported"
@@ -126,8 +131,14 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 
 	}
 	fixWorkflowPermsReponse.FinalOutput = out
-	//fixWorkflowPermsReponse.JobFixes = fixes
-	fixWorkflowPermsReponse.JobErrors = errors
+
+	// Convert to array of JobError from map
+	for job, jobErrors := range errors {
+		jobError := JobError{JobName: job}
+		jobError.Errors = append(jobError.Errors, jobErrors...)
+
+		fixWorkflowPermsReponse.JobErrors = append(fixWorkflowPermsReponse.JobErrors, jobError)
+	}
 
 	return fixWorkflowPermsReponse, nil
 }
