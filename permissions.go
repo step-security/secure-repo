@@ -16,7 +16,7 @@ type FixWorkflowPermsReponse struct {
 	AlreadyHasPermissions bool
 	IncorrectYaml         bool
 	//	JobFixes              map[string]string
-	JobErrors      map[string][]error
+	JobErrors      map[string][]string
 	MissingActions []string
 }
 
@@ -60,7 +60,7 @@ func alreadyHasWorkflowPermissions(workflow Workflow) bool {
 func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkflowPermsReponse, error) {
 
 	workflow := Workflow{}
-	errors := make(map[string][]error)
+	errors := make(map[string][]string)
 	//fixes := make(map[string]string)
 	fixWorkflowPermsReponse := &FixWorkflowPermsReponse{}
 
@@ -92,8 +92,8 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 			// We are not modifying permissions if already defined
 			fixWorkflowPermsReponse.HasErrors = true
 			fixWorkflowPermsReponse.AlreadyHasPermissions = true
-			jobError := fmt.Errorf(errorAlreadyHasPermissions)
-			errors[jobName] = append(errors[jobName], jobError)
+
+			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
 			continue
 		}
 
@@ -101,7 +101,10 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 		perms, err := jobState.getPermissions(job.Steps)
 
 		if err != nil {
-			errors[jobName] = jobState.Errors
+			for _, err := range jobState.Errors {
+				errors[jobName] = append(errors[jobName], err.Error())
+			}
+
 			fixWorkflowPermsReponse.HasErrors = true
 			fixWorkflowPermsReponse.MissingActions = append(fixWorkflowPermsReponse.MissingActions, jobState.MissingActions...)
 			continue // skip fixing this job

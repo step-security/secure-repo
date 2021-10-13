@@ -32,8 +32,8 @@ func TestFixWorkflows(t *testing.T) {
 
 			jobError := jobErrors["job-with-error"]
 
-			if jobError != nil && strings.Contains(jobError[0].Error(), "KnownIssue") {
-				output = jobError[0].Error()
+			if jobError != nil && strings.Contains(jobError[0], "KnownIssue") {
+				output = jobError[0]
 			} else {
 				t.Errorf("test failed. unexpected job error %s, error: %v", f.Name(), jobErrors)
 			}
