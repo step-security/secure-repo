@@ -15,9 +15,8 @@ type FixWorkflowPermsReponse struct {
 	HasErrors             bool
 	AlreadyHasPermissions bool
 	IncorrectYaml         bool
-	//	JobFixes              map[string]string
-	JobErrors      []JobError
-	MissingActions []string
+	JobErrors             []JobError
+	MissingActions        []string
 }
 
 type JobError struct {
@@ -96,7 +95,7 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 		if alreadyHasJobPermissions(job) {
 			// We are not modifying permissions if already defined
 			fixWorkflowPermsReponse.HasErrors = true
-			fixWorkflowPermsReponse.AlreadyHasPermissions = true
+			//fixWorkflowPermsReponse.AlreadyHasPermissions = true
 
 			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
 			continue
@@ -124,8 +123,7 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 					// This should not happen
 					return nil, err
 				}
-				// This is to get fix relative to original file
-				//fixes[jobName], _ = addPermissions(inputYaml, jobName, perms)
+
 			}
 		}
 
