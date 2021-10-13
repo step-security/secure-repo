@@ -22,7 +22,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 	err := json.Unmarshal([]byte(req), &httpRequest)
 
 	if err == nil && httpRequest.RawPath != "" {
-		fmt.Printf("Request is APIGatewayV2HTTPRequest: %v\n", httpRequest)
+		//fmt.Printf("Request is APIGatewayV2HTTPRequest: %v\n", httpRequest)
 
 		sess := session.Must(session.NewSessionWithOptions(session.Options{
 			SharedConfigState: session.SharedConfigEnable,
