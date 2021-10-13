@@ -78,6 +78,7 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 	if err != nil {
 		fixWorkflowPermsReponse.HasErrors = true
 		fixWorkflowPermsReponse.IncorrectYaml = true
+		fixWorkflowPermsReponse.FinalOutput = inputYaml
 		return fixWorkflowPermsReponse, nil
 	}
 
@@ -85,6 +86,7 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 		// We are not modifying permissions if already defined
 		fixWorkflowPermsReponse.HasErrors = true
 		fixWorkflowPermsReponse.AlreadyHasPermissions = true
+		fixWorkflowPermsReponse.FinalOutput = inputYaml
 		return fixWorkflowPermsReponse, nil
 	}
 
@@ -95,8 +97,6 @@ func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 		if alreadyHasJobPermissions(job) {
 			// We are not modifying permissions if already defined
 			fixWorkflowPermsReponse.HasErrors = true
-			//fixWorkflowPermsReponse.AlreadyHasPermissions = true
-
 			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
 			continue
 		}
