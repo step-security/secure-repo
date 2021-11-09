@@ -14,13 +14,28 @@ func AddAction(inputYaml, action string) (string, error) {
 		return "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 	out := inputYaml
+	currentJobLine := 0
+	for jobName, job := range workflow.Jobs {
+		alreadyPresent := false
+		for _, step := range job.Steps {
+			if len(step.Uses) > 0 && step.Uses == action {
+				alreadyPresent = true
+			}
+		}
 
-	for jobName := range workflow.Jobs {
-		/*if alreadyHasAction(job) {
-			continue
-		}*/
+		if alreadyPresent {
+			t := yaml.Node{}
 
-		out, err = addAction(out, jobName, action)
+			err := yaml.Unmarshal([]byte(inputYaml), &t)
+			if err != nil {
+				return "", fmt.Errorf("unable to parse yaml %v", err)
+			}
+
+			jobNode := iterateNode(&t, "steps", "!!seq", currentJobLine)
+			currentJobLine = jobNode.Line
+		} else {
+			out, currentJobLine, err = addAction(out, jobName, action, currentJobLine)
+		}
 
 		if err != nil {
 			return out, err
@@ -30,18 +45,18 @@ func AddAction(inputYaml, action string) (string, error) {
 	return out, nil
 }
 
-func addAction(inputYaml, jobName, action string) (string, error) {
+func addAction(inputYaml, jobName, action string, minLine int) (string, int, error) {
 	t := yaml.Node{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &t)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse yaml %v", err)
+		return "", 0, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	jobNode := iterateNode(&t, "steps", "!!seq")
+	jobNode := iterateNode(&t, "steps", "!!seq", minLine)
 
 	if jobNode == nil {
-		return "", fmt.Errorf("jobName %s not found in the input yaml", jobName)
+		return "", 0, fmt.Errorf("jobName %s not found in the input yaml", jobName)
 	}
 
 	inputLines := strings.Split(inputYaml, "\n")
@@ -61,5 +76,5 @@ func addAction(inputYaml, jobName, action string) (string, error) {
 		output = append(output, inputLines[i])
 	}
 
-	return strings.Join(output, "\n"), nil
+	return strings.Join(output, "\n"), jobNode.Line, nil
 }
