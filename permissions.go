@@ -467,7 +467,7 @@ func addPermissions(inputYaml string, jobName string, permissions []string) (str
 		return "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	jobNode := iterateNode(&t, jobName)
+	jobNode := iterateNode(&t, jobName, "!!map")
 
 	if jobNode == nil {
 		return "", fmt.Errorf("jobName %s not found in the input yaml", jobName)
@@ -497,10 +497,7 @@ func addPermissions(inputYaml string, jobName string, permissions []string) (str
 	return strings.Join(output, "\n"), nil
 }
 
-// iterateNode will recursive look for the node following the identifier Node,
-// as go-yaml has a node for the key and the value itself
-// we want to manipulate the value Node
-func iterateNode(node *yaml.Node, identifier string) *yaml.Node {
+func iterateNode(node *yaml.Node, identifier, tag string) *yaml.Node {
 	returnNode := false
 	for _, n := range node.Content {
 		if n.Value == identifier {
@@ -508,14 +505,14 @@ func iterateNode(node *yaml.Node, identifier string) *yaml.Node {
 			continue
 		}
 		if returnNode {
-			if n.Tag == "!!map" {
+			if n.Tag == tag {
 				return n
 			} else {
 				returnNode = false
 			}
 		}
 		if len(n.Content) > 0 {
-			ac_node := iterateNode(n, identifier)
+			ac_node := iterateNode(n, identifier, tag)
 			if ac_node != nil {
 				return ac_node
 			}

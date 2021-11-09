@@ -9,8 +9,8 @@ import (
 )
 
 func TestFixWorkflows(t *testing.T) {
-	const inputDirectory = "./testfiles/input"
-	const outputDirectory = "./testfiles/output"
+	const inputDirectory = "./testfiles/perms/input"
+	const outputDirectory = "./testfiles/perms/output"
 	files, err := ioutil.ReadDir(inputDirectory)
 	if err != nil {
 		log.Fatal(err)
