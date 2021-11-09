@@ -46,6 +46,8 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				storeMissingActions(fixResponse.MissingActions, dynamoDbSvc)
 			}
 
+			fixResponse.FinalOutput, _ = AddAction(fixResponse.FinalOutput, "step-security/harden-runner@main")
+
 			output, _ := json.Marshal(fixResponse)
 			response = events.APIGatewayProxyResponse{
 				StatusCode: http.StatusOK,
