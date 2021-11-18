@@ -1,0 +1,27 @@
+name: Test
+on:
+  push:
+    
+jobs:
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - uses: step-security/harden-runner@main
+      with:
+        allowed-endpoints: 
+          beta.api.stepsecurity.io:443
+          codecov.io:443
+          github.com:443
+          proxy.golang.org:443
+          storage.googleapis.com:443
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Go 
+      uses: actions/setup-go@v2.1.3
+      with:
+        go-version: 1.15
+    - name: Run coverage
+      run: go test -race -coverprofile=coverage.txt -covermode=atomic
+    - uses: codecov/codecov-action@v2
