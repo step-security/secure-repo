@@ -38,17 +38,21 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			lastPathComponent := pathComponents[len(pathComponents)-1]
 			switch lastPathComponent {
 			case "actions":
-
-				err := StoreActionPermissions(httpRequest.Body, dynamoDbSvc)
-				if err != nil {
-
-					response = events.APIGatewayProxyResponse{
-						StatusCode: http.StatusInternalServerError,
-						Body:       err.Error(),
-					}
-				} else {
+				if httpRequest.RequestContext.HTTP.Method == "OPTIONS" {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,
+					}
+				} else {
+					err := StoreActionPermissions(httpRequest.Body, dynamoDbSvc)
+					if err != nil {
+						response = events.APIGatewayProxyResponse{
+							StatusCode: http.StatusInternalServerError,
+							Body:       err.Error(),
+						}
+					} else {
+						response = events.APIGatewayProxyResponse{
+							StatusCode: http.StatusOK,
+						}
 					}
 				}
 			}
