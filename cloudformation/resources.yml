@@ -103,7 +103,7 @@ Resources:
             ApiId: !Ref ApiGatewayV2Api
             ApiKeyRequired: false
             AuthorizationType: "NONE"
-            RouteKey: "ANY /actions/{action}/permissions"
+            RouteKey: "ANY /actions"
             Target: !Join
               - /
               - - integrations
