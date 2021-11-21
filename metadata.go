@@ -131,11 +131,7 @@ func StoreActionPermissions(actionName, request string, svc dynamodbiface.Dynamo
 		return err
 	}
 
-	atIndex := strings.Index(actionName, "@")
-	actionKey := actionName[0:atIndex]
-	actionKey = strings.ReplaceAll(actionKey, "/", "-")
-	actionKey = strings.ToLower(actionKey)
-	action.Name = actionKey
+	action.Name = actionName
 
 	av, err := dynamodbattribute.MarshalMap(action)
 
