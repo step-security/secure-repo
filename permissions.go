@@ -71,14 +71,14 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 
 	if alreadyHasWorkflowPermissions(workflow) {
 		// We are not modifying permissions if already defined
-		return "", fmt.Errorf("Workflow already has permissions")
+		return inputYaml, fmt.Errorf("Workflow already has permissions")
 	}
 
 	t := yaml.Node{}
 
 	err = yaml.Unmarshal([]byte(inputYaml), &t)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse yaml %v", err)
+		return inputYaml, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
 	line := 0
@@ -93,7 +93,7 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 	}
 
 	if line == 0 {
-		return "", fmt.Errorf("jobs not found in workflow")
+		return inputYaml, fmt.Errorf("jobs not found in workflow")
 	}
 
 	inputLines := strings.Split(inputYaml, "\n")
