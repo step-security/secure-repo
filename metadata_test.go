@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -44,4 +45,34 @@ func (m *mockDynamoDBClient) Scan(input *dynamodb.ScanInput) (*dynamodb.ScanOutp
 
 	return output, nil
 
+}
+
+func TestStoreActionPermissions(t *testing.T) {
+	type args struct {
+		request string
+		svc     dynamodbiface.DynamoDBAPI
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name:    "no perms",
+			args:    args{request: "{\"name\":\"action12\"}", svc: &mockDynamoDBClient{}},
+			wantErr: false,
+		},
+		{
+			name:    "content read",
+			args:    args{request: "{\"name\":\"action12\", \"permissions\":{\"contents\":\"read\"}}", svc: &mockDynamoDBClient{}},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := StoreActionPermissions(tt.args.request, tt.args.svc); (err != nil) != tt.wantErr {
+				t.Errorf("StoreActionPermissions() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
