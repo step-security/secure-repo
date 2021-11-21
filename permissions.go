@@ -61,7 +61,63 @@ func alreadyHasWorkflowPermissions(workflow Workflow) bool {
 	return false
 }
 
-func FixWorkflowPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkflowPermsReponse, error) {
+func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
+	workflow := Workflow{}
+
+	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
+	if err != nil {
+		return "", err
+	}
+
+	if alreadyHasWorkflowPermissions(workflow) {
+		// We are not modifying permissions if already defined
+		return "", fmt.Errorf("Workflow already has permissions")
+	}
+
+	t := yaml.Node{}
+
+	err = yaml.Unmarshal([]byte(inputYaml), &t)
+	if err != nil {
+		return "", fmt.Errorf("unable to parse yaml %v", err)
+	}
+
+	line := 0
+	column := 0
+	topNode := t.Content
+	for _, n := range topNode[0].Content {
+		if n.Value == "jobs" && n.Tag == "!!str" {
+			line = n.Line
+			column = n.Column
+			break
+		}
+	}
+
+	if line == 0 {
+		return "", fmt.Errorf("jobs not found in workflow")
+	}
+
+	inputLines := strings.Split(inputYaml, "\n")
+	var output []string
+	for i := 0; i < line-1; i++ {
+		output = append(output, inputLines[i])
+	}
+
+	spaces := ""
+	for i := 0; i < column-1; i++ {
+		spaces += " "
+	}
+
+	output = append(output, spaces+"permissions: read-all")
+	output = append(output, "")
+
+	for i := line - 1; i < len(inputLines); i++ {
+		output = append(output, inputLines[i])
+	}
+
+	return strings.Join(output, "\n"), nil
+}
+
+func AddJobLevelPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkflowPermsReponse, error) {
 
 	workflow := Workflow{}
 	errors := make(map[string][]string)

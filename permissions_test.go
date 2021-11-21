@@ -9,8 +9,8 @@ import (
 )
 
 func TestFixWorkflows(t *testing.T) {
-	const inputDirectory = "./testfiles/perms/input"
-	const outputDirectory = "./testfiles/perms/output"
+	const inputDirectory = "./testfiles/joblevelperms/input"
+	const outputDirectory = "./testfiles/joblevelperms/output"
 	files, err := ioutil.ReadDir(inputDirectory)
 	if err != nil {
 		log.Fatal(err)
@@ -23,7 +23,7 @@ func TestFixWorkflows(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		fixWorkflowPermsResponse, err := FixWorkflowPermissions(string(input), &mockDynamoDBClient{})
+		fixWorkflowPermsResponse, err := AddJobLevelPermissions(string(input), &mockDynamoDBClient{})
 		output := fixWorkflowPermsResponse.FinalOutput
 		jobErrors := fixWorkflowPermsResponse.JobErrors
 
@@ -94,4 +94,38 @@ func Test_addPermissions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAddWorkflowLevelPermissions(t *testing.T) {
+	const inputDirectory = "./testfiles/toplevelperms/input"
+	const outputDirectory = "./testfiles/toplevelperms/output"
+	files, err := ioutil.ReadDir(inputDirectory)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		output, err := AddWorkflowLevelPermissions(string(input))
+
+		if err != nil {
+			t.Errorf("Error not expected")
+		}
+
+		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, f.Name()))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if output != string(expectedOutput) {
+			t.Errorf("test failed %s did not match expected output\n%s", f.Name(), output)
+		}
+	}
+
 }
