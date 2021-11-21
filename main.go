@@ -58,7 +58,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			}
 		} else if strings.Contains(httpRequest.RawPath, "/secure-workflow") {
 
-			fixResponse, err := FixWorkflowPermissions(httpRequest.Body, dynamoDbSvc)
+			fixResponse, err := AddJobLevelPermissions(httpRequest.Body, dynamoDbSvc)
 
 			if err != nil {
 
@@ -73,6 +73,8 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				}
 
 				fixResponse.FinalOutput, _ = AddAction(fixResponse.FinalOutput, "step-security/harden-runner@main")
+
+				fixResponse.FinalOutput, _ = AddWorkflowLevelPermissions(fixResponse.FinalOutput)
 
 				output, _ := json.Marshal(fixResponse)
 				response = events.APIGatewayProxyResponse{
