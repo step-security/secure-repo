@@ -49,9 +49,8 @@ func (m *mockDynamoDBClient) Scan(input *dynamodb.ScanInput) (*dynamodb.ScanOutp
 
 func TestStoreActionPermissions(t *testing.T) {
 	type args struct {
-		actionName string
-		request    string
-		svc        dynamodbiface.DynamoDBAPI
+		request string
+		svc     dynamodbiface.DynamoDBAPI
 	}
 	tests := []struct {
 		name    string
@@ -60,18 +59,18 @@ func TestStoreActionPermissions(t *testing.T) {
 	}{
 		{
 			name:    "no perms",
-			args:    args{actionName: "owner/repo@v1", request: "{}", svc: &mockDynamoDBClient{}},
+			args:    args{request: "{\"name\":\"action12\"}", svc: &mockDynamoDBClient{}},
 			wantErr: false,
 		},
 		{
 			name:    "content read",
-			args:    args{actionName: "owner/repo@v1", request: "{\"permissions\":{\"contents\":\"read\"}}", svc: &mockDynamoDBClient{}},
+			args:    args{request: "{\"name\":\"action12\", \"permissions\":{\"contents\":\"read\"}}", svc: &mockDynamoDBClient{}},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := StoreActionPermissions(tt.args.actionName, tt.args.request, tt.args.svc); (err != nil) != tt.wantErr {
+			if err := StoreActionPermissions(tt.args.request, tt.args.svc); (err != nil) != tt.wantErr {
 				t.Errorf("StoreActionPermissions() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

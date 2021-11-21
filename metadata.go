@@ -121,7 +121,7 @@ func StoreMissingActions(missingActions []string, svc dynamodbiface.DynamoDBAPI)
 	return nil
 }
 
-func StoreActionPermissions(actionName, request string, svc dynamodbiface.DynamoDBAPI) error {
+func StoreActionPermissions(request string, svc dynamodbiface.DynamoDBAPI) error {
 
 	var action Action
 
@@ -130,8 +130,6 @@ func StoreActionPermissions(actionName, request string, svc dynamodbiface.Dynamo
 	if err != nil {
 		return err
 	}
-
-	action.Name = actionName
 
 	av, err := dynamodbattribute.MarshalMap(action)
 
