@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -89,7 +90,7 @@ func importActions(svc dynamodbiface.DynamoDBAPI) {
 	}
 }
 
-func storeMissingActions(missingActions []string, svc dynamodbiface.DynamoDBAPI) error {
+func StoreMissingActions(missingActions []string, svc dynamodbiface.DynamoDBAPI) error {
 
 	for _, action := range missingActions {
 
@@ -115,6 +116,41 @@ func storeMissingActions(missingActions []string, svc dynamodbiface.DynamoDBAPI)
 			return err
 		}
 
+	}
+
+	return nil
+}
+
+func StoreActionPermissions(actionName, request string, svc dynamodbiface.DynamoDBAPI) error {
+
+	var action Action
+
+	err := json.Unmarshal([]byte(request), &action)
+
+	if err != nil {
+		return err
+	}
+
+	atIndex := strings.Index(actionName, "@")
+	actionKey := actionName[0:atIndex]
+	actionKey = strings.ReplaceAll(actionKey, "/", "-")
+	actionKey = strings.ToLower(actionKey)
+	action.Name = actionKey
+
+	av, err := dynamodbattribute.MarshalMap(action)
+
+	if err != nil {
+		return err
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(ActionPermissionsTable),
+	}
+
+	_, err = svc.PutItem(input)
+	if err != nil {
+		return err
 	}
 
 	return nil

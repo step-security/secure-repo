@@ -1,9 +1,9 @@
-name: Cfnrelease
+name: Cfnrelease-int
 
 on:
   push: 
     branches:    
-     - main
+     - int
     
 jobs:
   publish-test:
@@ -22,8 +22,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_INT }}  
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_INT }}
           aws-region: us-west-2
       
       - run: go test
