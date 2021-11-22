@@ -1,0 +1,15 @@
+name: Lint
+on:
+  pull_request:
+    branches: main
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest  
+    steps:
+      - uses: actions/missingaction@v2
+      - uses: github/super-linter@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISABLE_ERRORS: true
