@@ -9,4 +9,8 @@ This is an API to secure GitHub Actions Workflow files. You can use it by visiti
 The API takes in a GitHub Actions workflow file as an input and returns a transformed workflow file with the following changes:
 1. Minimum `GITHUB_TOKEN` permissions are set for each job
 2. Step Security [Harden Runner](https://github.com/step-security/harden-runner) GitHub Action is added to each job
+3. Actions are pinned to a full length commit SHA
 
+<p align="left">
+  <img src="https://step-security-images.s3.us-west-2.amazonaws.com/secureworkflow.png" alt="Secure workflow screenshot" >
+</p>
