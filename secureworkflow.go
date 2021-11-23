@@ -16,6 +16,8 @@ func SecureWorkflow(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkfl
 
 		fixResponse.FinalOutput, _ = AddAction(fixResponse.FinalOutput, "step-security/harden-runner@main")
 
+		fixResponse.FinalOutput, _ = PinActions(fixResponse.FinalOutput)
+
 		if !fixResponse.HasErrors {
 			fixResponse.FinalOutput, _ = AddWorkflowLevelPermissions(fixResponse.FinalOutput)
 		}
