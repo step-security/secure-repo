@@ -3,14 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -53,41 +51,6 @@ func getActionPermissions(svc dynamodbiface.DynamoDBAPI) (*ActionPermissions, er
 
 	return &actionPermissions, nil
 
-}
-
-func importActions(svc dynamodbiface.DynamoDBAPI) {
-	actionPermissionsYaml, err := ioutil.ReadFile("./testfiles/action-permissions.yml")
-
-	if err != nil {
-		return
-	}
-
-	actionPermissions := ActionPermissions{}
-
-	err = yaml.Unmarshal(actionPermissionsYaml, &actionPermissions)
-
-	if err != nil {
-		return
-	}
-
-	for _, action := range actionPermissions.Actions {
-
-		av, err := dynamodbattribute.MarshalMap(action)
-
-		if err != nil {
-			return
-		}
-
-		input := &dynamodb.PutItemInput{
-			Item:      av,
-			TableName: aws.String(ActionPermissionsTable),
-		}
-
-		_, err = svc.PutItem(input)
-		if err != nil {
-			return
-		}
-	}
 }
 
 func StoreMissingActions(missingActions []string, svc dynamodbiface.DynamoDBAPI) error {

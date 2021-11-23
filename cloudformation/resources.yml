@@ -7,6 +7,9 @@ Parameters:
         Default: secure-workflow-api
     ImageTag:
       Description: Image tag
+      Type: String
+    PAT:
+      Description: PAT to overcome rate limiting
       Type: String   
 
 Resources: 
@@ -37,7 +40,10 @@ Resources:
                 !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ResourceName}:${ImageTag}' 
         MemorySize: 128
         Role: !GetAtt 'FunctionRole.Arn'
-        Timeout: 180        
+        Timeout: 180
+        Environment:
+          Variables:
+            PAT: !Ref PAT        
       
     ApiGatewayV2Api:
         Type: "AWS::ApiGatewayV2::Api"

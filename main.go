@@ -31,6 +31,14 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 		dynamoDbSvc := dynamodb.New(sess)
 		var response events.APIGatewayProxyResponse
 
+		if httpRequest.RequestContext.HTTP.Method == "OPTIONS" {
+			response = events.APIGatewayProxyResponse{
+				StatusCode: http.StatusOK,
+			}
+			returnValue, _ := json.Marshal(&response)
+			return returnValue, nil
+		}
+
 		// PUT actions/{action}/permissions
 		if strings.Contains(httpRequest.RawPath, "/actions") {
 
@@ -38,41 +46,30 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			lastPathComponent := pathComponents[len(pathComponents)-1]
 			switch lastPathComponent {
 			case "actions":
-				if httpRequest.RequestContext.HTTP.Method == "OPTIONS" {
+
+				err := StoreActionPermissions(httpRequest.Body, dynamoDbSvc)
+				if err != nil {
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusInternalServerError,
+						Body:       err.Error(),
+					}
+				} else {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,
 					}
-				} else {
-					err := StoreActionPermissions(httpRequest.Body, dynamoDbSvc)
-					if err != nil {
-						response = events.APIGatewayProxyResponse{
-							StatusCode: http.StatusInternalServerError,
-							Body:       err.Error(),
-						}
-					} else {
-						response = events.APIGatewayProxyResponse{
-							StatusCode: http.StatusOK,
-						}
-					}
 				}
+
 			}
 		} else if strings.Contains(httpRequest.RawPath, "/secure-workflow") {
 
-			fixResponse, err := FixWorkflowPermissions(httpRequest.Body, dynamoDbSvc)
+			fixResponse, err := SecureWorkflow(httpRequest.Body, dynamoDbSvc)
 
 			if err != nil {
-
 				response = events.APIGatewayProxyResponse{
 					StatusCode: http.StatusInternalServerError,
 					Body:       err.Error(),
 				}
 			} else {
-
-				if len(fixResponse.MissingActions) > 0 {
-					StoreMissingActions(fixResponse.MissingActions, dynamoDbSvc)
-				}
-
-				fixResponse.FinalOutput, _ = AddAction(fixResponse.FinalOutput, "step-security/harden-runner@main")
 
 				output, _ := json.Marshal(fixResponse)
 				response = events.APIGatewayProxyResponse{

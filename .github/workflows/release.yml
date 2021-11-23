@@ -56,7 +56,8 @@ jobs:
           template: cloudformation/resources.yml
           parameter-overrides: >-
             ResourceName=secure-workflow-api,
-            ImageTag=${{ github.sha }}            
+            ImageTag=${{ github.sha }},
+            PAT=${{ secrets.PAT }}                 
           no-fail-on-empty-changeset: "1"
       
         
