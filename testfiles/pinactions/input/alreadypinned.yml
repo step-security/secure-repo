@@ -1,0 +1,22 @@
+name: Integration Test Github
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@61b9e3751b92087fd0b06925ba6dd6314e06f089
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@49d9c2e46838527972659f80f5488d08971fdc2d
+      with:
+        name: docker.pkg.github.com/elgohr/publish-docker-github-action/publish-docker-github-action
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        registry: docker.pkg.github.com
+  build1:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@61b9e3751b92087fd0b06925ba6dd6314e06f089
+    - uses: borales/actions-yarn@4965e1a0f0ae9c422a9a5748ebd1fb5e097d22b9
+      with:
+        auth-token: ${{ secrets.GITHUB_TOKEN }}
+        registry-url: npm.pkg.github.com
