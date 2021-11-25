@@ -32,33 +32,11 @@ const errorAlreadyHasPermissions = "KnownIssue-5: Jobs that already have permiss
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
 func alreadyHasJobPermissions(job Job) bool {
-	if job.Permissions.Actions != "" ||
-		job.Permissions.Checks != "" ||
-		job.Permissions.Contents != "" ||
-		job.Permissions.Deployments != "" ||
-		job.Permissions.Issues != "" ||
-		job.Permissions.Packages != "" ||
-		job.Permissions.PullRequests != "" ||
-		job.Permissions.Statuses != "" {
-		return true
-	}
-
-	return false
+	return job.Permissions.IsSet
 }
 
 func alreadyHasWorkflowPermissions(workflow Workflow) bool {
-	if workflow.Permissions.Actions != "" ||
-		workflow.Permissions.Checks != "" ||
-		workflow.Permissions.Contents != "" ||
-		workflow.Permissions.Deployments != "" ||
-		workflow.Permissions.Issues != "" ||
-		workflow.Permissions.Packages != "" ||
-		workflow.Permissions.PullRequests != "" ||
-		workflow.Permissions.Statuses != "" {
-		return true
-	}
-
-	return false
+	return workflow.Permissions.IsSet
 }
 
 func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
@@ -287,41 +265,9 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 			}
 		}
 
-		// These are in ascending order, contents, then issues
-		if actionPermission.Permissions.Actions != "" {
-			permissions = append(permissions, "actions: "+actionPermission.Permissions.Actions)
-		}
-
-		if actionPermission.Permissions.Checks != "" {
-			permissions = append(permissions, "checks: "+actionPermission.Permissions.Checks)
-		}
-
-		if actionPermission.Permissions.Contents != "" {
-			permissions = append(permissions, "contents: "+actionPermission.Permissions.Contents)
-		}
-
-		if actionPermission.Permissions.Deployments != "" {
-			permissions = append(permissions, "deployments: "+actionPermission.Permissions.Deployments)
-		}
-
-		if actionPermission.Permissions.Issues != "" {
-			permissions = append(permissions, "issues: "+actionPermission.Permissions.Issues)
-		}
-
-		if actionPermission.Permissions.Packages != "" {
-			permissions = append(permissions, "packages: "+actionPermission.Permissions.Packages)
-		}
-
-		if actionPermission.Permissions.PullRequests != "" {
-			permissions = append(permissions, "pull-requests: "+actionPermission.Permissions.PullRequests)
-		}
-
-		if actionPermission.Permissions.SecurityEvents != "" {
-			permissions = append(permissions, "security-events: "+actionPermission.Permissions.SecurityEvents)
-		}
-
-		if actionPermission.Permissions.Statuses != "" {
-			permissions = append(permissions, "statuses: "+actionPermission.Permissions.Statuses)
+		// TODO: Fix the order
+		for scope, value := range actionPermission.Permissions.Scopes {
+			permissions = append(permissions, fmt.Sprintf("%s: %s", scope, value))
 		}
 
 	} else {

@@ -1,5 +1,11 @@
 package main
 
+import "errors"
+
+var (
+	ErrInvalidValue = errors.New("invalid value for field 'permissions'")
+)
+
 type Workflow struct {
 	Name        string      `yaml:"name"`
 	Permissions Permissions `yaml:"permissions"`
@@ -25,15 +31,10 @@ type Env map[string]string
 // For action-permissions.yml
 
 type Permissions struct {
-	Actions        string `yaml:"actions"`
-	Checks         string `yaml:"checks"`
-	Contents       string `yaml:"contents"`
-	Deployments    string `yaml:"deployments"`
-	Packages       string `yaml:"packages"`
-	PullRequests   string `yaml:"pull-requests"`
-	Issues         string `yaml:"issues"`
-	SecurityEvents string `yaml:"security-events"`
-	Statuses       string `yaml:"statuses"`
+	Scopes   map[string]string
+	ReadAll  bool
+	WriteAll bool
+	IsSet    bool
 }
 
 type Action struct {
@@ -51,4 +52,26 @@ type Actions map[string]Action
 
 type GitHubContent struct {
 	Content string `json:"content"`
+}
+
+func (p *Permissions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	mstr := make(map[string]string)
+	if err := unmarshal(&mstr); err == nil {
+		p.Scopes = mstr
+		p.IsSet = true
+		return nil
+	}
+
+	permString := ""
+	if err := unmarshal(&permString); err == nil {
+		if permString == "read-all" {
+			p.ReadAll = true
+		} else if permString == "write-all" {
+			p.WriteAll = true
+		}
+		p.IsSet = true
+		return nil
+	}
+
+	return ErrInvalidValue
 }
