@@ -4,6 +4,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
+const HardenRunnerActionNameWithBranch = "step-security/harden-runner@main"
+const HardenRunnerActionName = "step-security/harden-runner"
+
 func SecureWorkflow(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkflowPermsReponse, error) {
 	fixResponse, err := AddJobLevelPermissions(inputYaml, svc)
 	if err != nil {
@@ -14,7 +17,7 @@ func SecureWorkflow(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkfl
 			StoreMissingActions(fixResponse.MissingActions, svc)
 		}
 
-		fixResponse.FinalOutput, _ = AddAction(fixResponse.FinalOutput, "step-security/harden-runner@main")
+		fixResponse.FinalOutput, _ = AddAction(fixResponse.FinalOutput, HardenRunnerActionNameWithBranch)
 
 		fixResponse.FinalOutput, _ = PinActions(fixResponse.FinalOutput)
 

@@ -18,7 +18,7 @@ func AddAction(inputYaml, action string) (string, error) {
 	for jobName, job := range workflow.Jobs {
 		alreadyPresent := false
 		for _, step := range job.Steps {
-			if len(step.Uses) > 0 && step.Uses == action {
+			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, HardenRunnerActionName) {
 				alreadyPresent = true
 				break
 			}
