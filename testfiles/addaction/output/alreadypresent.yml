@@ -10,5 +10,6 @@ jobs:
   list-directory1:
     runs-on: ubuntu-latest
     steps:
-     - uses: step-security/harden-runner@main
+     - name: Harden Runner
+       uses: step-security/harden-runner@main
      - run: ls -R

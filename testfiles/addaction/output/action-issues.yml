@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: step-security/harden-runner@main
+    - name: Harden Runner
+      uses: step-security/harden-runner@main
     - name: Close Issue
       uses: peter-evans/close-issue@v1
       with:
