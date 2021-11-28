@@ -31,6 +31,8 @@ The metadata filename must be `action-security.yml`. It must be located in a fol
 
 This example is for `peter-evans/close-issue` GitHub Action. It shows that the Action expects GitHub token as an action input, the name of the input is `token`, and that it is set to `GITHUB_TOKEN` as the default value. It also shows that the permissions needed for the Action are `issues: write` and the reason for that permission is specified in the `issues-reason` key. 
 
+[`knowledge-base/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/peter-evans/close-issue/action-security.yml)
+
 ```
 github-token:
   action-input:
@@ -52,3 +54,22 @@ github-token:
 ## `github-token.action-input.is-default`
 
 **Required** github-token.action-input.is-default This is required if `action-input` is set. It should be set to true, if `default` value of the input that expects the `GITHUB_TOKEN` is `${{ github.token }}`. 
+
+## `github-token.environment-variable-name`
+
+**Optional** If you expect the `GITHUB_TOKEN` to be set in an environment variable, specify the name of the environment variable in `environment-variable-name`. If you accept the `GITHUB_TOKEN` as an Action input, you do not need to set this. 
+
+## Example
+
+This example is for `github/super-linter` GitHub Action. It shows that the Action expects GitHub token as an environment variable, the name of the environment variable is `GITHUB_TOKEN`. It also shows that the permissions needed for the Action are `statuses: write` and the reason for that permission is specified in the `statuses-reason` key. 
+
+[`knowledge-base/github/super-linter/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/github/super-linter/action-security.yml)
+
+```
+name: 'Super-Linter'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    statuses: write
+    statuses-reason: to mark status of each linter run
+```
