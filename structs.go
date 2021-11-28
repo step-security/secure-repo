@@ -1,6 +1,9 @@
 package main
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 var (
 	ErrInvalidValue = errors.New("invalid value for field 'permissions'")
@@ -44,6 +47,32 @@ type Action struct {
 	Permissions  Permissions `yaml:"permissions"`
 }
 
+type ActionMetadata struct {
+	Name        string      `yaml:"name"`
+	GitHubToken GitHubToken `yaml:"github-token"`
+}
+
+type ActionInput struct {
+	Input     string `yaml:"input"`
+	IsDefault bool   `yaml:"is-default"`
+}
+
+type GitHubToken struct {
+	ActionInput             ActionInput            `yaml:"action-input"`
+	EnvironmentVariableName string                 `yaml:"environment-variable-name"`
+	Permissions             ActionScopePermissions `yaml:"permissions"`
+}
+
+type ActionScopePermissions struct {
+	Scopes map[string]ActionScopePermission
+}
+
+type ActionScopePermission struct {
+	Permission string
+	Reason     string
+	Condition  string
+}
+
 type ActionPermissions struct {
 	Actions Actions `yaml:"actions"`
 }
@@ -52,6 +81,40 @@ type Actions map[string]Action
 
 type GitHubContent struct {
 	Content string `json:"content"`
+}
+
+func (p *ActionScopePermissions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	mstr := make(map[string]string)
+	err := unmarshal(&mstr)
+	if err != nil {
+		return ErrInvalidValue
+	}
+
+	scopeMap := make(map[string]string)
+	reasonMap := make(map[string]string)
+	conditionMap := make(map[string]string)
+	actionScopePermissionMap := make(map[string]ActionScopePermission)
+
+	for k, v := range mstr {
+		if strings.HasSuffix(k, "-reason") {
+			scope := strings.Split(k, "-reason")[0]
+			reasonMap[scope] = v
+		} else if strings.HasSuffix(k, "-if") {
+			scope := strings.Split(k, "-if")[0]
+			conditionMap[scope] = v
+		} else {
+			scopeMap[k] = v
+		}
+	}
+
+	for k, v := range scopeMap {
+		reason := reasonMap[k]
+		actionScopePermissionMap[k] = ActionScopePermission{Permission: v, Reason: reason}
+	}
+
+	p.Scopes = actionScopePermissionMap
+	return nil
+
 }
 
 func (p *Permissions) UnmarshalYAML(unmarshal func(interface{}) error) error {
