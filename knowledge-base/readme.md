@@ -1,4 +1,4 @@
-## Contribute to the GitHub Actions security knowledge base
+# Contribute to the GitHub Actions security knowledge base
 
 If you are the owner of a GitHub Action, please contribute information about the use of `GITHUB_TOKEN` and expected outbound calls for your Action. 
 
