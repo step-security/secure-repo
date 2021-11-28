@@ -19,13 +19,13 @@ To contibute to the knowledge base:
 
 The metadata filename must be `action-security.yml`. It must be located in a folder for your GitHub Action under the `knowledge-base` folder, e.g. the location for `actions/checkout` is [`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml) The data in the metadata file defines the permissions needed for `GITHUB_TOKEN` for your Action and the outbound calls made by your Action.
 
-## name
+## `name`
 
 **Required** The name of your action, should be the same as in your GitHub Action's action.yml file
 
-## github-token
+## `github-token`
 
-**Optional** github-token allows you to specify where `GITHUB_TOKEN` is expected as input for your GitHub Action, what permissions it needs, and the reason for those permissions. 
+**Optional** github-token allows you to specify where `GITHUB_TOKEN` is expected as input for your GitHub Action, what permissions it needs, and the reason for those permissions. If your Action does not use the `GITHUB_TOKEN`, you do not need to set this. 
 
 ## Example
 
@@ -40,3 +40,15 @@ github-token:
     issues: write
     issues-reason: to close issues
 ```
+
+## `github-token.action-input`
+
+**Optional** github-token.action-input allows you to specify which input is used to accept the `GITHUB_TOKEN`. If your Action expects the token to be specified as an input to your Action, specify it in the `input` key. If you accept the `GITHUB_TOKEN` in environment variable, you do not need to set this. 
+
+## `github-token.action-input.input`
+
+**Required** github-token.action-input.input should be the name of the input in your `action.yml` file that accepts the `GITHUB_TOKEN`. This is required if `action-input` is set. 
+
+## `github-token.action-input.is-default`
+
+**Required** github-token.action-input.is-default This is required if `action-input` is set. It should be set to true, if `default` value of the input that expects the `GITHUB_TOKEN` is `${{ github.token }}`. 
