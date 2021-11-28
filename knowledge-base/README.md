@@ -12,5 +12,14 @@ This will increase trust for your GitHub Action and more developers would be com
 
 To contibute to the knowledge base:
 1. Add a folder under the knowledge-base folder for your GitHub Action.
-2. In the folder for your GitHub Action, add an action-security.yml file. You can view existing files to understand the structure of these YAML files. 
-3. Add metadata in the action-security.yml file about the use of `GITHUB_TOKEN` and expected outbound traffic for your GitHub Action.
+2. In the folder for your GitHub Action, add an `action-security.yml` file. You can view existing files to understand the structure of these YAML files. 
+3. Add metadata in the `action-security.yml` file about the use of `GITHUB_TOKEN` and expected outbound traffic for your GitHub Action.
+
+## Syntax for action-security.yml
+
+The metadata filename must be `action-security.yml`. It must be located in a folder for your GitHub Action under the `knowledge-base` folder, e.g. the location for `actions/checkout` is [`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml) The data in the metadata file defines the inputs, outputs and main entrypoint for your action.
+
+## name
+
+**Required** The name of your action, should be the same as in your GitHub Action's action.yml file
+
