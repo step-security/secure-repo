@@ -355,7 +355,7 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 }
 
 func getActionKnowledgeBase(action string) (*ActionMetadata, error) {
-	input, err := ioutil.ReadFile(path.Join("knowledgebase", action, "action-security.yml"))
+	input, err := ioutil.ReadFile(path.Join("knowledge-base", action, "action-security.yml"))
 
 	if err != nil {
 		return nil, err

@@ -1,0 +1,12 @@
+name: 'Auto Cancel Redundant Workflow'
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    actions: write
+    actions-reason: to cancel workflows
+outbound-endpoints:
+  - api.github.com:
+      port: 443
+      reason: To call GitHub Actions API
