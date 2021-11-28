@@ -65,6 +65,63 @@ func TestFixWorkflows(t *testing.T) {
 	}
 }
 
+func TestAddJobLevelPermissionsKB(t *testing.T) {
+	const inputDirectory = "./testfiles/joblevelpermskb/input"
+	const outputDirectory = "./testfiles/joblevelpermskb/output"
+	files, err := ioutil.ReadDir(inputDirectory)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fixWorkflowPermsResponse, err := AddJobLevelPermissionsKB(string(input))
+		output := fixWorkflowPermsResponse.FinalOutput
+		jobErrors := fixWorkflowPermsResponse.JobErrors
+
+		// some test cases return a job error for known issues
+		if len(jobErrors) > 0 {
+			for _, je := range jobErrors {
+				if strings.Compare(je.JobName, "job-with-error") == 0 {
+					if strings.Contains(je.Errors[0], "KnownIssue") {
+						output = je.Errors[0]
+					} else {
+						t.Errorf("test failed. unexpected job error %s, error: %v", f.Name(), jobErrors)
+					}
+				}
+			}
+
+		}
+
+		if fixWorkflowPermsResponse.AlreadyHasPermissions {
+			output = errorAlreadyHasPermissions
+		}
+
+		if fixWorkflowPermsResponse.IncorrectYaml {
+			output = errorIncorrectYaml
+		}
+
+		if err != nil {
+			t.Errorf("test failed %s, error: %v", f.Name(), err)
+		}
+
+		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, f.Name()))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if output != string(expectedOutput) {
+			t.Errorf("test failed %s did not match expected output\n%s", f.Name(), output)
+		}
+	}
+}
+
 func Test_addPermissions(t *testing.T) {
 	type args struct {
 		inputYaml   string

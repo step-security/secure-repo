@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path"
 	"sort"
 	"strings"
 
@@ -175,6 +177,80 @@ func AddJobLevelPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 	return fixWorkflowPermsReponse, nil
 }
 
+func AddJobLevelPermissionsKB(inputYaml string) (*FixWorkflowPermsReponse, error) {
+
+	workflow := Workflow{}
+	errors := make(map[string][]string)
+	//fixes := make(map[string]string)
+	fixWorkflowPermsReponse := &FixWorkflowPermsReponse{}
+
+	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
+	if err != nil {
+		fixWorkflowPermsReponse.HasErrors = true
+		fixWorkflowPermsReponse.IncorrectYaml = true
+		fixWorkflowPermsReponse.FinalOutput = inputYaml
+		return fixWorkflowPermsReponse, nil
+	}
+
+	if alreadyHasWorkflowPermissions(workflow) {
+		// We are not modifying permissions if already defined
+		fixWorkflowPermsReponse.HasErrors = true
+		fixWorkflowPermsReponse.AlreadyHasPermissions = true
+		fixWorkflowPermsReponse.FinalOutput = inputYaml
+		return fixWorkflowPermsReponse, nil
+	}
+
+	out := inputYaml
+
+	for jobName, job := range workflow.Jobs {
+
+		if alreadyHasJobPermissions(job) {
+			// We are not modifying permissions if already defined
+			fixWorkflowPermsReponse.HasErrors = true
+			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
+			continue
+		}
+
+		jobState := &JobState{}
+		perms, err := jobState.getPermissionsKB(job.Steps)
+
+		if err != nil {
+			for _, err := range jobState.Errors {
+				errors[jobName] = append(errors[jobName], err.Error())
+			}
+
+			fixWorkflowPermsReponse.HasErrors = true
+			fixWorkflowPermsReponse.MissingActions = append(fixWorkflowPermsReponse.MissingActions, jobState.MissingActions...)
+			continue // skip fixing this job
+		} else {
+			if strings.Compare(inputYaml, fixWorkflowPermsReponse.FinalOutput) != 0 {
+				fixWorkflowPermsReponse.IsChanged = true
+
+				// This is to add on the fixes for jobs
+				out, err = addPermissions(out, jobName, perms)
+
+				if err != nil {
+					// This should not happen
+					return nil, err
+				}
+
+			}
+		}
+
+	}
+	fixWorkflowPermsReponse.FinalOutput = out
+
+	// Convert to array of JobError from map
+	for job, jobErrors := range errors {
+		jobError := JobError{JobName: job}
+		jobError.Errors = append(jobError.Errors, jobErrors...)
+
+		fixWorkflowPermsReponse.JobErrors = append(fixWorkflowPermsReponse.JobErrors, jobError)
+	}
+
+	return fixWorkflowPermsReponse, nil
+}
+
 func isGitHubToken(literal string) bool {
 	literal = strings.ToLower(literal)
 	if strings.Contains(literal, "secrets.github_token") || strings.Contains(literal, "github.token") {
@@ -273,6 +349,63 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 	} else {
 		jobState.MissingActions = append(jobState.MissingActions, action.Uses)
 		return nil, fmt.Errorf(errorMissingAction, action.Uses)
+	}
+
+	return permissions, nil
+}
+
+func getActionKnowledgeBase(action string) (*ActionMetadata, error) {
+	input, err := ioutil.ReadFile(path.Join("knowledgebase", action, "action-security.yml"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	actionMetadata := ActionMetadata{}
+
+	err = yaml.Unmarshal([]byte(input), &actionMetadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return &actionMetadata, nil
+}
+
+func (jobState *JobState) getPermissionsForActionKB(action Step) ([]string, error) {
+	permissions := []string{}
+	atIndex := strings.Index(action.Uses, "@")
+
+	if atIndex == -1 {
+		return nil, fmt.Errorf(errorLocalAction, action.Uses)
+	}
+
+	actionKey := action.Uses[0:atIndex]
+
+	actionMetadata, err := getActionKnowledgeBase(actionKey)
+
+	if err != nil {
+		jobState.MissingActions = append(jobState.MissingActions, action.Uses)
+		return nil, fmt.Errorf(errorMissingAction, action.Uses)
+	}
+
+	// If action has a default token, and the token was set explicitly, but not to the Github token, no permissions are needed
+	// See action-with-nondefault-token.yml as an example
+	if actionMetadata.GitHubToken.ActionInput.IsDefault {
+		if action.With[actionMetadata.GitHubToken.ActionInput.Input] != "" && !isGitHubToken(action.With[actionMetadata.GitHubToken.ActionInput.Input]) {
+			return permissions, nil
+		}
+	}
+
+	// If action expects token in env variable, and the token was not set, or not to the Github token, no permissions are needed
+	if actionMetadata.GitHubToken.EnvironmentVariableName != "" {
+		if action.Env[actionMetadata.GitHubToken.EnvironmentVariableName] == "" || !isGitHubToken(action.Env[actionMetadata.GitHubToken.EnvironmentVariableName]) {
+			return permissions, nil
+		}
+	}
+
+	// TODO: Fix the order
+	for scope, value := range actionMetadata.GitHubToken.Permissions.Scopes {
+		permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
 	}
 
 	return permissions, nil
@@ -400,6 +533,44 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 
 		if step.Uses != "" { // it is an action
 			permsForAction, err := jobState.getPermissionsForAction(step)
+
+			if err != nil {
+				jobState.Errors = append(jobState.Errors, err)
+			}
+
+			permissions = append(permissions, permsForAction...)
+		} else if step.Run != "" { // if it is a run step
+			permsForRunStep, err := jobState.getPermissionsForRunStep(step)
+
+			if err != nil {
+				jobState.Errors = append(jobState.Errors, err)
+			}
+
+			permissions = append(permissions, permsForRunStep...)
+		}
+
+	}
+
+	if len(jobState.Errors) > 0 {
+		return nil, fmt.Errorf("Job has errors")
+	}
+
+	if len(permissions) == 0 {
+		return []string{"contents: none"}, nil
+	}
+
+	permissions = removeRedundantPermisions(permissions)
+
+	return permissions, nil
+}
+
+func (jobState *JobState) getPermissionsKB(steps []Step) ([]string, error) {
+	permissions := []string{}
+
+	for _, step := range steps {
+
+		if step.Uses != "" { // it is an action
+			permsForAction, err := jobState.getPermissionsForActionKB(step)
 
 			if err != nil {
 				jobState.Errors = append(jobState.Errors, err)
