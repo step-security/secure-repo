@@ -1,0 +1,8 @@
+name: 'Setup .NET Core SDK'
+outbound-endpoints:
+  - dotnetcli.blob.core.windows.net:
+      port: 443
+      reason: To download dotnet
+  - dotnetcli.azureedge.net:
+      port: 443
+      reason: To download dotnet

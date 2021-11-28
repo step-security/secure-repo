@@ -1,0 +1,10 @@
+name: 'Setup Node.js environment'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions: # Used to pull node distributions from node-versions. Metadata permissions is present by default
+outbound-endpoints:
+  - nodejs.org:
+      port: 443
+      reason: To download node distribution
