@@ -7,7 +7,7 @@ on:
 jobs:
   closeissue:
     permissions:
-      issues: write # for peter-evans/close-issue to close issues
+      issues: write # for peter-evans/close-issue@v1 to close issues
     runs-on: ubuntu-latest
 
     steps:

@@ -1,0 +1,12 @@
+name: 'Checkout'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to fetch code
+outbound-endpoints:
+  - github.com:
+      port: 443
+      reason: To fetch code from GitHub 

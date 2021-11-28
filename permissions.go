@@ -405,7 +405,7 @@ func (jobState *JobState) getPermissionsForActionKB(action Step) ([]string, erro
 
 	// TODO: Fix the order
 	for scope, value := range actionMetadata.GitHubToken.Permissions.Scopes {
-		permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
+		permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, action.Uses, value.Reason))
 	}
 
 	return permissions, nil
