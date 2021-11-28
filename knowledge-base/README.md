@@ -17,9 +17,26 @@ To contibute to the knowledge base:
 
 ## Syntax for action-security.yml
 
-The metadata filename must be `action-security.yml`. It must be located in a folder for your GitHub Action under the `knowledge-base` folder, e.g. the location for `actions/checkout` is [`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml) The data in the metadata file defines the inputs, outputs and main entrypoint for your action.
+The metadata filename must be `action-security.yml`. It must be located in a folder for your GitHub Action under the `knowledge-base` folder, e.g. the location for `actions/checkout` is [`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml) The data in the metadata file defines the permissions needed for `GITHUB_TOKEN` for your Action and the outbound calls made by your Action.
 
 ## name
 
 **Required** The name of your action, should be the same as in your GitHub Action's action.yml file
 
+## github-token
+
+**Optional** github-token allows you to specify where `GITHUB_TOKEN` is expected as input for your GitHub Action, what permissions it needs, and the reason for those permissions. 
+
+## Example
+
+This example is for `peter-evans/close-issue` GitHub Action. It shows that the Action expects GitHub token as an action input, the name of the input is `token`, and that it is set to `GITHUB_TOKEN` as the default value. It also shows that the permissions needed for the Action are `issues: write` and the reason for that permission is specified in the `issues-reason` key. 
+
+```
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to close issues
+```
