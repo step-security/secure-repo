@@ -7,6 +7,6 @@ github-token:
     contents: read
     contents-reason: to fetch code
 outbound-endpoints:
-  - github.com:
-      port: 443
-      reason: To fetch code from GitHub 
+  github.com:
+    port: 443
+    reason: to fetch code from GitHub 
