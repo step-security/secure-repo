@@ -1,17 +1,17 @@
-# Contribute to the GitHub Actions security knowledge base
+# Contribute to the GitHub Actions Security Knowledge base
 
 If you are the owner of a GitHub Action, please contribute information about the use of `GITHUB_TOKEN` and expected outbound calls for your Action. 
 
 This will enable the community to:
 1. Automatically calculate minimum token permissions for the `GITHUB_TOKEN` for their workflows. 
-2. Restrict outbound traffic for their GitHub Actions worklows to allowed endpoints.
+2. Restrict outbound traffic for their GitHub Actions workflows to allowed endpoints.
 
 This will increase trust for your GitHub Action and more developers would be comfortable using it, and it will improve security for everyone's GitHub Actions workflows.
 
 # How do I contribute to the knowledge base?
 
-To contibute to the knowledge base:
-1. Add a folder under the knowledge-base folder for your GitHub Action.
+To contribute to the knowledge base:
+1. Add a folder under the knowledge base folder for your GitHub Action.
 2. In the folder for your GitHub Action, add an `action-security.yml` file. You can view existing files to understand the structure of these YAML files. 
 3. Add metadata in the `action-security.yml` file about the use of `GITHUB_TOKEN` and expected outbound traffic for your GitHub Action.
 
@@ -99,7 +99,7 @@ github-token:
 
 ## `github-token.permissions.<scope>-reason`
 
-**Optional** If your Action uses the `GITHUB_TOKEN` and uses it for a scope other than `metadata`, provide the reason you need the scope. This information gets added to a workflow when its permissions are calculated automatically using the knowledge base.  
+**Optional** If your Action uses the `GITHUB_TOKEN` and uses it for a scope other than `metadata`, provide the reason you need the scope. This information gets added to a workflow when its permissions are calculated automatically using the knowledge base. This is required if the corresponding scope is set in the permissions.  
 
 ## Example
 
@@ -133,6 +133,7 @@ jobs:
        issue-number: 1
        comment: Auto-closing issue
 ```
+
 
 
 
