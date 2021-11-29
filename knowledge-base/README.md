@@ -136,7 +136,7 @@ jobs:
 
 ## `outbound-endpoints`
 
-**Required** `outbound-endpoints` allows you to specify the outbound endpoints that your GitHub Action is expected to call and the reason for that call. If your GitHub Action does not make any outbound calls, you still need to set this, but it can be set to an empty value. This enables developers to restrict outbound traffic from their workflows using the `Harden Runner' GitHub Action. 
+**Required** `outbound-endpoints` allows you to specify the outbound endpoints that your GitHub Action is expected to call and the reason for that call. If your GitHub Action does not make any outbound calls, you still need to set this, but it can be set to an empty value. This enables developers to restrict outbound traffic from their workflows using the [`Harden Runner`](https://github.com/marketplace/actions/harden-runner) GitHub Action. 
 
 To know what outbound calls are made by your action, add the `Harden Runner` GitHub Action to a workflow that uses your GitHub Action. You can then see what outbound calls are being made. [Here](https://github.com/step-security/secure-workflows/blob/7a5b6afce236fa0634b8ecb46ebec180774c6aa2/.github/workflows/test.yml#L14) is an example workflow that uses the `actions/checkout` GitHub Action. The outbound calls made by `actions/checkout` GitHub Action are visible [here](https://app.stepsecurity.io/github/step-security/secure-workflows/actions/runs/1517151905). 
 
@@ -152,5 +152,31 @@ outbound-endpoints:
   github.com:
     port: 443
     reason: to fetch code from GitHub
+```
+
+## `outbound-endpoints.<domainname>`
+
+**Optional** A domain name to which outbound calls are expected by your GitHub Action
+
+## `outbound-endpoints.<domainname>.port`
+
+**Required** For a domain name, the port to which outbound calls are expected by your GitHub Action.
+
+## `outbound-endpoints.<domainname>.reason`
+
+**Required** For a domain name, the reason the outbound call is being made.
+
+## Example
+
+This example is for `actions/setup-node` GitHub Action. It shows that the Action is expected to make outbount calls to `nodejs.org` at port `443`, and the `reason` is `to download node distribution`. 
+
+[`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml)
+
+```
+name: 'Setup Node.js environment'
+outbound-endpoints:
+  nodejs.org:
+    port: 443
+    reason: to download node distribution
 ```
 
