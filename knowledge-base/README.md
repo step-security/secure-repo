@@ -170,7 +170,7 @@ outbound-endpoints:
 
 This example is for `actions/setup-node` GitHub Action. It shows that the Action is expected to make outbount calls to `nodejs.org` at port `443`, and the `reason` is `to download node distribution`. 
 
-[`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml)
+[`knowledge-base/actions/setup-node/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/setup-node/action-security.yml)
 
 ```
 name: 'Setup Node.js environment'
