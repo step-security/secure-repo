@@ -73,3 +73,67 @@ github-token:
     statuses: write
     statuses-reason: to mark status of each linter run
 ```
+
+## `github-token.permissions`
+
+**Optional** If your Action uses the `GITHUB_TOKEN` provide information about the permissions needed using `github-token.permissions`. Each permission that is needed should be specified as a scope. If you only use the token to prevent rate-limiting, it needs `metadata` permissions, which the token has by default, so you do not need to provide additional scopes. 
+
+## Example
+
+This example is for `actions/setup-node` GitHub Action. It shows that the Action expects GitHub token as an Action input. The permissions key is set, but no scopes are defined, since it only uses it for rate-limiting. 
+
+[`knowledge-base/actions/setup-node/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/setup-node/action-security.yml)
+
+```
+name: 'Setup Node.js environment'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions: # Used to pull node distributions from node-versions. Metadata permissions is present by default
+```
+
+## `github-token.permissions.<scope>`
+
+**Optional** If your Action uses the `GITHUB_TOKEN` and uses it for a scope other than `metadata`, provide what scope is needed. Valid scopes are documented [here](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token).
+
+## `github-token.permissions.<scope>-reason`
+
+**Optional** If your Action uses the `GITHUB_TOKEN` and uses it for a scope other than `metadata`, provide the reason you need the scope. This information gets added to a workflow when its permissions are calculated automatically using the knowledge base.  
+
+## Example
+
+As an example, consider this `action-security.yml` for `peter-evans/close-issue` GitHub Action.
+
+[`knowledge-base/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/peter-evans/close-issue/action-security.yml)
+
+```
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to close issues
+```
+
+When a GitHub workflow uses `peter-evans/close-issue` GitHub Action, and it uses the knowledge base to set permissions automatically, this is the output. The `permissions` key is added to the job, and the reason is added in a comment. The reason is taken from the `github-token.permissions.<scope>-reason` value from the knowledge base. 
+
+```
+jobs:
+  closeissue:
+    permissions:
+      issues: write # for peter-evans/close-issue@v1 to close issues
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Close Issue
+      uses: peter-evans/close-issue@v1
+      with:
+       issue-number: 1
+       comment: Auto-closing issue
+```
+
+
+
+
