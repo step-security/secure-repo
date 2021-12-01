@@ -8,9 +8,9 @@ import (
 	"testing"
 )
 
-func TestFixWorkflows(t *testing.T) {
-	const inputDirectory = "./testfiles/joblevelperms/input"
-	const outputDirectory = "./testfiles/joblevelperms/output"
+func TestAddJobLevelPermissions(t *testing.T) {
+	const inputDirectory = "./testfiles/joblevelpermskb/input"
+	const outputDirectory = "./testfiles/joblevelpermskb/output"
 	files, err := ioutil.ReadDir(inputDirectory)
 	if err != nil {
 		log.Fatal(err)
@@ -23,7 +23,7 @@ func TestFixWorkflows(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		fixWorkflowPermsResponse, err := AddJobLevelPermissions(string(input), &mockDynamoDBClient{})
+		fixWorkflowPermsResponse, err := AddJobLevelPermissions(string(input))
 		output := fixWorkflowPermsResponse.FinalOutput
 		jobErrors := fixWorkflowPermsResponse.JobErrors
 

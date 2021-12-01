@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 	"sort"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,33 +34,11 @@ const errorAlreadyHasPermissions = "KnownIssue-5: Jobs that already have permiss
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
 func alreadyHasJobPermissions(job Job) bool {
-	if job.Permissions.Actions != "" ||
-		job.Permissions.Checks != "" ||
-		job.Permissions.Contents != "" ||
-		job.Permissions.Deployments != "" ||
-		job.Permissions.Issues != "" ||
-		job.Permissions.Packages != "" ||
-		job.Permissions.PullRequests != "" ||
-		job.Permissions.Statuses != "" {
-		return true
-	}
-
-	return false
+	return job.Permissions.IsSet
 }
 
 func alreadyHasWorkflowPermissions(workflow Workflow) bool {
-	if workflow.Permissions.Actions != "" ||
-		workflow.Permissions.Checks != "" ||
-		workflow.Permissions.Contents != "" ||
-		workflow.Permissions.Deployments != "" ||
-		workflow.Permissions.Issues != "" ||
-		workflow.Permissions.Packages != "" ||
-		workflow.Permissions.PullRequests != "" ||
-		workflow.Permissions.Statuses != "" {
-		return true
-	}
-
-	return false
+	return workflow.Permissions.IsSet
 }
 
 func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
@@ -117,20 +97,14 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 	return strings.Join(output, "\n"), nil
 }
 
-func AddJobLevelPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkflowPermsReponse, error) {
+func AddJobLevelPermissions(inputYaml string) (*FixWorkflowPermsReponse, error) {
 
 	workflow := Workflow{}
 	errors := make(map[string][]string)
 	//fixes := make(map[string]string)
 	fixWorkflowPermsReponse := &FixWorkflowPermsReponse{}
 
-	actionPermissions, err := getActionPermissions(svc)
-
-	if err != nil {
-		return nil, fmt.Errorf("unable to read action permissions, %v", err)
-	}
-
-	err = yaml.Unmarshal([]byte(inputYaml), &workflow)
+	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
 		fixWorkflowPermsReponse.HasErrors = true
 		fixWorkflowPermsReponse.IncorrectYaml = true
@@ -157,7 +131,7 @@ func AddJobLevelPermissions(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*F
 			continue
 		}
 
-		jobState := &JobState{ActionPermissions: actionPermissions}
+		jobState := &JobState{}
 		perms, err := jobState.getPermissions(job.Steps)
 
 		if err != nil {
@@ -206,6 +180,29 @@ func isGitHubToken(literal string) bool {
 	return false
 }
 
+func getActionKnowledgeBase(action string) (*ActionMetadata, error) {
+	kbFolder := os.Getenv("KBFolder")
+
+	if kbFolder == "" {
+		kbFolder = "knowledge-base"
+	}
+
+	input, err := ioutil.ReadFile(path.Join(kbFolder, action, "action-security.yml"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	actionMetadata := ActionMetadata{}
+
+	err = yaml.Unmarshal([]byte(input), &actionMetadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return &actionMetadata, nil
+}
+
 func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error) {
 	permissions := []string{}
 	atIndex := strings.Index(action.Uses, "@")
@@ -216,117 +213,31 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 
 	actionKey := action.Uses[0:atIndex]
 
-	actionKey = strings.ReplaceAll(actionKey, "/", "-")
+	actionMetadata, err := getActionKnowledgeBase(actionKey)
 
-	actionKey = strings.ToLower(actionKey)
-
-	actionPermission, isFound := jobState.ActionPermissions.Actions[actionKey]
-
-	if isFound {
-
-		// See elgohr-publish-docker-github-action.yml
-		if actionKey == "elgohr-publish-docker-github-action" && action.With["registry"] != "" && strings.Contains(action.With["registry"], ".pkg.github.com") {
-			if action.With["password"] != "" && strings.Contains(action.With["password"], "secrets.GITHUB_TOKEN") {
-				permissions = append(permissions, "packages: write")
-			}
-		}
-
-		if actionKey == "js-devtools-npm-publish" && action.With["registry"] != "" && strings.Contains(action.With["registry"], ".pkg.github.com") {
-			if action.With["token"] != "" && strings.Contains(action.With["token"], "secrets.GITHUB_TOKEN") {
-				permissions = append(permissions, "packages: write")
-			}
-		}
-
-		if (actionKey == "brandedoutcast-publish-nuget" || actionKey == "rohith-publish-nuget") && action.With["NUGET_SOURCE"] != "" && strings.Contains(action.With["NUGET_SOURCE"], ".pkg.github.com") {
-			if action.With["NUGET_KEY"] != "" && strings.Contains(action.With["NUGET_KEY"], "secrets.GITHUB_TOKEN") {
-				permissions = append(permissions, "packages: write")
-			}
-		}
-
-		if actionKey == "borales-actions-yarn" && action.With["registry-url"] != "" && strings.Contains(action.With["registry-url"], ".pkg.github.com") {
-			if action.With["auth-token"] != "" && strings.Contains(action.With["auth-token"], "secrets.GITHUB_TOKEN") {
-				permissions = append(permissions, "packages: write")
-			}
-		}
-
-		// See docker-login-action.yml
-		if actionKey == "docker-login-action" || actionKey == "azure-docker-login" {
-			if action.With["password"] != "" && strings.Contains(action.With["password"], "secrets.GITHUB_TOKEN") {
-				permissions = append(permissions, "packages: write")
-			}
-		}
-
-		// Set registry info. This is for setup-node action. See action-setupnode-install-gpr.yml
-		if actionKey == "actions-setup-node" && action.With["registry-url"] != "" && strings.Contains(action.With["registry-url"], ".pkg.github.com") {
-			jobState.CurrentNpmPackageRegistry = action.With["registry-url"]
-		}
-
-		// Set registry info. This is for setup-dotnet action. See action-setupdotnet-publish-gpr.yml
-		if actionKey == "actions-setup-dotnet" {
-			if action.With["source-url"] != "" {
-				jobState.CurrentNuGetSourceURL = action.With["source-url"]
-			}
-			if action.Env["NUGET_AUTH_TOKEN"] != "" {
-				jobState.CurrentNugetAuthToken = action.Env["NUGET_AUTH_TOKEN"]
-			}
-		}
-
-		// If action has a default token, and the token was set explicitly, but not to the Github token, no permissions are needed
-		// See action-with-nondefault-token.yml as an example
-		if actionPermission.DefaultToken != "" {
-			if action.With[actionPermission.DefaultToken] != "" && !isGitHubToken(action.With[actionPermission.DefaultToken]) {
-				return permissions, nil
-			}
-		}
-
-		// If action expects token in env variable, and the token was not set, or not to the Github token, no permissions are needed
-		// See action-envkey-non-ghtoken.yml as an example
-		if actionPermission.EnvKey != "" {
-			if action.Env[actionPermission.EnvKey] == "" || !isGitHubToken(action.Env[actionPermission.EnvKey]) {
-				return permissions, nil
-			}
-		}
-
-		// These are in ascending order, contents, then issues
-		if actionPermission.Permissions.Actions != "" {
-			permissions = append(permissions, "actions: "+actionPermission.Permissions.Actions)
-		}
-
-		if actionPermission.Permissions.Checks != "" {
-			permissions = append(permissions, "checks: "+actionPermission.Permissions.Checks)
-		}
-
-		if actionPermission.Permissions.Contents != "" {
-			permissions = append(permissions, "contents: "+actionPermission.Permissions.Contents)
-		}
-
-		if actionPermission.Permissions.Deployments != "" {
-			permissions = append(permissions, "deployments: "+actionPermission.Permissions.Deployments)
-		}
-
-		if actionPermission.Permissions.Issues != "" {
-			permissions = append(permissions, "issues: "+actionPermission.Permissions.Issues)
-		}
-
-		if actionPermission.Permissions.Packages != "" {
-			permissions = append(permissions, "packages: "+actionPermission.Permissions.Packages)
-		}
-
-		if actionPermission.Permissions.PullRequests != "" {
-			permissions = append(permissions, "pull-requests: "+actionPermission.Permissions.PullRequests)
-		}
-
-		if actionPermission.Permissions.SecurityEvents != "" {
-			permissions = append(permissions, "security-events: "+actionPermission.Permissions.SecurityEvents)
-		}
-
-		if actionPermission.Permissions.Statuses != "" {
-			permissions = append(permissions, "statuses: "+actionPermission.Permissions.Statuses)
-		}
-
-	} else {
+	if err != nil {
 		jobState.MissingActions = append(jobState.MissingActions, action.Uses)
 		return nil, fmt.Errorf(errorMissingAction, action.Uses)
+	}
+
+	// If action has a default token, and the token was set explicitly, but not to the Github token, no permissions are needed
+	// See action-with-nondefault-token.yml as an example
+	if actionMetadata.GitHubToken.ActionInput.IsDefault {
+		if action.With[actionMetadata.GitHubToken.ActionInput.Input] != "" && !isGitHubToken(action.With[actionMetadata.GitHubToken.ActionInput.Input]) {
+			return permissions, nil
+		}
+	}
+
+	// If action expects token in env variable, and the token was not set, or not to the Github token, no permissions are needed
+	if actionMetadata.GitHubToken.EnvironmentVariableName != "" {
+		if action.Env[actionMetadata.GitHubToken.EnvironmentVariableName] == "" || !isGitHubToken(action.Env[actionMetadata.GitHubToken.EnvironmentVariableName]) {
+			return permissions, nil
+		}
+	}
+
+	// TODO: Fix the order
+	for scope, value := range actionMetadata.GitHubToken.Permissions.Scopes {
+		permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
 	}
 
 	return permissions, nil

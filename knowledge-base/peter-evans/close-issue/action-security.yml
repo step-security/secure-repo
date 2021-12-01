@@ -1,0 +1,12 @@
+name: 'Close Issue'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to close issues
+outbound-endpoints:
+  api.github.com:
+    port: 443
+    reason: to call GitHub Issues API 

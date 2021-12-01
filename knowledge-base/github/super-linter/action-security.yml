@@ -1,0 +1,10 @@
+name: 'Super-Linter'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    statuses: write
+    statuses-reason: to mark status of each linter run
+outbound-endpoints:
+  api.github.com:
+    port: 443
+    reason: to call GitHub Status API

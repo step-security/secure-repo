@@ -18,7 +18,7 @@ func AddAction(inputYaml, action string) (string, error) {
 	for jobName, job := range workflow.Jobs {
 		alreadyPresent := false
 		for _, step := range job.Steps {
-			if len(step.Uses) > 0 && step.Uses == action {
+			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, HardenRunnerActionPath) {
 				alreadyPresent = true
 				break
 			}
@@ -63,7 +63,8 @@ func addAction(inputYaml, jobName, action string) (string, error) {
 		spaces += " "
 	}
 
-	output = append(output, spaces+fmt.Sprintf("- uses: %s", action))
+	output = append(output, spaces+fmt.Sprintf("- name: %s", HardenRunnerActionName))
+	output = append(output, spaces+fmt.Sprintf("  uses: %s", action))
 
 	for i := jobNode.Line - 1; i < len(inputLines); i++ {
 		output = append(output, inputLines[i])
