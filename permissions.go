@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"sort"
 	"strings"
@@ -180,7 +181,13 @@ func isGitHubToken(literal string) bool {
 }
 
 func getActionKnowledgeBase(action string) (*ActionMetadata, error) {
-	input, err := ioutil.ReadFile(path.Join("knowledge-base", action, "action-security.yml"))
+	kbFolder := os.Getenv("KBFolder")
+
+	if kbFolder == "" {
+		kbFolder = "knowledge-base"
+	}
+
+	input, err := ioutil.ReadFile(path.Join(kbFolder, action, "action-security.yml"))
 
 	if err != nil {
 		return nil, err

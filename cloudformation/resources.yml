@@ -43,7 +43,8 @@ Resources:
         Timeout: 180
         Environment:
           Variables:
-            PAT: !Ref PAT        
+            PAT: !Ref PAT
+            KBFolder: "/knowledge-base"        
       
     ApiGatewayV2Api:
         Type: "AWS::ApiGatewayV2::Api"
