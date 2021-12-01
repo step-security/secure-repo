@@ -29,7 +29,7 @@ type JobError struct {
 const errorSecretInRunStep = "KnownIssue-1: Jobs with run steps that use token are not supported"
 const errorSecretInRunStepEnvVariable = "KnownIssue-2: Jobs with run steps that use token in environment variable are not supported"
 const errorLocalAction = "KnownIssue-3: Action %s is a local action. Local actions are not supported"
-const errorMissingAction = "KnownIssue-4: Jobs with action %s are not supported"
+const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base"
 const errorAlreadyHasPermissions = "KnownIssue-5: Jobs that already have permissions are not modified"
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
