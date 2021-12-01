@@ -1,0 +1,16 @@
+name: 'GitHub action to automatically rebase PRs'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to push code to rebase
+    pull-requests: read
+    pull-requests-reason: to get info about PR
+outbound-endpoints:
+  api.github.com:
+    port: 443
+    reason: to call GitHub Pull Request API
+  github.com:
+    port: 443
+    reason: to push code to rebase
+harden-runner-link: https://app.stepsecurity.io/github/varunsh-coder/actions-playground/actions/runs/1526918154

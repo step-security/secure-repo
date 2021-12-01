@@ -1,0 +1,18 @@
+name: 'Create Pull Request'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to create branch
+    pull-requests: write
+    pull-requests-reason: to create a PR
+outbound-endpoints:
+  api.github.com:
+    port: 443
+    reason: to call GitHub Pull Request API
+  github.com:
+    port: 443
+    reason: to push PR branch
+harden-runner-link: https://app.stepsecurity.io/github/varunsh-coder/actions-playground/actions/runs/1527060180
