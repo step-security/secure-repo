@@ -9,8 +9,8 @@ permissions: read-all
 jobs:
   lint:
     permissions:
-      contents: read
-      statuses: write
+      contents: read # for actions/checkout to fetch code
+      statuses: write # for github/super-linter to mark status of each linter run
     runs-on: ubuntu-latest  
     steps:
       - name: Harden Runner

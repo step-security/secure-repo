@@ -23,8 +23,8 @@ on:
 jobs:
   build:
     permissions:
-      contents: read # for actions/checkout@v2 to fetch code
-      statuses: write # for github/super-linter@v4 to mark status of each linter run
+      contents: read # for actions/checkout to fetch code
+      statuses: write # for github/super-linter to mark status of each linter run
     name: Lint Code Base
     # Set the agent to run on
     runs-on: ubuntu-latest
