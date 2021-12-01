@@ -11,7 +11,7 @@ const (
 )
 
 func SecureWorkflow(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkflowPermsReponse, error) {
-	fixResponse, err := AddJobLevelPermissions(inputYaml, svc)
+	fixResponse, err := AddJobLevelPermissions(inputYaml)
 	if err != nil {
 		return nil, err
 	} else {
