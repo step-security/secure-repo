@@ -399,22 +399,32 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 func removeRedundantPermisions(permissions []string) []string {
 
 	permissions = removeDuplicates(permissions)
+	/*
+	 permissions would be like
+	 contents: read # for actions/checkout to fetch code
+	 pull-requests: write # for action/something to create PR
+	*/
 	var newPermissions []string
 	// if there is read and write of same permissions, e.g contents: read and contents: write, then contents: read should be removed
+	// key will be the scope, e.g. contents or pull-requests
+	// value will be the value in permissions
 	permMap := make(map[string]string)
 
 	for _, perm := range permissions {
 		permSplit := strings.Split(perm, ":")
+		scope := permSplit[0]           // e.g. contents
+		permWithComment := permSplit[1] // e.g. read # for actions/checkout to fetch code
 
-		permInMap, found := permMap[permSplit[0]]
+		permInMap, found := permMap[scope]
 
 		if found {
-			if permInMap == " read" {
-				permMap[permSplit[0]] = permSplit[1] // this should be a write
+			scopeValue := strings.Trim(strings.Split(permInMap, "#")[0], " ") // e.g. read
+			if scopeValue == "read" {
+				permMap[scope] = permWithComment
 			}
 
 		} else {
-			permMap[permSplit[0]] = permSplit[1]
+			permMap[scope] = permWithComment
 		}
 	}
 
