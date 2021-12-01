@@ -1,0 +1,19 @@
+name: 'Run analysis of OSSF Scorecard'
+github-token:
+  action-input:
+    input: repo_token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to get branch protection status
+outbound-endpoints:
+  api.github.com:
+    port: 443
+    reason: to call GitHub API # TODO: Confirm specific APIs
+  bestpractices.coreinfrastructure.org:
+    port: 443
+    reason:  # TODO: Confirm reason
+  api.osv.dev:
+    port: 443
+    reason:  # TODO: Confirm reason
+harden-action-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1523253753
