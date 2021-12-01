@@ -1,0 +1,5 @@
+name: 'Harden Runner'
+outbound-endpoints:
+  agent.api.stepsecurity.io:
+    port: 443
+    reason: to send runtime security metadata
