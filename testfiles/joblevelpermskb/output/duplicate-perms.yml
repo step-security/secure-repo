@@ -1,0 +1,25 @@
+name: create pr
+
+on:      
+ workflow_dispatch:
+
+jobs:
+  create-pr:
+    permissions:
+      contents: write # for peter-evans/create-pull-request to create branch
+      pull-requests: write # for peter-evans/create-pull-request to create a PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@main
+      - uses: actions/checkout@v2
+      - name: Create commits
+        run: |
+          git config user.name 'Varun'
+          git config user.email 'varunsh-coder@users.noreply.github.com'
+          date +%s > report.txt
+          git add .
+          git commit -m "Add untracked file during workflow"
+      - name: Uncommitted change
+        run: date +%s > report.txt
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
