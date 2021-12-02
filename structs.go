@@ -70,7 +70,7 @@ type ActionScopePermissions struct {
 type ActionScopePermission struct {
 	Permission string
 	Reason     string
-	Condition  string
+	Expression string
 }
 
 type ActionPermissions struct {
@@ -92,7 +92,7 @@ func (p *ActionScopePermissions) UnmarshalYAML(unmarshal func(interface{}) error
 
 	scopeMap := make(map[string]string)
 	reasonMap := make(map[string]string)
-	conditionMap := make(map[string]string)
+	ExpressionMap := make(map[string]string)
 	actionScopePermissionMap := make(map[string]ActionScopePermission)
 
 	for k, v := range mstr {
@@ -101,7 +101,7 @@ func (p *ActionScopePermissions) UnmarshalYAML(unmarshal func(interface{}) error
 			reasonMap[scope] = v
 		} else if strings.HasSuffix(k, "-if") {
 			scope := strings.Split(k, "-if")[0]
-			conditionMap[scope] = v
+			ExpressionMap[scope] = v
 		} else {
 			scopeMap[k] = v
 		}
@@ -109,7 +109,8 @@ func (p *ActionScopePermissions) UnmarshalYAML(unmarshal func(interface{}) error
 
 	for k, v := range scopeMap {
 		reason := reasonMap[k]
-		actionScopePermissionMap[k] = ActionScopePermission{Permission: v, Reason: reason}
+		expression := ExpressionMap[k]
+		actionScopePermissionMap[k] = ActionScopePermission{Permission: v, Reason: reason, Expression: expression}
 	}
 
 	p.Scopes = actionScopePermissionMap
