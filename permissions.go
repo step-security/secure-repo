@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/PaesslerAG/gval"
+	"github.com/generikvault/gvalstrings"
 	"gopkg.in/yaml.v3"
 )
 
@@ -237,10 +239,40 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 
 	// TODO: Fix the order
 	for scope, value := range actionMetadata.GitHubToken.Permissions.Scopes {
-		permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
+		if len(value.Expression) == 0 || evaluateExpression(value.Expression, action) {
+			permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
+		}
 	}
 
 	return permissions, nil
+}
+
+func evaluateExpression(expression string, action Step) bool {
+	vars := make(map[string]interface{})
+	vars["with"] = action.With
+
+	expression = strings.ReplaceAll(expression, "${{", "")
+	expression = strings.ReplaceAll(expression, "}}", "")
+	expression = strings.Trim(expression, " ")
+
+	value, err := gval.Evaluate(expression,
+		vars,
+		gvalstrings.SingleQuoted(),
+		gval.Function("contains", func(args ...interface{}) (interface{}, error) {
+			switch v := args[0].(type) {
+			case With:
+				inputMap := v
+				key := args[1].(string)
+				_, found := inputMap[key]
+				return (bool)(found), nil
+			}
+			return nil, fmt.Errorf("type not supported %T", args[0])
+		}))
+	if err != nil {
+		return false
+	}
+
+	return value.(bool)
 }
 
 type JobState struct {
