@@ -1,0 +1,14 @@
+name: '"Configure AWS Credentials" Action For GitHub Actions'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions: 
+    id-token: write
+    id-token-reason: to get credentials from GitHub OIDC provider
+    id-token-if: ${{ contains(with, 'role-to-assume') && !contains(with, 'aws-access-key-id') && !contains(with, 'web-identity-token-file')  }}
+outbound-endpoints:
+  sts.*.amazonaws.com:
+    port: 443
+    reason: to validate or fetch AWS credentials
+harden-runner-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1523234844
