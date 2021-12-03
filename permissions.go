@@ -175,7 +175,11 @@ func AddJobLevelPermissions(inputYaml string) (*FixWorkflowPermsReponse, error) 
 
 func isGitHubToken(literal string) bool {
 	literal = strings.ToLower(literal)
-	if strings.Contains(literal, "secrets.github_token") || strings.Contains(literal, "github.token") {
+	literal = strings.ReplaceAll(literal, "${{", "")
+	literal = strings.ReplaceAll(literal, "}}", "")
+	literal = strings.Trim(literal, " ")
+
+	if literal == "secrets.github_token" || literal == "github.token" {
 		return true
 	}
 
@@ -223,9 +227,15 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 	}
 
 	// If action has a default token, and the token was set explicitly, but not to the Github token, no permissions are needed
-	// See action-with-nondefault-token.yml as an example
 	if actionMetadata.GitHubToken.ActionInput.IsDefault {
 		if action.With[actionMetadata.GitHubToken.ActionInput.Input] != "" && !isGitHubToken(action.With[actionMetadata.GitHubToken.ActionInput.Input]) {
+			return permissions, nil
+		}
+	}
+
+	// If action has does not have a default token, and the token was not set explicitly, no permissions are needed
+	if actionMetadata.GitHubToken.ActionInput.Input != "" && !actionMetadata.GitHubToken.ActionInput.IsDefault {
+		if action.With[actionMetadata.GitHubToken.ActionInput.Input] == "" || !isGitHubToken(action.With[actionMetadata.GitHubToken.ActionInput.Input]) {
 			return permissions, nil
 		}
 	}
