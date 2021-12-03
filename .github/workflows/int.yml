@@ -11,16 +11,18 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@dea7bd51ad9ea3da09c16c60ecd5b9de22cb8e92
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5
         with:
           fetch-depth: 0
       - name: Set up Go 
-        uses: actions/setup-go@v2.1.3
+        uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
         with:
           go-version: 1.15
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_INT }}  
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_INT }}
@@ -29,7 +31,7 @@ jobs:
       - run: go test
       
       - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4
         with:
           name: secure-workflow-api-ecr
           template: cloudformation/ecr.yml
@@ -38,7 +40,7 @@ jobs:
       
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@aaf69d68aa3fb14c1d5a6be9ac61fe15b48453a2
 
       - name: Build, tag, and push image to Amazon ECR
         env:
@@ -50,7 +52,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       
       - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4
         with:
           name: secure-workflow-api
           template: cloudformation/resources.yml
