@@ -3,17 +3,27 @@ github-token:
   action-input:
     input: repo_token
     is-default: false
-  permissions:
+  permissions: 
     contents: read
-    contents-reason: to get branch protection status
+    contents-reason: to list releases
+    actions: read
+    actions-reason: to check for publishing workflows
+    checks: read
+    checks-reason: to check for SAST tool in check runs
+    statuses: read
+    statuses-reason: to check for CI tests in PRs
+    issues: read
+    issues-reason: to check if repo is maintained
+    pull-requests: read
+    pull-requests-reason: to check if PRs are reviewed
 outbound-endpoints:
   api.github.com:
     port: 443
-    reason: to call GitHub API # TODO: Confirm specific APIs
+    reason: to call GitHub APIs
   bestpractices.coreinfrastructure.org:
     port: 443
-    reason:  # TODO: Confirm reason
+    reason:  to check CII best practices badge level
   api.osv.dev:
     port: 443
-    reason:  # TODO: Confirm reason
+    reason:  to check vulnerabilities in the OSV database
 harden-action-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1523253753
