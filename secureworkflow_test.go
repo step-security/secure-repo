@@ -63,7 +63,17 @@ func TestSecureWorkflow(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, err := SecureWorkflow(string(input), &mockDynamoDBClient{})
+		queryParams := make(map[string]string)
+		switch f.Name() {
+		case "nopin.yml":
+			queryParams["pinActions"] = "false"
+		case "nohardenrunner.yml":
+			queryParams["addHardenRunner"] = "false"
+		case "noperms.yml":
+			queryParams["addPermissions"] = "false"
+		}
+
+		output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
 
 		if err != nil {
 			t.Errorf("Error not expected")

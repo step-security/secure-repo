@@ -10,24 +10,47 @@ const (
 	HardenRunnerActionName           = "Harden Runner"
 )
 
-func SecureWorkflow(inputYaml string, svc dynamodbiface.DynamoDBAPI) (*FixWorkflowPermsReponse, error) {
-	fixResponse, err := AddJobLevelPermissions(inputYaml)
-	if err != nil {
-		return nil, err
-	} else {
+func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*SecureWorkflowReponse, error) {
+	pinActions := true
+	addHardenRunner := true
+	addPermissions := true
 
-		if len(fixResponse.MissingActions) > 0 {
-			StoreMissingActions(fixResponse.MissingActions, svc)
-		}
-
-		fixResponse.FinalOutput, _ = AddAction(fixResponse.FinalOutput, HardenRunnerActionPathWithBranch)
-
-		fixResponse.FinalOutput, _ = PinActions(fixResponse.FinalOutput)
-
-		if !fixResponse.HasErrors {
-			fixResponse.FinalOutput, _ = AddWorkflowLevelPermissions(fixResponse.FinalOutput)
-		}
-
-		return fixResponse, nil
+	if queryStringParams["pinActions"] == "false" {
+		pinActions = false
 	}
+
+	if queryStringParams["addHardenRunner"] == "false" {
+		addHardenRunner = false
+	}
+
+	if queryStringParams["addPermissions"] == "false" {
+		addPermissions = false
+	}
+
+	secureWorkflowReponse := &SecureWorkflowReponse{FinalOutput: inputYaml}
+	var err error
+	if addPermissions {
+		secureWorkflowReponse, err = AddJobLevelPermissions(secureWorkflowReponse.FinalOutput)
+		if err != nil {
+			return nil, err
+		} else {
+			if !secureWorkflowReponse.HasErrors {
+				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput)
+			}
+			if len(secureWorkflowReponse.MissingActions) > 0 {
+				StoreMissingActions(secureWorkflowReponse.MissingActions, svc)
+			}
+		}
+	}
+
+	if addHardenRunner {
+		secureWorkflowReponse.FinalOutput, _ = AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithBranch)
+	}
+
+	if pinActions {
+		secureWorkflowReponse.FinalOutput, _ = PinActions(secureWorkflowReponse.FinalOutput)
+	}
+
+	return secureWorkflowReponse, nil
+
 }
