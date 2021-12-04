@@ -5,112 +5,112 @@ github-token:
     contents: read
     contents-reason: to access matching refs GitHub API, clone the repos, and get release assets.
 outbound-endpoints:
-  api.github.com:443:
+  api.github.com:
     port: 443
-    reason: to call GitHub API
-  api.launchpad.net:443:
+    reason: to call GitHub API to get matching refs, releases and tags.
+  api.launchpad.net:
     port: 443
-    reason: to call launchpad API
-  archive.ubuntu.com:443:
+    reason: to call launchpad API to get PPA fingerprint
+  archive.ubuntu.com:
     port: 443
     reason: to download packages from ubuntu archives
-  archive.ubuntu.com:80:
+  archive.ubuntu.com:
     port: 80
     reason: to download packages from ubuntu archives
-  azure.archive.ubuntu.com:443:
+  azure.archive.ubuntu.com:
     port: 443
     reason: to download packages from azure mirror of ubuntu archives
-  azure.archive.ubuntu.com:80:
+  azure.archive.ubuntu.com:
     port: 80
     reason: to download packages from azure mirror of ubuntu archives
-  bazel.build:443:
+  bazel.build:
     port: 80
     reason: to download bazel GPG key
-  blackfire.io:443:
+  blackfire.io:
     port: 443
     reason: to set-up Blackfire
   cdn.jsdelivr.net:
     port: 443
     reason: fallback CDN for scripts
-  codeload.github.com:443:
+  codeload.github.com:
     port: 443
     reason: to call GitHub release assets
-  deployer.org:443:
+  deployer.org:
     port: 443
     reason: to download Deployer phar
-  downloads.ioncube.com:443:
+  downloads.ioncube.com:
     port: 443
     reason: to download ionCube extension
-  download.oracle.com:443:
+  download.oracle.com:
     port: 443
     reason: to download Oracle instantclient
-  get.Blackfire.io:443:
+  get.Blackfire.io:
     port: 443
     reason: to set-up Blackfire
-  getcomposer.org:443:
+  getcomposer.org:
     port: 443
     reason: fallback for Composer phars
   git.remirepo.net:
     port: 443
     reason: to download patches
-  github-releases.githubusercontent.com:443:
+  github-releases.githubusercontent.com:
     port: 443
     reason: to get GitHub release information
-  github.com:443:
+  github.com:
     port: 443
     reason: to download scripts from GitHub
-  keyserver.ubuntu.com:443:
+  keyserver.ubuntu.com:
     port: 443
     reason: to fetch PPA keys
-  objects.githubusercontent.com:443:
+  objects.githubusercontent.com:
     port: 443
     reason: to fetch git objects
-  packages.Blackfire.io:443:
+  packages.Blackfire.io:
     port: 443
     reason: to set-up Blackfire
-  packages.Blackfire.io:80:
+  packages.Blackfire.io:
     port: 80
     reason: to set-up Blackfire
-  packages.sury.org:443:
+  packages.sury.org:
     port: 443
     reason: to get PHP packages on Debian
-  packages.sury.org:80:
+  packages.sury.org:
     port: 80
     reason: to get PHP packages on Debian
-  pear.php.net:443:
+  pear.php.net:
     port: 443
     reason: to set-up PHP extensions
-  pear.php.net:80:
+  pear.php.net:
     port: 80
     reason: to set-up PHP extensions
-  pecl.php.net:443:
+  pecl.php.net:
     port: 443
     reason: to set-up PHP extensions
-  pecl.php.net:80:
+  pecl.php.net:
     port: 80
     reason: to set-up PHP extensions
-  phar.io:443:
+  phar.io:
     port: 443
     reason: to download Phive phar
-  phar.phpunit.de:443:
+  phar.phpunit.de:
     port: 443
     reason: to download PHPUnit and related phars
-  ppa.launchpad.net:80:
+  ppa.launchpad.net:
     port: 80
     reason: to get PPA fingerprint
-  raw.githubusercontent.com:443:
+  raw.githubusercontent.com:
     port: 443
     reason: to download raw files on GitHub
-  repo.packagist.org:443:
+  repo.packagist.org:
     port: 443
     reason: to get packages manifests using Composer
-  setup-php.com:443:
+  setup-php.com:
     port: 443
     reason: to set-up PPA mirrors, scripts and patches
-  storage.googleapis.com:443:
+  storage.googleapis.com:
     port: 443
     reason: to set-up Bazel
-  www.phing.info:443:
+  www.phing.info:
     port: 443
     reason: to download phing phar
 harden-runner-link: https://app.stepsecurity.io/github/shivammathur/test-setup-php/actions/runs/1539115993

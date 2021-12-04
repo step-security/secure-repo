@@ -1,0 +1,21 @@
+name: 'cache-extensions'
+outbound-endpoints:
+  objects.githubusercontent.com:
+    port: 443
+    reason: to fetch git object
+  pipelines.actions.githubusercontent.com:
+    port: 443
+    reason: to restore cached files
+  ppa.launchpad.net:
+    port: 80
+    reason: to get package files from launchpad PPA
+  raw.githubusercontent.com:
+    port: 443
+    reason: to get PHP API version from php/php-src repo
+  vstsmms.actions.githubusercontent.com:
+    port: 443
+    reason: to cache files    
+  *.blob.core.windows.net:
+    port: 443
+    reason: to restore cached files
+harden-runner-link: https://app.stepsecurity.io/github/shivammathur/test-setup-php/actions/runs/1539305900
