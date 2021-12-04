@@ -4,13 +4,13 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9
-      - uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e
+      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1
+      - uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e # v1
         with:
           node-version: 10
       - run: npm install
       - run: npm test
-      - uses: JS-DevTools/npm-publish@22595ff8c4d0d9f53cef0656fbb90fbe06ee885c
+      - uses: JS-DevTools/npm-publish@22595ff8c4d0d9f53cef0656fbb90fbe06ee885c # v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           registry: https://npm.pkg.github.com
