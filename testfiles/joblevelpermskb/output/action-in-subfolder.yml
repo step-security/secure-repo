@@ -1,0 +1,47 @@
+name: Scorecard analysis workflow
+on:
+  push:
+    # Only the default branch is supported.
+    branches: [main]
+  pull_request:
+    # All branches are supported.
+    branches: [main]
+
+jobs:
+  analysis:
+    permissions:
+      actions: read # for ossf/scorecard-actions/analyze to check for publishing workflows
+      checks: read # for ossf/scorecard-actions/analyze to check for SAST tool in check runs
+      contents: read # for ossf/scorecard-actions/analyze to list releases
+      issues: read # for ossf/scorecard-actions/analyze to check if repo is maintained
+      pull-requests: read # for ossf/scorecard-actions/analyze to check if PRs are reviewed
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      statuses: read # for ossf/scorecard-actions/analyze to check for CI tests in PRs
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@917f7d59f22e82a5ddcaef409923426fd7aa6327
+      - name: "Checkout code"
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
+
+      - name: "Run analysis"
+        uses: ossf/scorecard-actions/analyze@7997b9913318433530164e97c418f0716ce9ab52
+        with:
+          policy_file: .github/scorecard-policy.yml
+          results_file: results.sarif
+          results_format: sarif
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # https://docs.github.com/en/actions/advanced-guides/storing-workflow-data-as-artifacts
+      # Optional.
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@b586475cdf29b524abab101a8ddb5efa9a225759
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: "Upload SARIF results"
+        uses: github/codeql-action/upload-sarif@e095058bfa09de8070f94e98f5dc059531bc6235
+        with:
+          sarif_file: results.sarif

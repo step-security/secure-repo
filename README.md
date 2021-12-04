@@ -5,9 +5,8 @@
 # Secure Workflows 
 
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
-[![Twitter handle][]][Twitter badge]
 
-Secure Workflows is an API to secure GitHub Actions Workflow files. 
+Secure Workflows is an open-source API to secure GitHub Actions Workflow files. 
 
 The API takes in a GitHub Actions workflow file as an input and returns a transformed workflow file with the following changes:
 1. Minimum `GITHUB_TOKEN` permissions are set for each job
@@ -16,7 +15,7 @@ The API takes in a GitHub Actions workflow file as an input and returns a transf
 
 ## GitHub Actions Security Knowledge Base
 
-To calculate minimum token permissions for a given workflow, and to set allowed endpoints for workflows, a [Knowledge Base of GitHub Actions](https://github.com/step-security/secure-workflows/tree/main/knowledge-base) is maintained. The knowledge base has information about what permissions a GitHub Action needs when using the `GITHUB_TOKEN` and what outbound calls the GitHub Action is expected to make. 
+To calculate minimum token permissions for a given workflow, and to set allowed endpoints for workflows, a [Knowledge Base of GitHub Actions](https://github.com/step-security/secure-workflows/tree/main/knowledge-base) has been setup. The knowledge base has information about what permissions a GitHub Action needs when using the `GITHUB_TOKEN` and what outbound calls the GitHub Action is expected to make. 
 
 The knowledge base enables you to:
 1. Automatically calculate minimum token permissions for the `GITHUB_TOKEN` for your workflows. 
@@ -28,10 +27,10 @@ If you are the owner of a GitHub Action, please [contribute to the knowledge bas
 
 ## Try Secure Workflows
 
-To try Secure workflows, visit https://app.stepsecurity.io/secureworkflow
+To try Secure workflows, visit https://app.stepsecurity.io/
 
 <p align="left">
-  <img src="https://step-security-images.s3.us-west-2.amazonaws.com/secureworkflow.png" alt="Secure workflow screenshot" >
+  <img src="https://step-security-images.s3.us-west-2.amazonaws.com/secureworkflownew.png" alt="Secure workflow screenshot" >
 </p>
 
 [Twitter handle]: https://img.shields.io/twitter/follow/step_security.svg?style=social&label=Follow

@@ -1,0 +1,81 @@
+name: my-pipeline
+        
+on:
+  push:
+  
+env:
+  SAM_TEMPLATE: template.yaml
+  TESTING_REGION: us-west-2
+  TESTING_ROLE_ARN: arn:aws:iam::829297927853:role/GH-Roles-Role-CU27R26U69GE
+  TESTING_ARTIFACTS_BUCKET: gh-roles-sambucket-fzgzmb5aghkd
+  AWS_SAM_STACK_NAME: sam-app
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install -r tests/requirements.txt
+      - run: python -m pytest tests/unit -v
+
+  build-and-package:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Build resources
+        run: sam build --template ${SAM_TEMPLATE} --use-container
+
+      - name: Assume the testing pipeline user role
+        uses: aws-actions/configure-aws-credentials@9aaa1daa91b40ce855e24cd45fb39b2ca18aeaf1
+        with:
+          aws-region: ${{ env.TESTING_REGION }}
+          role-to-assume: ${{ env.TESTING_ROLE_ARN }}
+
+      - name: Upload artifacts to testing artifact buckets
+        run: |
+          sam package \
+            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
+            --region ${TESTING_REGION} \
+            --output-template-file packaged-testing.yaml
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: packaged-testing.yaml
+          path: packaged-testing.yaml
+
+  deploy-testing:
+    needs: [build-and-package]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: packaged-testing.yaml
+
+      - name: Assume the testing pipeline user role
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          aws-region: ${{ env.TESTING_REGION }}
+          role-to-assume: ${{ env.TESTING_ROLE_ARN }}
+          role-session-name: testing-deployment
+          role-duration-seconds: 3600
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  integration-test:
+    needs: [deploy-testing]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assume the testing pipeline user role
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          aws-region: ${{ env.TESTING_REGION }}
+          role-to-assume: ${{ env.TESTING_ROLE_ARN }}
+          role-session-name: testing-integration
+          role-duration-seconds: 3600
+      - uses: actions/checkout@v2
+      - run: pip install -r hello_world/requirements.txt
+      - run: pip install -r tests/requirements.txt
+      - run: python -m pytest tests/integration -v

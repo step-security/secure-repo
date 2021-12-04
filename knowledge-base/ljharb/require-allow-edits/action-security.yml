@@ -1,0 +1,12 @@
+name: 'Require "Allow Edits"'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to check 'allow edits' on PR
+outbound-endpoints:
+  api.github.com:
+    port: 443
+    reason: to call GitHub Pull Request API 

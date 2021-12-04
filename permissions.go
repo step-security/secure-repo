@@ -8,10 +8,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/PaesslerAG/gval"
+	"github.com/generikvault/gvalstrings"
 	"gopkg.in/yaml.v3"
 )
 
-type FixWorkflowPermsReponse struct {
+type SecureWorkflowReponse struct {
 	FinalOutput           string
 	IsChanged             bool
 	HasErrors             bool
@@ -97,12 +99,12 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 	return strings.Join(output, "\n"), nil
 }
 
-func AddJobLevelPermissions(inputYaml string) (*FixWorkflowPermsReponse, error) {
+func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 
 	workflow := Workflow{}
 	errors := make(map[string][]string)
 	//fixes := make(map[string]string)
-	fixWorkflowPermsReponse := &FixWorkflowPermsReponse{}
+	fixWorkflowPermsReponse := &SecureWorkflowReponse{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
@@ -173,7 +175,11 @@ func AddJobLevelPermissions(inputYaml string) (*FixWorkflowPermsReponse, error) 
 
 func isGitHubToken(literal string) bool {
 	literal = strings.ToLower(literal)
-	if strings.Contains(literal, "secrets.github_token") || strings.Contains(literal, "github.token") {
+	literal = strings.ReplaceAll(literal, "${{", "")
+	literal = strings.ReplaceAll(literal, "}}", "")
+	literal = strings.Trim(literal, " ")
+
+	if literal == "secrets.github_token" || literal == "github.token" {
 		return true
 	}
 
@@ -221,9 +227,15 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 	}
 
 	// If action has a default token, and the token was set explicitly, but not to the Github token, no permissions are needed
-	// See action-with-nondefault-token.yml as an example
 	if actionMetadata.GitHubToken.ActionInput.IsDefault {
 		if action.With[actionMetadata.GitHubToken.ActionInput.Input] != "" && !isGitHubToken(action.With[actionMetadata.GitHubToken.ActionInput.Input]) {
+			return permissions, nil
+		}
+	}
+
+	// If action has does not have a default token, and the token was not set explicitly, no permissions are needed
+	if actionMetadata.GitHubToken.ActionInput.Input != "" && !actionMetadata.GitHubToken.ActionInput.IsDefault {
+		if action.With[actionMetadata.GitHubToken.ActionInput.Input] == "" || !isGitHubToken(action.With[actionMetadata.GitHubToken.ActionInput.Input]) {
 			return permissions, nil
 		}
 	}
@@ -237,10 +249,40 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 
 	// TODO: Fix the order
 	for scope, value := range actionMetadata.GitHubToken.Permissions.Scopes {
-		permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
+		if len(value.Expression) == 0 || evaluateExpression(value.Expression, action) {
+			permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
+		}
 	}
 
 	return permissions, nil
+}
+
+func evaluateExpression(expression string, action Step) bool {
+	vars := make(map[string]interface{})
+	vars["with"] = action.With
+
+	expression = strings.ReplaceAll(expression, "${{", "")
+	expression = strings.ReplaceAll(expression, "}}", "")
+	expression = strings.Trim(expression, " ")
+
+	value, err := gval.Evaluate(expression,
+		vars,
+		gvalstrings.SingleQuoted(),
+		gval.Function("contains", func(args ...interface{}) (interface{}, error) {
+			switch v := args[0].(type) {
+			case With:
+				inputMap := v
+				key := args[1].(string)
+				_, found := inputMap[key]
+				return (bool)(found), nil
+			}
+			return nil, fmt.Errorf("type not supported %T", args[0])
+		}))
+	if err != nil {
+		return false
+	}
+
+	return value.(bool)
 }
 
 type JobState struct {
@@ -399,22 +441,32 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 func removeRedundantPermisions(permissions []string) []string {
 
 	permissions = removeDuplicates(permissions)
+	/*
+	 permissions would be like
+	 contents: read # for actions/checkout to fetch code
+	 pull-requests: write # for action/something to create PR
+	*/
 	var newPermissions []string
 	// if there is read and write of same permissions, e.g contents: read and contents: write, then contents: read should be removed
+	// key will be the scope, e.g. contents or pull-requests
+	// value will be the value in permissions
 	permMap := make(map[string]string)
 
 	for _, perm := range permissions {
 		permSplit := strings.Split(perm, ":")
+		scope := permSplit[0]           // e.g. contents
+		permWithComment := permSplit[1] // e.g. read # for actions/checkout to fetch code
 
-		permInMap, found := permMap[permSplit[0]]
+		permInMap, found := permMap[scope]
 
 		if found {
-			if permInMap == " read" {
-				permMap[permSplit[0]] = permSplit[1] // this should be a write
+			scopeValue := strings.Trim(strings.Split(permInMap, "#")[0], " ") // e.g. read
+			if scopeValue == "read" {
+				permMap[scope] = permWithComment
 			}
 
 		} else {
-			permMap[permSplit[0]] = permSplit[1]
+			permMap[scope] = permWithComment
 		}
 	}
 
