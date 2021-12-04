@@ -39,30 +39,9 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			return returnValue, nil
 		}
 
-		// PUT actions/{action}/permissions
-		if strings.Contains(httpRequest.RawPath, "/actions") {
+		if strings.Contains(httpRequest.RawPath, "/secure-workflow") {
 
-			pathComponents := strings.Split(httpRequest.RawPath, "/")
-			lastPathComponent := pathComponents[len(pathComponents)-1]
-			switch lastPathComponent {
-			case "actions":
-
-				err := StoreActionPermissions(httpRequest.Body, dynamoDbSvc)
-				if err != nil {
-					response = events.APIGatewayProxyResponse{
-						StatusCode: http.StatusInternalServerError,
-						Body:       err.Error(),
-					}
-				} else {
-					response = events.APIGatewayProxyResponse{
-						StatusCode: http.StatusOK,
-					}
-				}
-
-			}
-		} else if strings.Contains(httpRequest.RawPath, "/secure-workflow") {
-
-			fixResponse, err := SecureWorkflow(httpRequest.Body, dynamoDbSvc)
+			fixResponse, err := SecureWorkflow(httpRequest.QueryStringParameters, httpRequest.Body, dynamoDbSvc)
 
 			if err != nil {
 				response = events.APIGatewayProxyResponse{

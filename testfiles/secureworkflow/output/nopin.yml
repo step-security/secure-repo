@@ -1,0 +1,22 @@
+name: Lint
+on:
+  pull_request:
+    branches: main
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  lint:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      statuses: write # for github/super-linter to mark status of each linter run
+    runs-on: ubuntu-latest  
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@main
+      - uses: actions/checkout@v1
+      - uses: github/super-linter@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISABLE_ERRORS: true

@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type FixWorkflowPermsReponse struct {
+type SecureWorkflowReponse struct {
 	FinalOutput           string
 	IsChanged             bool
 	HasErrors             bool
@@ -99,12 +99,12 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 	return strings.Join(output, "\n"), nil
 }
 
-func AddJobLevelPermissions(inputYaml string) (*FixWorkflowPermsReponse, error) {
+func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 
 	workflow := Workflow{}
 	errors := make(map[string][]string)
 	//fixes := make(map[string]string)
-	fixWorkflowPermsReponse := &FixWorkflowPermsReponse{}
+	fixWorkflowPermsReponse := &SecureWorkflowReponse{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
