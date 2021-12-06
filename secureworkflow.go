@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	HardenRunnerActionPathWithBranch = "step-security/harden-runner@main"
-	HardenRunnerActionPath           = "step-security/harden-runner"
-	HardenRunnerActionName           = "Harden Runner"
+	HardenRunnerActionPathWithTag = "step-security/harden-runner@v1"
+	HardenRunnerActionPath        = "step-security/harden-runner"
+	HardenRunnerActionName        = "Harden Runner"
 )
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*SecureWorkflowReponse, error) {
@@ -44,7 +44,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if addHardenRunner {
-		secureWorkflowReponse.FinalOutput, _ = AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithBranch)
+		secureWorkflowReponse.FinalOutput, _ = AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag)
 	}
 
 	if pinActions {

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest  
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@main
+        uses: step-security/harden-runner@v1
       - uses: actions/checkout@v1
       - uses: github/super-linter@v3
         env:
