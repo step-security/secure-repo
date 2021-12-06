@@ -7,7 +7,7 @@ jobs:
   create-pr:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@main
+      - uses: step-security/harden-runner@v1
       - uses: actions/checkout@v2
       - name: Create commits
         run: |

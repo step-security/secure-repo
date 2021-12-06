@@ -32,11 +32,11 @@ func TestSecureWorkflow(t *testing.T) {
 			}
 		  }`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/git/ref/heads/main",
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/git/ref/tags/v1",
 		httpmock.NewStringResponder(200, `{
-			"ref": "refs/heads/main",
+			"ref": "refs/tags/v1",
 			"node_id": "REF_kwDOGSuXyq9yZWZzL2hlYWRzL21haW4",
-			"url": "https://api.github.com/repos/step-security/harden-runner/git/refs/heads/main",
+			"url": "https://api.github.com/repos/step-security/harden-runner/git/refs/tags/v1",
 			"object": {
 				"sha": "7206db2ec98c5538323a6d70e51f965d55c11c87",
 				"type": "commit",
