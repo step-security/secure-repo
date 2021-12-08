@@ -7,6 +7,6 @@ github-token:
     issues: write
     issues-reason: to close issues
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Issues API 

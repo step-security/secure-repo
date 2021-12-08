@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
 	"sort"
 	"strings"
 
@@ -186,29 +183,6 @@ func isGitHubToken(literal string) bool {
 	return false
 }
 
-func getActionKnowledgeBase(action string) (*ActionMetadata, error) {
-	kbFolder := os.Getenv("KBFolder")
-
-	if kbFolder == "" {
-		kbFolder = "knowledge-base"
-	}
-
-	input, err := ioutil.ReadFile(path.Join(kbFolder, action, "action-security.yml"))
-
-	if err != nil {
-		return nil, err
-	}
-
-	actionMetadata := ActionMetadata{}
-
-	err = yaml.Unmarshal([]byte(input), &actionMetadata)
-	if err != nil {
-		return nil, err
-	}
-
-	return &actionMetadata, nil
-}
-
 func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error) {
 	permissions := []string{}
 	atIndex := strings.Index(action.Uses, "@")
@@ -219,7 +193,7 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 
 	actionKey := action.Uses[0:atIndex]
 
-	actionMetadata, err := getActionKnowledgeBase(actionKey)
+	actionMetadata, err := GetActionKnowledgeBase(actionKey)
 
 	if err != nil {
 		jobState.MissingActions = append(jobState.MissingActions, action.Uses)

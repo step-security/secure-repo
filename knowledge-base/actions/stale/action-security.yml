@@ -9,6 +9,6 @@ github-token:
     pull-requests: write
     pull-requests-reason: to close stale PRs
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Pull Request and Issues API 

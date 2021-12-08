@@ -5,16 +5,16 @@ github-token:
     is-default: true
   permissions: # Used to pull node distributions from go-versions. Metadata permissions is present by default
 outbound-endpoints:
-  storage.googleapis.com:
+  - fqdn: storage.googleapis.com
     port: 443
     reason: to download Go archive
-  golang.org:
+  - fqdn: golang.org
     port: 443
     reason: to confirm version
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to fetch manifest with go versions
-  github.com:
+  - fqdn: github.com
     port: 443
     reason: to download Go archive
 harden-runner-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1523234844

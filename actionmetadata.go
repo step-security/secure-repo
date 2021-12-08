@@ -2,7 +2,12 @@ package main
 
 import (
 	"errors"
+	"io/ioutil"
+	"os"
+	"path"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -48,8 +53,15 @@ type Action struct {
 }
 
 type ActionMetadata struct {
-	Name        string      `yaml:"name"`
-	GitHubToken GitHubToken `yaml:"github-token"`
+	Name             string            `yaml:"name"`
+	GitHubToken      GitHubToken       `yaml:"github-token"`
+	AllowedEndpoints []AllowedEndpoint `yaml:"outbound-endpoints"`
+}
+
+type AllowedEndpoint struct {
+	FQDN   string `yaml:"fqdn"`
+	Port   int    `yaml:"port"`
+	Reason string `yaml:"reason"`
 }
 
 type ActionInput struct {
@@ -138,4 +150,27 @@ func (p *Permissions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	return ErrInvalidValue
+}
+
+func GetActionKnowledgeBase(action string) (*ActionMetadata, error) {
+	kbFolder := os.Getenv("KBFolder")
+
+	if kbFolder == "" {
+		kbFolder = "knowledge-base"
+	}
+
+	input, err := ioutil.ReadFile(path.Join(kbFolder, action, "action-security.yml"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	actionMetadata := ActionMetadata{}
+
+	err = yaml.Unmarshal([]byte(input), &actionMetadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return &actionMetadata, nil
 }

@@ -5,6 +5,6 @@ github-token:
     is-default: true
   permissions: # Used to pull node distributions from node-versions. Metadata permissions is present by default
 outbound-endpoints:
-  nodejs.org:
+  - fqdn: nodejs.org
     port: 443
     reason: to download node distribution
