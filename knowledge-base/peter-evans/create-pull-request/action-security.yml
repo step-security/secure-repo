@@ -9,10 +9,10 @@ github-token:
     pull-requests: write
     pull-requests-reason: to create a PR
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Pull Request API
-  github.com:
+  - fqdn: github.com
     port: 443
     reason: to push PR branch
 harden-runner-link: https://app.stepsecurity.io/github/varunsh-coder/actions-playground/actions/runs/1527060180

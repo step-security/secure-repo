@@ -11,6 +11,6 @@ github-token:
     pull-requests-if: ${{ !contains(with, 'process-only') || with['process-only'] == 'prs' }}
     pull-requests-reason: to lock PRs
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Issues or Pull Request API

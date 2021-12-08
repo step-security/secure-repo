@@ -7,7 +7,7 @@ github-token:
     actions: read
     actions-reason: to get workflow details
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Actions API to get workflow details
 harden-runner-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1533088574
