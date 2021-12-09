@@ -47,9 +47,15 @@ outbound-endpoints:
   - fqdn: '*.githubusercontent.com'
     port: 443
     reason: to fetch git objects, release information and code
-  - fqdn: '*github.com'
+  - fqdn: 'api.github.com'
     port: 443
-    reason: to fetch code from GitHub, to get release assets and to call GitHub API to get matching refs, releases and tags.
+    reason: to call GitHub API to get matching refs, releases and tags.
+  - fqdn: 'codeload.github.com'
+    port: 443
+    reason: to get GitHub release assets
+  - fqdn: 'github.com'
+    port: 443
+    reason: to fetch code from GitHub
   - fqdn: packages.sury.org
     port: 443
     reason: to get PHP packages on Debian
