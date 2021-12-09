@@ -1,5 +1,5 @@
 name: Yarn Upgrade
-        
+
 on:
   schedule:
     # Every wednesday at 13:37 UTC
