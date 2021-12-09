@@ -342,8 +342,11 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) 
 	}
 
 	// Git push/ apply. See content-write-run-step.yml
-	if strings.Contains(runStep, "git apply") || strings.Contains(runStep, "git push") {
-		permissions = append(permissions, "contents: write")
+	if strings.Contains(runStep, "git apply") {
+		permissions = append(permissions, "contents: write # for git apply")
+		return permissions, nil
+	} else if strings.Contains(runStep, "git push") {
+		permissions = append(permissions, "contents: write # for git push")
 		return permissions, nil
 	}
 
