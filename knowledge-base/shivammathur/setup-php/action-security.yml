@@ -5,112 +5,79 @@ github-token:
     contents: read
     contents-reason: to access matching refs GitHub API, clone the repos, and get release assets.
 outbound-endpoints:
-  api.github.com:
+  - fqdn: '*.launchpad.net'
+    port: 80
+    reason: to call launchpad API to get PPA fingerprint and get packages
+  - fqdn: '*.launchpad.net'
     port: 443
-    reason: to call GitHub API to get matching refs, releases and tags.
-  api.launchpad.net:
-    port: 443
-    reason: to call launchpad API to get PPA fingerprint
-  archive.ubuntu.com:
-    port: 443
-    reason: to download packages from ubuntu archives
-  archive.ubuntu.com:
+    reason: to call launchpad API to get PPA fingerprint and get packages
+  - fqdn: '*.ubuntu.com'
     port: 80
     reason: to download packages from ubuntu archives
-  azure.archive.ubuntu.com:
+  - fqdn: '*.ubuntu.com'
     port: 443
-    reason: to download packages from azure mirror of ubuntu archives
-  azure.archive.ubuntu.com:
-    port: 80
-    reason: to download packages from azure mirror of ubuntu archives
-  bazel.build:
-    port: 80
+    reason: to download packages from ubuntu archives
+  - fqdn: bazel.build
+    port: 443
     reason: to download bazel GPG key
-  blackfire.io:
+  - fqdn: '*blackfire.io'
+    port: 80
+    reason: to set-up Blackfire
+  - fqdn: '*blackfire.io'
     port: 443
     reason: to set-up Blackfire
-  cdn.jsdelivr.net:
+  - fqdn: cdn.jsdelivr.net
     port: 443
-    reason: fallback CDN for scripts
-  codeload.github.com:
-    port: 443
-    reason: to call GitHub release assets
-  deployer.org:
+    reason: to fetch scripts (fallback CDN)
+  - fqdn: deployer.org
     port: 443
     reason: to download Deployer phar
-  downloads.ioncube.com:
+  - fqdn: downloads.ioncube.com
     port: 443
     reason: to download ionCube extension
-  download.oracle.com:
+  - fqdn: download.oracle.com
     port: 443
     reason: to download Oracle instantclient
-  get.Blackfire.io:
+  - fqdn: getcomposer.org
     port: 443
-    reason: to set-up Blackfire
-  getcomposer.org:
-    port: 443
-    reason: fallback for Composer phars
-  git.remirepo.net:
+    reason: to fetch Composer phars (fallback source)
+  - fqdn: git.remirepo.net
     port: 443
     reason: to download patches
-  github-releases.githubusercontent.com:
+  - fqdn: '*.githubusercontent.com'
     port: 443
-    reason: to get GitHub release information
-  github.com:
+    reason: to fetch git objects, release information and code
+  - fqdn: '*github.com'
     port: 443
-    reason: to download scripts from GitHub
-  keyserver.ubuntu.com:
-    port: 443
-    reason: to fetch PPA keys
-  objects.githubusercontent.com:
-    port: 443
-    reason: to fetch git objects
-  packages.Blackfire.io:
-    port: 443
-    reason: to set-up Blackfire
-  packages.Blackfire.io:
-    port: 80
-    reason: to set-up Blackfire
-  packages.sury.org:
+    reason: to fetch code from GitHub, to get release assets and to call GitHub API to get matching refs, releases and tags.
+  - fqdn: packages.sury.org
     port: 443
     reason: to get PHP packages on Debian
-  packages.sury.org:
+  - fqdn: packages.sury.org
     port: 80
     reason: to get PHP packages on Debian
-  pear.php.net:
+  - fqdn: '*.php.net'
     port: 443
     reason: to set-up PHP extensions
-  pear.php.net:
+  - fqdn: '*.php.net'
     port: 80
     reason: to set-up PHP extensions
-  pecl.php.net:
-    port: 443
-    reason: to set-up PHP extensions
-  pecl.php.net:
-    port: 80
-    reason: to set-up PHP extensions
-  phar.io:
+  - fqdn: phar.io
     port: 443
     reason: to download Phive phar
-  phar.phpunit.de:
+  - fqdn: phar.phpunit.de
     port: 443
     reason: to download PHPUnit and related phars
-  ppa.launchpad.net:
-    port: 80
-    reason: to get PPA fingerprint
-  raw.githubusercontent.com:
-    port: 443
-    reason: to download raw files on GitHub
-  repo.packagist.org:
+  - fqdn: repo.packagist.org
     port: 443
     reason: to get packages manifests using Composer
-  setup-php.com:
+  - fqdn: setup-php.com
     port: 443
-    reason: to set-up PPA mirrors, scripts and patches
-  storage.googleapis.com:
+    reason: to set-up PPA mirrors, scripts and patches as fallback URL
+  - fqdn: storage.googleapis.com
     port: 443
     reason: to set-up Bazel
-  www.phing.info:
+  - fqdn: www.phing.info
     port: 443
     reason: to download phing phar
 harden-runner-link: https://app.stepsecurity.io/github/shivammathur/test-setup-php/actions/runs/1539115993
