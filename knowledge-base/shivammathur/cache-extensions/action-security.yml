@@ -1,0 +1,12 @@
+name: 'cache-extensions'
+outbound-endpoints:
+  - fqdn: '*.githubusercontent.com'
+    port: 443
+    reason: to fetch git objects, cache files and fetch code from php/php-src repo
+  - fqdn: ppa.launchpad.net
+    port: 80
+    reason: to get package files from launchpad PPA
+  - fqdn: '*.blob.core.windows.net'
+    port: 443
+    reason: to restore cached files
+harden-runner-link: https://app.stepsecurity.io/github/shivammathur/test-setup-php/actions/runs/1539305900
