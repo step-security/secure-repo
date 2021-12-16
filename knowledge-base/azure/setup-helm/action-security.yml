@@ -1,0 +1,14 @@
+name: 'Helm tool installer'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions: # Used to get latest release tag for helm. Metadata permissions is present by default
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to get latest release tag for helm
+  - fqdn: get.helm.sh
+    port: 443
+    reason: to download helm
+harden-runner-link: https://app.stepsecurity.io/github/varunsh-coder/helm-chart/actions/runs/1574776665

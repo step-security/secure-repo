@@ -1,0 +1,23 @@
+name: 'Helm Chart Releaser'
+github-token:
+  environment-variable-name: CR_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to push chart release and create a release    
+  outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to create a release
+  - fqdn: github.com
+    port: 443
+    reason: to fetch tags and download chart releaser
+  - fqdn: objects.githubusercontent.com
+    port: 443
+    reason: to download chart releaser
+  - fqdn: uploads.github.com
+    port: 443
+    reason: to upload release artifacts
+  - fqdn: '*.github.io'
+    port: 443
+    reason: to update chart index
+harden-runner-link: https://app.stepsecurity.io/github/varunsh-coder/helm-chart/actions/runs/1574776665

@@ -1,0 +1,9 @@
+name: 'node matrix'
+outbound-endpoints:
+  - fqdn: nodejs.org
+    port: 443
+    reason: to get node versions
+  - fqdn: iojs.org
+    port: 443
+    reason: to get node versions
+harden-runner-link: https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1579066774
