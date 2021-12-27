@@ -1,0 +1,33 @@
+name: 'Run golangci-lint with reviewdog'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to report issues using checks
+    checks-if: ${{ !contains(with, 'reporter') || with['reporter'] == 'github-pr-check' || with['reporter'] == 'github-check' }}
+    pull-requests: write
+    pull-requests-if: ${{ with['reporter'] == 'github-pr-review' }}
+    pull-requests-reason: to report issues using PR comments
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to call GitHub Checks or Pull Requests API
+  - fqdn: artifactcache.actions.githubusercontent.com
+    port: 443
+    reason: to cache modules 
+  - fqdn: '*.blob.core.windows.net'
+    port: 443
+    reason: to cache modules
+  - fqdn: github.com
+    port: 443
+    reason: to download reviewdog and golangci-lint
+  - fqdn: objects.githubusercontent.com
+    port: 443
+    reason: to download reviewdog and golangci-lint
+  - fqdn: storage.googleapis.com
+    port: 443
+    reason: to download Go archive
+
+    
