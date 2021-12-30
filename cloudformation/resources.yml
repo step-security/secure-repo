@@ -9,7 +9,7 @@ Parameters:
       Description: Image tag
       Type: String
     PAT:
-      Description: PAT to overcome rate limiting
+      Description: Personal access token to overcome rate limiting
       Type: String   
 
 Resources: 
