@@ -2,14 +2,17 @@ name: 'Aqua Security Scanner Action'
 github-token:
   action-input:
     input: github_token
-    is-default: false
+    is-default: true
   permissions:
     contents: read
     content-reason: Scan Git repo with aqua scanner  
 outbound-endpoints:
-  - fqdn: api.github.com
+  - fqdn: github.com
     port: 443
     reason: to get latest release tag for aqua scanner
+  - fqdn: api.github.com
+    port: 443
+    reason: to call GitHub Checks or Pull Requests API
   - fqdn: registry-1.docker.io
     port: 443
     reason: Setup image from dockerfile
@@ -19,4 +22,10 @@ outbound-endpoints:
   - fqdn: auth.docker.io
     port: 443
     reason: Authenticate Docker Image
+  - fqdn: '*.golang.org'
+    port: 443
+    reason: Build docker image
+  - fqdn: storage.googleapis.com
+    port: 443
+    reason: to download Go archive
 harden-runner-link: https://app.stepsecurity.io/github/harden-runner-canary/kyverno/actions/runs/1622152509
