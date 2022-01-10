@@ -2,7 +2,7 @@ name: 'Setup Java JDK'
 outbound-endpoints:
   - fqdn: coveralls.io
     port: 443
-    reason: "to sending code coverage data"
+    reason: "to send code coverage data"
 
   - fqdn: github.com
     port: 443
