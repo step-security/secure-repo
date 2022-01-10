@@ -1,17 +1,39 @@
 name: 'Setup Java JDK'
 outbound-endpoints:
-  - fqdn: coveralls.io
+  - fqdn: adoptium.net
     port: 443
-    reason: "to send code coverage data"
+    reason: to download java-sdk
+  
+  - fqdn: *.azul.com
+    port: 443
+    reason: to download java-sdk
 
-  - fqdn: github.com
+  - fqdn: *.adoptopenjdk.net
+    port: 443
+    reason: to download java-sdk
+
+  - fqdn: *.bell-sw.com
+    port: 443
+    reason: to download java-sdk
+
+  - fqdn: *.microsoft.com
+    port: 443
+    reason: to download java-sdk
+
+  - fqdn: *.github.com
     port: 443
     reason: "to query metadata"
 
-  - fqdn: jitpack.io
+  - fqdn: *.jitpack.io
     port: 443
     reason: "to fetch artifacts from jitpack"
 
-  - fqdn: repo.maven.apache.org
+  - fqdn: *.gradle.org
     port: 443
-    reason: "to fetch dependencies managed by Apache Maven"
+    reason: to download gradle
+
+  - fqdn: *.apache.org
+    port: 443
+    reason: "to download maven and fetch dependencies managed by Apache Maven"
+  
+harden-runner-link: https://app.stepsecurity.io/github/harden-runner-canary/dassana/actions/runs/1622113198
