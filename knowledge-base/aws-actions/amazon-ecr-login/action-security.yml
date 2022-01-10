@@ -1,1 +1,9 @@
 name: 'Amazon ECR "Login" Action for GitHub Actions'
+outbound-endpoints:
+  - fqdn: api.ecr.*.amazonaws.com
+    port: 443
+    reason: to authenthicate and log in to AWS ECR registery(s)
+  - fqdn: *.dkr.ecr.*.amazonaws.com
+    port: 443
+    reason: to log in the local Docker client to ECR registery(s)
+harden-runner-link: https://app.stepsecurity.io/github/step-security/secure-workflows/actions/runs/1627574653
