@@ -16,6 +16,7 @@ jobs:
         allowed-endpoints: 
           beta.api.stepsecurity.io:443
           codecov.io:443
+          uploader.codecov.io:443
           github.com:443
           proxy.golang.org:443
           storage.googleapis.com:443
