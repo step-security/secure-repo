@@ -1,0 +1,17 @@
+name: 'Setup Java JDK'
+outbound-endpoints:
+  - fqdn: coveralls.io
+    port: 443
+    reason: "to sending code coverage data"
+
+  - fqdn: github.com
+    port: 443
+    reason: "to query metadata"
+
+  - fqdn: jitpack.io
+    port: 443
+    reason: "to fetch artifacts from jitpack"
+
+  - fqdn: repo.maven.apache.org
+    port: 443
+    reason: "to fetch dependencies managed by Apache Maven"
