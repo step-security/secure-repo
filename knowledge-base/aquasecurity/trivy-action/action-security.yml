@@ -1,0 +1,22 @@
+name: 'Aqua Security Scanner Action'
+github-token:
+  action-input:
+    input: Github_token
+    is-default: false
+  permissions:
+    contents: read
+    content-reason: Scan Git repo with aqua scanner  
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to get latest release tag for aqua scanner
+  - fqdn: registry-1.docker.io
+    port: 443
+    reason: Setup image from dockerfile
+  - fqdn: production.cloudflare.docker.com
+    port: 443
+    reason: Build docker image
+  - fqdn: auth.docker.io
+    port: 443
+    reason: Authenticate Docker Image
+harden-runner-link: https://app.stepsecurity.io/github/harden-runner-canary/kyverno/actions/runs/1622152509
