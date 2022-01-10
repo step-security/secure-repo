@@ -1,7 +1,7 @@
 name: 'Aqua Security Scanner Action'
 github-token:
   action-input:
-    input: Github_token
+    input: github_token
     is-default: false
   permissions:
     contents: read
