@@ -1,6 +1,6 @@
 name: 'Setup Java JDK'
 outbound-endpoints:
-  - fqdn: adoptium.net
+  - fqdn: *.adoptium.net
     port: 443
     reason: to download java-sdk
   
