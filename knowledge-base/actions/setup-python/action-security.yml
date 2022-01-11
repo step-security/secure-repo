@@ -3,7 +3,7 @@ github-token:
   action-input:
     input: token
     is-default: true
-  permissions: # Used to pull node distributions from node-versions. Metadata permissions is present by default
+  permissions: # Used to pull python distributions from python-versions.
 
 outbound-endpoints:
   - fqdn: raw.githubusercontent.com
