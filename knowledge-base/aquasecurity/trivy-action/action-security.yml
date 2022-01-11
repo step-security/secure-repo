@@ -1,11 +1,4 @@
-name: 'Aqua Security Scanner Action'
-github-token:
-  action-input:
-    input: github_token
-    is-default: true
-  permissions:
-    contents: read
-    content-reason: Scan Git repo with aqua scanner  
+name: 'Aqua Security Scanner Action' 
 outbound-endpoints:
   - fqdn: github.com
     port: 443
