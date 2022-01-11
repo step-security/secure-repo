@@ -1,5 +1,8 @@
 name: 'Aqua Security Scanner Action'
-outbound-endpoints:
+outbound-endpoints: 
+  - fqdn: github.com
+    port: 443
+    reason: to get latest release tag for aqua scanner
   - fqdn: api.github.com
     port: 443
     reason: to call GitHub Checks or Pull Requests API
