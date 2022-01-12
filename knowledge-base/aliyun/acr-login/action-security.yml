@@ -1,0 +1,13 @@
+name: 'ACR-Login action'
+outbound-endpoints:
+  - fqdn: 'cr.*.aliyuncs.com'
+    port: 443
+    reason: to get api endpoints
+
+  - fqdn: 'registry.*.aliyuncs.com'
+    port: 443
+    reason: to get registry endpoints
+
+  - fqdn: index.docker.io
+    port: 443
+    reason: to login to the registry
