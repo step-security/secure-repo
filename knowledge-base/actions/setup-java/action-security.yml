@@ -1,0 +1,36 @@
+name: 'Setup Java JDK'
+outbound-endpoints:
+  - fqdn: api.adoptium.net
+    port: 443
+    reason: to download java-sdk
+  
+  - fqdn: api.azul.com
+    port: 443
+    reason: to gather information about available java-sdk version
+
+  - fqdn: cdn.azul.com
+    port: 443
+    reason: to download the java-sdk version
+
+  - fqdn: api.adoptopenjdk.net
+    port: 443
+    reason: to download java-sdk
+
+  - fqdn: api.bell-sw.com
+    port: 443
+    reason: to download java-sdk
+
+  - fqdn: aka.ms
+    port: 443
+    reason: to download java-sdk
+
+  - fqdn: github.com
+    port: 443
+    reason: "to query metadata"
+
+
+  - fqdn: maven.apache.org
+    port: 443
+    reason: "to authenticate the user for uploading package on maven repo"
+  
+harden-runner-link: https://app.stepsecurity.io/github/harden-runner-canary/dassana/actions/runs/1622113198
