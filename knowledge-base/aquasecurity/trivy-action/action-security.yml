@@ -1,4 +1,3 @@
-
 name: 'Aqua Security Scanner Action'
 outbound-endpoints: 
   - fqdn: api.github.com
