@@ -1,0 +1,9 @@
+name: "HashiCorp - Setup Terraform"
+outbound-endpoints: 
+  - fqdn: releases.hashicorp.com
+    port: 443
+    reason: "to download terraform release"
+
+  - fqdn: app.terraform.io
+    port: 443
+    reason: "to get authenticated"
