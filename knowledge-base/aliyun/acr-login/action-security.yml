@@ -10,4 +10,4 @@ outbound-endpoints:
 
   - fqdn: index.docker.io
     port: 443
-    reason: to log into the server
+    reason: to login to the registry
