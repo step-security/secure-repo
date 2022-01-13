@@ -1,0 +1,8 @@
+name: 'Setup NuGet.exe for use with actions'
+outbound-endpoints:
+  - fqdn: dist.nuget.org
+    port: 443
+    reason: to fetch nuget latest version
+  - fqdn: api.github.com
+    port: 443
+    reason: to get manifest file
