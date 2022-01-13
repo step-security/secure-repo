@@ -7,7 +7,7 @@ github-token:
                # so maybe only `read` permission is required.
                # GITHUB_TOKEN is used only to avoid rate-limit
 
-outbound-endpoints: 
+outbound-endpoints:
   - fqdn: mirror.openshift.com
     port: 443
     reason: to download openshift-tools-installer from mirror
@@ -17,5 +17,5 @@ outbound-endpoints:
     reason: to download openshift-tools-installer from github
 
   - fqdn: api.github.com
-    port: 443 
+    port: 443
     reason: to query info about sepcific release-tag
