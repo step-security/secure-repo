@@ -1,5 +1,0 @@
-name: 'Snyk-dokker action'
-outbound-endpoints:
-  - fqdn: snyk.io
-    port: 443
-    reason: to scan the dokker image
