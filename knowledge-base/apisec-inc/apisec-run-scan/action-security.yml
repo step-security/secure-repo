@@ -1,0 +1,5 @@
+name: 'APIsec Scan'
+outbound-endpoints: 
+  - fqdn: cloud.fxlabs.io
+    port: 443
+    reason: to run scan using APIsec security platform 
