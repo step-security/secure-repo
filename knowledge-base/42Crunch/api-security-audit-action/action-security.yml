@@ -1,0 +1,15 @@
+name: '42Crunch REST API Static Security Testing'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions: # NOTE: github_api call is made to upload results to Github Code Scanning
+outbound-endpoints:
+  - fqdn: platform.42crunch.com
+    port: 443
+    reason: to use 42Crunch platform
+  - fqdn: api.github.com
+    port: 443
+    reason: to upload results to Github Code Scanning
+
+harden-runner-link: https://app.stepsecurity.io/github/Devils-Knight/Knowledge-base/actions/runs/1693963110
