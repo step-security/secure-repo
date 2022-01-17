@@ -1,11 +1,8 @@
 name: 'Aqua Security Scanner Action'
 outbound-endpoints: 
-  - fqdn: github.com
-    port: 443
-    reason: to download vulnerability DB
   - fqdn: api.github.com
     port: 443
-    reason: to call GitHub Checks or Pull Requests API
+    reason: to download vulnerability DB
   - fqdn: objects.githubusercontent.com
     port: 443
     reason: to download vulnerability DB
