@@ -1,0 +1,5 @@
+name: Setting context for Kubernetes cluster of Alibaba Cloud Kubernetes Service (ACK)
+outbound-endpoints:
+  - fqdn: cs.aliyuncs.com
+    port: 443
+    reason: to query cluster user's configurations

@@ -1,0 +1,10 @@
+name: 'mobsfscan'
+outbound-endpoints:
+  - fqdn: pypi.org
+    port: 443
+    reason: to install mobsfscan dependencies
+  - fqdn: files.pythonhosted.org
+    port: 443
+    reason: to install mobsfscan dependencies
+
+harden-runner-link: https://app.stepsecurity.io/github/Devils-Knight/Knowledge-base/actions/runs/1693963109

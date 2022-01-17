@@ -1,0 +1,21 @@
+name: OpenShift Tools Installer
+github-token:
+  action-input:
+    input: github-pat
+    is-default: true
+  permissions: # NOTE: github_api call is only made to releases_endpoint to query tag info.(public-endpoint)
+               # so maybe only `read` permission is required.
+               # GITHUB_TOKEN is used only to avoid rate-limit
+
+outbound-endpoints:
+  - fqdn: mirror.openshift.com
+    port: 443
+    reason: to download openshift-tools-installer from mirror
+
+  - fqdn: github.com
+    port: 443
+    reason: to download openshift-tools-installer from github
+
+  - fqdn: api.github.com
+    port: 443
+    reason: to query info about specific release-tag
