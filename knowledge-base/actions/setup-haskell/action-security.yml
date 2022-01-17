@@ -14,4 +14,4 @@ outbound-endpoints:
     reason: to download ghcup
   - fqdn: github.com
     port: 443
-    reason: to downlaod stack
+    reason: to download stack
