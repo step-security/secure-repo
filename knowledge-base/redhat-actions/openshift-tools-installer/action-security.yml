@@ -18,4 +18,4 @@ outbound-endpoints:
 
   - fqdn: api.github.com
     port: 443
-    reason: to query info about sepcific release-tag
+    reason: to query info about specific release-tag
