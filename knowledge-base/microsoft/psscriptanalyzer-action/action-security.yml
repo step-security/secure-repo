@@ -1,0 +1,15 @@
+name: Run PSScriptAnalyzer
+outbound-endpoints:
+  # NOTE: https://docs.microsoft.com/en-us/powershell/scripting/gallery/getting-started?view=powershell-7.2#network-access-to-the-powershell-gallery
+  - fqdn: www.powershellgallery.com
+    port: 443
+    reason: to fetch powershell modules
+  
+  - fqdn:  psg-prod-eastus.azureedge.net.
+    port: 443
+    reason: to download powershell modules
+
+  - fqdn: az818661.vo.msecnd.net
+    port: 443
+    reason: to download powershell modules 
+harden-runner-link: https://app.stepsecurity.io/github/h0x0er/kb_setup/actions/runs/1706707156
