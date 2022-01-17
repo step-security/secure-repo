@@ -1,0 +1,14 @@
+name: Setup Erlang/OTP with optional Elixir (and mix) and/or rebar3
+outbound-endpoints: 
+  - fqdn: repo.hex.pm
+    port: 443
+    reason: to download elixir and OTP builds
+  
+  - fqdn: github.com
+    port: 443
+    reason: to download gleam-lang & rebar3 releases 
+
+  - fqdn: api.github.com
+    port: 443
+    reason: to check erlang, rebar3 & gleam-lang repos for release-version information
+  
