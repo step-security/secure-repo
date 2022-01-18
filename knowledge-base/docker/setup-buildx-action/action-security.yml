@@ -1,0 +1,9 @@
+name: 'Docker Setup Buildx'
+outbound-endpoints:
+  - fqdn: '*.docker.io'
+    port: 443
+    reason: to set up Docker Buildx to build docker entities
+  - fqdn: auth.docker.io
+    port: 443
+    reason: to authenticate docker credentials
+harden-runner-link: https://app.stepsecurity.io/github/arjundashrath/StepSecurity_Tests/actions/runs/1711751350
