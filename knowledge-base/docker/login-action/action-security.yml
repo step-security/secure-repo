@@ -1,0 +1,9 @@
+name: 'Docker Login'
+outbound-endpoints:
+  - fqdn: registry-1.docker.io
+    port: 443
+    reason: to auth with docker
+  - fqdn: auth.docker.io
+    port: 443
+    reason: to auth with docker
+harden-runner-link: https://app.stepsecurity.io/github/h0x0er/kb_setup/actions/runs/1711236313 

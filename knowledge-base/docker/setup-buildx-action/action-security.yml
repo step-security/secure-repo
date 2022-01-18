@@ -1,0 +1,12 @@
+name: 'Docker Setup Buildx'
+outbound-endpoints:
+  - fqdn: registry-1.docker.io
+    port: 443
+    reason: to login into docker.io
+  - fqdn: auth.docker.io
+    port: 443
+    reason: to interact with authorization server
+  - fqdn: github.com
+    port: 443
+    reason: to query & download latest release
+harden-runner-link: https://app.stepsecurity.io/github/h0x0er/kb_setup/actions/runs/1711495004 
