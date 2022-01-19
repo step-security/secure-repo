@@ -86,7 +86,8 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 		spaces += " "
 	}
 
-	output = append(output, spaces+"permissions: read-all")
+	output = append(output, spaces+"permissions:")
+	output = append(output, spaces+"  contents: read")
 	output = append(output, "")
 
 	for i := line - 1; i < len(inputLines); i++ {
