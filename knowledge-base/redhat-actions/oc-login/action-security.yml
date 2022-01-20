@@ -1,0 +1,6 @@
+name: 'OpenShift Login'
+outbound-endpoints:
+  # NOTE: https://stackoverflow.com/questions/46417232/what-server-url-should-be-used-for-the-oc-login-command-when-using-openshifts
+  - fqdn: *.openshift-online.com
+    port: 6443
+    reason: to perform authentication in RedHat OpenShift
