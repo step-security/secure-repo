@@ -1,0 +1,9 @@
+name: 'Setup Deno'
+outbound-endpoints:
+  - fqdn: raw.githubusercontent.com
+    port: 443
+    reason: to fetch code for deno setup
+  - fqdn: github.com
+    port: 443
+    reason: to set up a specific version of deno
+harden-runner-link: https://app.stepsecurity.io/github/arjundashrath/StepSecurity_Tests/actions/runs/1716868818
