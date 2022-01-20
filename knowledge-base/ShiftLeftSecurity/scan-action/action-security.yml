@@ -4,7 +4,7 @@ github-token:
   is-default: false
   permissions:
     pull-requests: write
-    pull-requests-reason: to add the scan summary as a comment in pull request # NOTE: https://slscan.io/en/latest/integrations/github-actions/#automatic-pull-request-comments
+    pull-requests-reason: to add comments in pull request # NOTE: https://slscan.io/en/latest/integrations/github-actions/#automatic-pull-request-comments
 outbound-endpoints:
   - fqdn: api.github.com
     port: 443
