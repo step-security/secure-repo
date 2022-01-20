@@ -6,7 +6,7 @@ github-token:
   permissions:
     security-events: write
     security-events-reason: to upload results to Github Code Scanning
-    security-events-if: ${{contains(with,'upload-to-code-scanning')}}
+    security-events-if: ${{ contains(with, 'upload-to-code-scanning') && with['upload-to-code-scanning'] == 'true'
 outbound-endpoints:
   - fqdn: platform.42crunch.com
     port: 443
