@@ -1,9 +1,12 @@
 name: '42Crunch REST API Static Security Testing'
 github-token:
   action-input:
-    input: github-token
+    input: token
     is-default: true
-  permissions: # NOTE: github_api call is made to upload results to Github Code Scanning
+  permissions:
+    security-events: write
+    security-events-reason: to upload results to Github Code Scanning
+    security-events-if: ${{contains(with,'upload-to-code-scanning')}}
 outbound-endpoints:
   - fqdn: platform.42crunch.com
     port: 443
