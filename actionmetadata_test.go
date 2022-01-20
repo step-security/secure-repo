@@ -93,7 +93,6 @@ func TestKnowledgeBase(t *testing.T) {
 			// validating the action repo
 			if response.StatusCode != http.StatusOK {
 				lintIssues = append(lintIssues, fmt.Sprintf("Non-OK HTTP status(%d) at %s ", response.StatusCode, filePath))
-				fmt.Println("url--> ", urlpath)
 				return nil
 			}
 
