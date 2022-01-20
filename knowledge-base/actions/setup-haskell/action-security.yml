@@ -1,0 +1,17 @@
+name: 'Setup Haskell'
+outbound-endpoints: 
+  - fqdn: gitlab.haskell.org
+    port: 443
+    reason: to download ghcup installer
+  - fqdn: launchpad.net
+    port: 443
+    reason: to download cabal and ghc
+  - fqdn: community.chocolatey.org 
+    port: 443
+    reason: to download ghc packages
+  - fqdn: downloads.haskell.org 
+    port: 443
+    reason: to download ghcup
+  - fqdn: github.com
+    port: 443
+    reason: to download stack

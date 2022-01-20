@@ -1,0 +1,6 @@
+name: 'Snyk Docker'
+outbound-endpoints:
+  - fqdn: snyk.io
+    port: 443
+    reason: to scan the docker image
+harden-runner-link: https://app.stepsecurity.io/github/Devils-Knight/Knowledge-base/actions/runs/1682433461
