@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,6 +36,67 @@ func TestKnowledgeBase(t *testing.T) {
 				lintIssues = append(lintIssues, fmt.Sprintf("File must be named action-security.yml, not %s at %s", info.Name(), filePath))
 				return nil
 			}
+
+			var index, count int = 0, 0
+			var urlpath, branch_name string = "", "master"
+			for i := 0; i < len(filePath); i++ {
+				if filePath[i] == '/' {
+					count = count + 1
+				}
+				if count == 3 {
+					index = i
+					break
+				}
+			}
+
+			// type Response struct {
+			// 	Name string `json:"name"`
+			// }
+			// type Response_array []Response
+
+			client := &http.Client{}
+			/*
+				req, err := http.NewRequest("GET", "https://api.github.com/repos/"+filePath[15:index]+"/branches", nil)
+				if err != nil {
+					fmt.Print(err.Error())
+				}
+				req.Header.Add("Accept", "application/json")
+				req.Header.Add("Content-Type", "application/json")
+				resp, err := client.Do(req)
+				if err != nil {
+					fmt.Print(err.Error())
+				}
+				defer resp.Body.Close()
+				bodyBytes, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					fmt.Print(err.Error())
+				}
+				var responseObject Response_array
+				json.Unmarshal(bodyBytes, &responseObject)
+				if len(responseObject) > 0 {
+					branch_name = responseObject[0].Name // default branch name
+				}
+			*/
+
+			// urlpath for validating the repo
+			urlpath = filePath[15:index] + "/tree/" + branch_name + filePath[index:len(filePath)-20]
+
+			request, _ := http.NewRequest("GET", "https://github.com/"+urlpath, nil)
+			request.Header.Set("Content-Type", "application/json")
+			response, err := client.Do(request)
+			if err != nil {
+				lintIssues = append(lintIssues, fmt.Sprintf("Not valid path for the action repo: %s", err))
+				return nil
+			}
+			defer response.Body.Close()
+
+			// validating the action repo
+			if response.StatusCode != http.StatusOK {
+				lintIssues = append(lintIssues, fmt.Sprintf("Non-OK HTTP status(%d) at %s ", response.StatusCode, filePath))
+				fmt.Println("url--> ", urlpath)
+				return nil
+			}
+
 			input, err := ioutil.ReadFile(filePath)
 
 			if err != nil {
