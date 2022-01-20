@@ -107,6 +107,9 @@ func TestKnowledgeBase(t *testing.T) {
 					lintIssues = append(lintIssues, fmt.Sprintf("Reason must start with 'to '. It is currently %s in action-security.yml at %s", scope.Reason, filePath))
 					return nil
 				}
+				if len(scope.Reason) > 50 {
+					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not exceed 50 char limit. It is currently %d in action-security.yml at %s", len(scope.Reason), filePath))
+				}
 			}
 
 			return nil
