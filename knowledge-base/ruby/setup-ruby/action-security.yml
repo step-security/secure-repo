@@ -1,0 +1,6 @@
+name: 'Setup Ruby, JRuby and TruffleRuby'
+outbound-endpoints:
+  - fqdn: rubygems.org
+    port: 443
+    reason: to download files to setup Ruby, JRuby and TruffleRuby
+harden-runner-link: https://app.stepsecurity.io/github/arjundashrath/StepSecurity_Tests/actions/runs/1719164860
