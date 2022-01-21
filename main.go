@@ -16,7 +16,7 @@ import (
 type Handler struct {
 }
 
-func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
+func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error, bool) {
 
 	httpRequest := &events.APIGatewayV2HTTPRequest{}
 
@@ -36,12 +36,12 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				StatusCode: http.StatusOK,
 			}
 			returnValue, _ := json.Marshal(&response)
-			return returnValue, nil
+			return returnValue, nil, false
 		}
 
 		if strings.Contains(httpRequest.RawPath, "/secure-workflow") {
 
-			fixResponse, err := SecureWorkflow(httpRequest.QueryStringParameters, httpRequest.Body, dynamoDbSvc)
+			fixResponse, err, metricsVar := SecureWorkflow(httpRequest.QueryStringParameters, httpRequest.Body, dynamoDbSvc)
 
 			if err != nil {
 				response = events.APIGatewayProxyResponse{
@@ -60,11 +60,11 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 		}
 
 		returnValue, _ := json.Marshal(&response)
-		return returnValue, nil
+		return returnValue, nil, metricsVar
 
 	}
 
-	return nil, fmt.Errorf("request was neither APIGatewayV2HTTPRequest nor SQSEvent")
+	return nil, fmt.Errorf("request was neither APIGatewayV2HTTPRequest nor SQSEvent"), false
 }
 
 func main() {
