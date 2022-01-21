@@ -1,0 +1,15 @@
+name: "Security and Licence Scan"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to add comments in pull request # NOTE: https://slscan.io/en/latest/integrations/github-actions/#automatic-pull-request-comments
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to add comment in a pull request
+
+  - fqdn: github.com
+    port: 443
+    reason: to fetch the workspace repo
