@@ -1,0 +1,18 @@
+name: '42Crunch REST API Static Security Testing'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    security-events: write
+    security-events-reason: to upload results to Github Code Scanning
+    security-events-if: ${{ contains(with, 'upload-to-code-scanning') && with['upload-to-code-scanning'] == 'true'
+outbound-endpoints:
+  - fqdn: platform.42crunch.com
+    port: 443
+    reason: to use 42Crunch platform
+  - fqdn: api.github.com
+    port: 443
+    reason: to upload results to Github Code Scanning
+
+harden-runner-link: https://app.stepsecurity.io/github/Devils-Knight/Knowledge-base/actions/runs/1693963110
