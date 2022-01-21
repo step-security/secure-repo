@@ -1,0 +1,6 @@
+name: "Semgrep Action"
+outbound-endpoints:
+  - fqdn: semgrep.dev
+    port: 443
+    reason: to connect with Semgrep App
+harden-runner-link: https://app.stepsecurity.io/github/h0x0er/kb_setup/actions/runs/1717422313

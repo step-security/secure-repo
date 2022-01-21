@@ -1,0 +1,5 @@
+name: 'OpenShift Login'
+outbound-endpoints:
+  - fqdn: openshift-online.com
+    port: 6443
+    reason: to perform authentication in RedHat OpenShift
