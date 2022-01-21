@@ -3,7 +3,7 @@ github-token:
   environment-variable-name: COMPOSER_TOKEN
   permissions:
     contents: read
-    contents-reason: to access matching refs GitHub API, clone the repos, and get release assets.
+    contents-reason: to access matching refs of GitHub API.
 outbound-endpoints:
   - fqdn: '*.launchpad.net'
     port: 80
