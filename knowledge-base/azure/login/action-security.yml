@@ -1,0 +1,18 @@
+name: 'Azure Login'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions: 
+    id-token: write
+    id-token-reason: to get credentials from GitHub OIDC provider
+    id-token-if: ${{ contains(with, 'client-id') && contains(with, 'tenant-id') && contains(with, 'subscription-id')}}
+outbound-endpoints:
+  - fqdn: azure.microsoft.com
+    port: 443
+    reason: to login into azure
+  - fqdn: raw.githubusercontent.com
+    port: 443
+    reason: to set azure http user agent
+
+harden-runner-link: https://app.stepsecurity.io/github/Devils-Knight/Knowledge-base/actions/runs/1706509956

@@ -1,0 +1,6 @@
+name: "Snyk Infrastructure as Code"
+outbound-endpoints:
+  - fqdn: snyk.io
+    port: 443
+    reason: to authenticate with snyk
+harden-runner-link: https://app.stepsecurity.io/github/h0x0er/kb_setup/actions/runs/1711645290

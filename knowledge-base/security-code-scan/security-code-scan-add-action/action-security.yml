@@ -1,0 +1,6 @@
+name: SecurityCodeScan
+outbound-endpoints:
+  - fqdn: api-v2v3search-0.nuget.org
+    port: 443
+    reason: to get the latest security code scan package version
+harden-runner-link: https://app.stepsecurity.io/github/h0x0er/kb_setup/actions/runs/1711189506
