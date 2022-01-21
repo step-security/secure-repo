@@ -33,16 +33,18 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	if addPermissions {
 		secureWorkflowReponse, err = AddJobLevelPermissions(secureWorkflowReponse.FinalOutput)
 		if err != nil {
-			return nil, err
+			return nil, err, false
 		} else {
 			if !secureWorkflowReponse.HasErrors {
 				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput)
-				isResolved = true
+				
 			}
 			if len(secureWorkflowReponse.MissingActions) > 0 {
 				StoreMissingActions(secureWorkflowReponse.MissingActions, svc)
-				isResolved = true
+
 			}
+			
+			isResolved = true
 		}
 	}
 
