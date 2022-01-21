@@ -10,10 +10,11 @@ const (
 	HardenRunnerActionName        = "Harden Runner"
 )
 
-func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*SecureWorkflowReponse, error) {
+func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*SecureWorkflowReponse, error, bool) {
 	pinActions := true
 	addHardenRunner := true
 	addPermissions := true
+	isResolved := false
 
 	if queryStringParams["pinActions"] == "false" {
 		pinActions = false
@@ -36,9 +37,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		} else {
 			if !secureWorkflowReponse.HasErrors {
 				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput)
+				isResolved = true
 			}
 			if len(secureWorkflowReponse.MissingActions) > 0 {
 				StoreMissingActions(secureWorkflowReponse.MissingActions, svc)
+				isResolved = true
 			}
 		}
 	}
@@ -51,6 +54,6 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		secureWorkflowReponse.FinalOutput, _ = PinActions(secureWorkflowReponse.FinalOutput)
 	}
 
-	return secureWorkflowReponse, nil
+	return secureWorkflowReponse, nil, isResolved
 
 }
