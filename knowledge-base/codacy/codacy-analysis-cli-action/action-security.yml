@@ -1,0 +1,15 @@
+name: 'Codacy Analysis CLI'
+outbound-endpoints:
+  - fqdn: raw.githubusercontent.com
+    port: 443
+    reason: to download Codacy CLI
+  - fqdn: '*.docker.io'
+    port: 443
+    reason: to access and authenticate docker 
+  - fqdn: production.cloudflare.docker.com
+    port: 443
+    reason: to pull image configuration
+  - fqdn: api.codacy.com
+    port: 443
+    reason: to fetch Codacy configuration  
+harden-runner-link: https://app.stepsecurity.io/github/arjundashrath/StepSecurity_Tests/actions/runs/1722954530

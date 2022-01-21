@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
 	"sort"
 	"strings"
 
@@ -89,7 +86,8 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 		spaces += " "
 	}
 
-	output = append(output, spaces+"permissions: read-all")
+	output = append(output, spaces+"permissions:")
+	output = append(output, spaces+"  contents: read")
 	output = append(output, "")
 
 	for i := line - 1; i < len(inputLines); i++ {
@@ -148,12 +146,17 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			if strings.Compare(inputYaml, fixWorkflowPermsReponse.FinalOutput) != 0 {
 				fixWorkflowPermsReponse.IsChanged = true
 
-				// This is to add on the fixes for jobs
-				out, err = addPermissions(out, jobName, perms)
+				if len(perms) == 1 && strings.Contains(perms[0], "contents: read") {
+					// Don't add contents: read, because it will get defined at workflow level
+					continue
+				} else {
+					// This is to add on the fixes for jobs
+					out, err = addPermissions(out, jobName, perms)
 
-				if err != nil {
-					// This should not happen
-					return nil, err
+					if err != nil {
+						// This should not happen
+						return nil, err
+					}
 				}
 
 			}
@@ -186,29 +189,6 @@ func isGitHubToken(literal string) bool {
 	return false
 }
 
-func getActionKnowledgeBase(action string) (*ActionMetadata, error) {
-	kbFolder := os.Getenv("KBFolder")
-
-	if kbFolder == "" {
-		kbFolder = "knowledge-base"
-	}
-
-	input, err := ioutil.ReadFile(path.Join(kbFolder, action, "action-security.yml"))
-
-	if err != nil {
-		return nil, err
-	}
-
-	actionMetadata := ActionMetadata{}
-
-	err = yaml.Unmarshal([]byte(input), &actionMetadata)
-	if err != nil {
-		return nil, err
-	}
-
-	return &actionMetadata, nil
-}
-
 func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error) {
 	permissions := []string{}
 	atIndex := strings.Index(action.Uses, "@")
@@ -219,7 +199,7 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 
 	actionKey := action.Uses[0:atIndex]
 
-	actionMetadata, err := getActionKnowledgeBase(actionKey)
+	actionMetadata, err := GetActionKnowledgeBase(actionKey)
 
 	if err != nil {
 		jobState.MissingActions = append(jobState.MissingActions, action.Uses)
@@ -368,8 +348,11 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) 
 	}
 
 	// Git push/ apply. See content-write-run-step.yml
-	if strings.Contains(runStep, "git apply") || strings.Contains(runStep, "git push") {
-		permissions = append(permissions, "contents: write")
+	if strings.Contains(runStep, "git apply") {
+		permissions = append(permissions, "contents: write # for git apply")
+		return permissions, nil
+	} else if strings.Contains(runStep, "git push") {
+		permissions = append(permissions, "contents: write # for git push")
 		return permissions, nil
 	}
 

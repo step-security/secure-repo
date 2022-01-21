@@ -35,6 +35,10 @@ func PinActions(inputYaml string) (string, error) {
 
 func pinAction(action, jobName, inputYaml string) string {
 
+	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
+		return inputYaml // Cannot pin local actions or docker actions
+	}
+
 	leftOfAt := strings.Split(action, "@")
 	tagOrBranch := leftOfAt[1]
 
@@ -64,7 +68,7 @@ func pinAction(action, jobName, inputYaml string) string {
 	}
 
 	commitSHA := ref.Object.SHA
-	pinnedAction := leftOfAt[0] + "@" + *commitSHA
+	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], *commitSHA, tagOrBranch)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
 	return inputYaml
 }

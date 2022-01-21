@@ -1,0 +1,13 @@
+name: 'CodeQL: Init'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: read
+    actions-reason: to get workflow details
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to call GitHub Actions API to get workflow details
+harden-runner-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1533088574

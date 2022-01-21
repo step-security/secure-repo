@@ -4,7 +4,8 @@ on:
     branches: main
   workflow_dispatch:
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -14,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest  
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@main
+        uses: step-security/harden-runner@v1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v1
       - uses: github/super-linter@v3
         env:

@@ -65,6 +65,8 @@ func addAction(inputYaml, jobName, action string) (string, error) {
 
 	output = append(output, spaces+fmt.Sprintf("- name: %s", HardenRunnerActionName))
 	output = append(output, spaces+fmt.Sprintf("  uses: %s", action))
+	output = append(output, spaces+"  with:")
+	output = append(output, spaces+"    egress-policy: audit")
 
 	for i := jobNode.Line - 1; i < len(inputLines); i++ {
 		output = append(output, inputLines[i])

@@ -1,0 +1,6 @@
+name: 'Setup Dart SDK'
+outbound-endpoints:
+  - fqdn: storage.googleapis.com
+    port: 443
+    reason: to download installer  
+harden-runner-link: https://app.stepsecurity.io/github/varunsh-coder/actions-playground/actions/runs/1583475914

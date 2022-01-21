@@ -1,0 +1,29 @@
+name: 'GoReleaser Action'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to create a GitHub release
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to create a GitHub release
+  - fqdn: github.com
+    port: 443
+    reason: to download GoReleaser tool
+  - fqdn: goreleaser.com
+    port: 443
+    reason: to fetch all GoReleaser tags
+  - fqdn: objects.githubusercontent.com
+    port: 443
+    reason: to download GoReleaser tool # needs confirmation
+  - fqdn: proxy.golang.org
+    port: 443
+    reason: to download Go dependencies
+  - fqdn: storage.googleapis.com
+    port: 443
+    reason: to download Go dependencies # needs confirmation
+  - fqdn: uploads.github.com
+    port: 443
+    reason: to upload release assets
+harden-runner-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1523256928

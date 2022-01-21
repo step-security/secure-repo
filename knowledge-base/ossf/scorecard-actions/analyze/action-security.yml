@@ -17,13 +17,13 @@ github-token:
     pull-requests: read
     pull-requests-reason: to check if PRs are reviewed
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub APIs
-  bestpractices.coreinfrastructure.org:
+  - fqdn: bestpractices.coreinfrastructure.org
     port: 443
     reason:  to check CII best practices badge level
-  api.osv.dev:
+  - fqdn: api.osv.dev
     port: 443
     reason:  to check vulnerabilities in the OSV database
 harden-action-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1523253753

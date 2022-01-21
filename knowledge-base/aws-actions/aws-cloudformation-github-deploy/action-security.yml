@@ -1,0 +1,6 @@
+name: 'AWS CloudFormation "Deploy CloudFormation Stack" Action for GitHub Actions'
+outbound-endpoints:
+  - fqdn: cloudformation.*.amazonaws.com
+    port: 443
+    reason: to call AWS cloud formation API
+harden-runner-link: https://app.stepsecurity.io/github/step-security/secure-workflows/actions/runs/1537681246

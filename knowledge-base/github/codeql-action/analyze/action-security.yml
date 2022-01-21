@@ -1,0 +1,13 @@
+name: 'CodeQL: Finish'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    security-events: write
+    security-events-reason: to upload SARIF results
+outbound-endpoints: # This causes build and so may also download dependencies
+  - fqdn: api.github.com
+    port: 443
+    reason: to call GitHub Code Scanning API
+harden-runner-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1533088574

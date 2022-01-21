@@ -1,0 +1,13 @@
+name: 'CodeQL: Autobuild'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    security-events: write
+    security-events-reason: to send a status report
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to call GitHub Code Scanning API
+harden-runner-link: https://app.stepsecurity.io/github/step-security/agent/actions/runs/1533088574

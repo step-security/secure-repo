@@ -1,0 +1,19 @@
+name: "D Compiler Installation"
+github-token:
+  action-input:
+    input: gh_token
+    is-default: true
+  permissions: # to get release with the specified tag 
+   
+outbound-endpoints:
+  - fqdn: downloads.dlang.org
+    port: 443
+    reason: to download dlang package
+
+  - fqdn: api.github.com
+    port: 443
+    reason: to query the release tags
+
+  - fqdn: github.com
+    port: 443
+    reason: to download the LDC release

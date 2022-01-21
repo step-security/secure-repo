@@ -10,7 +10,8 @@
       paths-ignore:
         - '**.md'
 
-  permissions: read-all
+  permissions:
+    contents: read
 
   jobs:
     build:

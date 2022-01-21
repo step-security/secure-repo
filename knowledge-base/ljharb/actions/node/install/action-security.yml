@@ -1,0 +1,12 @@
+name: 'node CI: install node and npm dependencies'
+outbound-endpoints:
+  - fqdn: nodejs.org
+    port: 443
+    reason: to download node
+  - fqdn: iojs.org
+    port: 443
+    reason: to download node
+  - fqdn: registry.npmjs.org
+    port: 443
+    reason: to download dependencies    
+harden-runner-link: https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1579066774

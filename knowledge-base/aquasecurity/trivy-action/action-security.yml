@@ -1,0 +1,10 @@
+name: 'Aqua Security Scanner Action'
+outbound-endpoints: 
+  - fqdn: api.github.com
+    port: 443
+    reason: to download vulnerability DB
+  - fqdn: objects.githubusercontent.com
+    port: 443
+    reason: to download vulnerability DB
+
+harden-runner-link: https://app.stepsecurity.io/github/harden-runner-canary/kyverno/actions/runs/1622152509

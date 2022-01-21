@@ -5,6 +5,6 @@ github-token:
     statuses: write
     statuses-reason: to mark status of each linter run
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Status API

@@ -7,10 +7,10 @@ github-token:
     pull-requests: read
     pull-requests-reason: to get info about PR
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Pull Request API
-  github.com:
+  - fqdn: github.com
     port: 443
     reason: to push code to rebase
 harden-runner-link: https://app.stepsecurity.io/github/varunsh-coder/actions-playground/actions/runs/1526918154

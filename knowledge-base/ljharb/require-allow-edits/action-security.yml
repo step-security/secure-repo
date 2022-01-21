@@ -7,6 +7,6 @@ github-token:
     pull-requests: read
     pull-requests-reason: to check 'allow edits' on PR
 outbound-endpoints:
-  api.github.com:
+  - fqdn: api.github.com
     port: 443
     reason: to call GitHub Pull Request API 
