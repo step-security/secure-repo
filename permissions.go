@@ -146,12 +146,17 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			if strings.Compare(inputYaml, fixWorkflowPermsReponse.FinalOutput) != 0 {
 				fixWorkflowPermsReponse.IsChanged = true
 
-				// This is to add on the fixes for jobs
-				out, err = addPermissions(out, jobName, perms)
+				if len(perms) == 1 && strings.Contains(perms[0], "contents: read") {
+					// Don't add contents: read, because it will get defined at workflow level
+					continue
+				} else {
+					// This is to add on the fixes for jobs
+					out, err = addPermissions(out, jobName, perms)
 
-				if err != nil {
-					// This should not happen
-					return nil, err
+					if err != nil {
+						// This should not happen
+						return nil, err
+					}
 				}
 
 			}
