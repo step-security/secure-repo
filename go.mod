@@ -20,6 +20,7 @@ require (
 require (
 	github.com/PaesslerAG/gval v1.1.2
 	github.com/generikvault/gvalstrings v0.0.0-20180926130504-471f38f0112a
+	github.com/google/go-github/v38 v38.1.0
 	github.com/google/go-github/v40 v40.0.0
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
