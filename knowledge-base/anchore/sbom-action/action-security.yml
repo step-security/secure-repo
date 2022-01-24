@@ -1,0 +1,10 @@
+name: "Anchore SBOM Action"
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    actions: write
+    actions-reason: to upload & delete workflow artifacts & assets
+
+# Solves#194
