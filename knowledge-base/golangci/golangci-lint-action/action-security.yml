@@ -5,6 +5,6 @@ github-token:
     is-default: true
   permissions:
     pull-requests: read
-    pull-requests-reason: to fetch pull requests
+    pull-requests-reason: to fetch pull requests # CHECKOUT: https://github.com/golangci/golangci-lint-action/blob/ebc78f9b2fcd19a74da6a693bc1419e3313167a8/src/run.ts#L41
 
 # NOTE: Solves#197

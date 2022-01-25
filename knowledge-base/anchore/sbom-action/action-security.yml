@@ -5,6 +5,6 @@ github-token:
     is-default: true
   permissions:
     actions: write
-    actions-reason: to upload & delete workflow artifacts & assets
-
+    actions-reason: to upload & delete workflow artifacts & assets  # CHECKOUT: https://github.com/anchore/sbom-action/blob/3626d7d7b13e87ee6c6f9ded3940dea05a3967bc/src/github/SyftGithubAction.ts#L262
+    
 # Solves#194
