@@ -5,8 +5,8 @@ github-token:
     is-default: true
   permissions:
     contents: write
+    contents-if: {{!contains(with, 'should_push') || with['should_push'] == 'true'}}
     contents-reason: to read repo directories
-    contents-write-if: {{!contains(with, 'should_push') || with['should_push'] == 'true'}}
     #Reference: https://github.com/githubocto/repo-visualizer/commit/a71a1e869c0848832eb983924dd80e6ca4de5880
 outbound-endpoints:
   - fqdn: github.com
