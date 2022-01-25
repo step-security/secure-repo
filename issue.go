@@ -17,33 +17,29 @@ const (
 	allIssues         = "all"
 )
 
-type GitHubJobStepOut struct {
-	Action string
-}
-
-func CreateIssue(step *GitHubJobStepOut, owner, repo, runid string) (int, error) {
+func CreateIssue(Action string) (int, error) {
 	// is action
-	if len(step.Action) > 0 {
+	if len(Action) > 0 {
 		// is kb not found
-		_, err := GetActionKnowledgeBase(step.Action)
+		_, err := GetActionKnowledgeBase(Action)
 
 		if err != nil {
 			// does issue already exist?
-			issue, err := getExistingIssue(step.Action)
+			issue, err := getExistingIssue(Action)
 
 			if err != nil {
 				return 0, err
 			}
 
 			if issue == nil {
-				issue, err = createIssue(step, owner, repo, runid)
+				issue, err = createIssue(Action)
 
 				if err != nil {
-					fmt.Printf("[CreateIssue] error in creating issue for action %s: %v", step.Action, err)
+					fmt.Printf("[CreateIssue] error in creating issue for action %s: %v", Action, err)
 					return 0, err
 				}
 
-				fmt.Printf("[CreateIssue] Issue created for action %s: %d", step.Action, issue.Number)
+				fmt.Printf("[CreateIssue] Issue created for action %s: %d", Action, issue.Number)
 				return *issue.Number, nil
 			} else {
 				return *issue.Number, nil
@@ -56,17 +52,16 @@ func CreateIssue(step *GitHubJobStepOut, owner, repo, runid string) (int, error)
 	return 0, fmt.Errorf("step is not an action")
 }
 
-func createIssue(step *GitHubJobStepOut, owner, repo, runid string) (*github.Issue, error) {
+func createIssue(Action string) (*github.Issue, error) {
 	PAT := os.Getenv("PAT")
 	if PAT == "" {
 		return nil, fmt.Errorf("[createIssue] PAT not set in env variable")
 	}
 	client := getClient(PAT)
-	title := fmt.Sprintf("[KB] Add KB for %s", step.Action)
+	title := fmt.Sprintf("[KB] Add KB for %s", Action)
 	labels := []string{kblabel}
 	bodyLines := []string{}
-	bodyLines = append(bodyLines, "harden-runner-link: ")
-	bodyLines = append(bodyLines, fmt.Sprintf("https://app.stepsecurity.io/github/%s/%s/actions/runs/%s", owner, repo, runid))
+	bodyLines = append(bodyLines, "Knowledge Base is missing for %s.", Action)
 	body := strings.Join(bodyLines, "\r\n")
 	issue, _, err := client.Issues.Create(context.Background(), stepsecurityowner, stepsecurityrepo, &github.IssueRequest{Title: &title, Labels: &labels, Body: &body})
 
