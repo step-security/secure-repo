@@ -1,0 +1,21 @@
+name: "close issue"
+
+on:
+  push:
+  
+
+jobs:
+  closeissue:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@v1
+      with:
+        egress-policy: audit
+
+    - name: Close Issue
+      uses: peter-evans/close-issue@v1
+      with:
+       issue-number: 1
+       comment: Auto-closing issue
