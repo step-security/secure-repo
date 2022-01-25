@@ -3,7 +3,7 @@ github-token:
   environment-variable-name: COMPOSER_TOKEN
   permissions:
     contents: read
-    contents-reason: to clone the repos, and get release assets. #Refernce: https://github.com/shivammathur/setup-php/tree/2.16.0#memo-usage
+    contents-reason: to clone the repos, and get release assets. #Refernce: https://github.com/shivammathur/setup-php/blob/c38f1acc3878025148540820642612cec3b0bcf9/dist/index.js#L531
 outbound-endpoints:
   - fqdn: '*.launchpad.net'
     port: 80
