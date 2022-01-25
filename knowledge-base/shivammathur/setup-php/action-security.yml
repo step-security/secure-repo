@@ -3,7 +3,7 @@ github-token:
   environment-variable-name: COMPOSER_TOKEN
   permissions:
     contents: read
-    contents-reason: to access matching refs of GitHub API.
+    contents-reason: to clone the repos, and get release assets. #Refernce: https://github.com/shivammathur/setup-php/tree/2.16.0#memo-usage
 outbound-endpoints:
   - fqdn: '*.launchpad.net'
     port: 80
