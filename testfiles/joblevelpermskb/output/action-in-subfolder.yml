@@ -10,13 +10,13 @@ on:
 jobs:
   analysis:
     permissions:
-      actions: read # for ossf/scorecard-actions/analyze to check for publishing workflows
-      checks: read # for ossf/scorecard-actions/analyze to check for SAST tool in check runs
-      contents: read # for ossf/scorecard-actions/analyze to list releases
-      issues: read # for ossf/scorecard-actions/analyze to check if repo is maintained
-      pull-requests: read # for ossf/scorecard-actions/analyze to check if PRs are reviewed
+      actions: read # for ossf/scorecard-actions to check for publishing workflows
+      checks: read # for ossf/scorecard-actions to check for SAST tool in check runs
+      contents: read # for ossf/scorecard-actions to list releases
+      issues: read # for ossf/scorecard-actions to check if repo is maintained
+      pull-requests: read # for ossf/scorecard-actions to check if PRs are reviewed
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      statuses: read # for ossf/scorecard-actions/analyze to check for CI tests in PRs
+      statuses: read # for ossf/scorecard-actions to check for CI tests in PRs
     name: Scorecard analysis
     runs-on: ubuntu-latest
     steps:
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
 
       - name: "Run analysis"
-        uses: ossf/scorecard-action@c8416b0b2bf627c349ca92fc8e3de51a64b005cf
+        uses: ossf/scorecard-actions@c8416b0b2bf627c349ca92fc8e3de51a64b005cf
         with:
           policy_file: .github/scorecard-policy.yml
           results_file: results.sarif
