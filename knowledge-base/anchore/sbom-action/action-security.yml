@@ -1,0 +1,11 @@
+name: "Anchore SBOM Action"
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    actions: write
+    actions-reason: to upload workflow artifacts  # CHECKOUT: https://github.com/anchore/sbom-action/blob/3626d7d7b13e87ee6c6f9ded3940dea05a3967bc/src/github/SyftGithubAction.ts#L262
+    contents: write
+    contents-reason: to upload & delete release assets # https://github.com/anchore/sbom-action/blob/3626d7d7b13e87ee6c6f9ded3940dea05a3967bc/src/github/SyftGithubAction.ts#L459
+# Solves#194

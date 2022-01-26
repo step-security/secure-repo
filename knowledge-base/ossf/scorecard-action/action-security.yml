@@ -1,0 +1,4 @@
+name: "OSSF Scorecard action"
+# NOTE: GITHUB_PAT is used instead of GITHUB_TOKEN
+# CHECKOUT:https://github.com/ossf/scorecard-action#installation
+# FIX: #190
