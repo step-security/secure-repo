@@ -3,7 +3,6 @@ github-token:
   environment-variable-name: GITHUB_TOKEN
   is-default: false
   permissions:
-    checks: write
-    checks-reason: to update Checks Section # CHECKOUT: https://github.com/github/super-linter#how-to-use
-  
+    statuses: write
+    statuses-reason: to mark status of each linter run
 # FIX#192
