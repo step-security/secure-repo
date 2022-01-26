@@ -1,0 +1,9 @@
+name: 'GitHub Script'
+github-token:
+  action-input:
+    input: github-token
+    is-default: false
+  permissions:
+    id-token: write
+    id-token-reason: used to create an authenticated client
+    #Reference: https://github.com/actions/github-script/blob/f05a81df23035049204b043b50c3322045ce7eb3/action.yml#L12
