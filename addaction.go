@@ -67,6 +67,7 @@ func addAction(inputYaml, jobName, action string) (string, error) {
 	output = append(output, spaces+fmt.Sprintf("  uses: %s", action))
 	output = append(output, spaces+"  with:")
 	output = append(output, spaces+"    egress-policy: audit")
+	output = append(output, "")
 
 	for i := jobNode.Line - 1; i < len(inputLines); i++ {
 		output = append(output, inputLines[i])
