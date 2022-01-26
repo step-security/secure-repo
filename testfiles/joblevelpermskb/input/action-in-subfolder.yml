@@ -1,39 +1,26 @@
-name: Scorecard analysis workflow
-on:
-  push:
-    # Only the default branch is supported.
-    branches: [main]
-  pull_request:
-    # All branches are supported.
-    branches: [main]
-
+name: Snyk Container
+on: push
 jobs:
-  analysis:
-    name: Scorecard analysis
+  snyk:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@917f7d59f22e82a5ddcaef409923426fd7aa6327
-      - name: "Checkout code"
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
-
-      - name: "Run analysis"
-        uses: ossf/scorecard-actions@c8416b0b2bf627c349ca92fc8e3de51a64b005cf
-        with:
-          policy_file: .github/scorecard-policy.yml
-          results_file: results.sarif
-          results_format: sarif
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-
-      # https://docs.github.com/en/actions/advanced-guides/storing-workflow-data-as-artifacts
-      # Optional.
-      - name: "Upload artifact"
-        uses: actions/upload-artifact@b586475cdf29b524abab101a8ddb5efa9a225759
-        with:
-          name: SARIF file
-          path: results.sarif
-          retention-days: 5
-
-      - name: "Upload SARIF results"
-        uses: github/codeql-action/upload-sarif@e095058bfa09de8070f94e98f5dc059531bc6235
-        with:
-          sarif_file: results.sarif
+    - uses: actions/checkout@v2
+    - name: Build a Docker image
+      run: docker build -t your/image-to-test .
+    - name: Run Snyk to check Docker image for vulnerabilities
+      # Snyk can be used to break the build when it detects vulnerabilities.
+      # In this case we want to upload the issues to GitHub Code Scanning
+      continue-on-error: true
+      uses: snyk/actions/docker@master
+      env:
+        # In order to use the Snyk Action you will need to have a Snyk API token.
+        # More details in https://github.com/snyk/actions#getting-your-snyk-token
+        # or you can signup for free at https://snyk.io/login
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        image: your/image-to-test
+        args: --file=Dockerfile
+    - name: Upload result to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: snyk.sarif

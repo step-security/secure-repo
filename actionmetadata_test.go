@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-github/v40/github"
+	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -38,9 +41,10 @@ func TestKnowledgeBase(t *testing.T) {
 			}
 
 			// validating the action repo
-			var response *http.Response = testUrlpath(filePath)
-			if response.StatusCode != http.StatusOK {
-				lintIssues = append(lintIssues, fmt.Sprintf("Non-OK HTTP status(%d) at %s ", response.StatusCode, filePath))
+			var response *github.Response = doesActionRepoExist(filePath)
+			if response.Response.StatusCode != http.StatusOK {
+				fmt.Println("response: ", response.Response.StatusCode)
+				lintIssues = append(lintIssues, fmt.Sprintf("Action repo does not exist at %s", filePath))
 				return nil
 			}
 
@@ -132,7 +136,36 @@ func TestKnowledgeBase(t *testing.T) {
 	}
 }
 
-func testUrlpath(filePath string) *http.Response {
+func doesActionRepoExist(filePath string) *github.Response {
+	var tagOrBranch string = "master"
+	splitOnSlash := strings.Split(filePath, "/")
+	owner := splitOnSlash[1]
+	repo := splitOnSlash[2]
+
+	PAT := os.Getenv("PAT")
+
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: PAT},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+
+	_, res, err := client.Git.GetRef(context.Background(), owner, repo, fmt.Sprintf("tags/%s", tagOrBranch))
+
+	if err != nil {
+		_, res, err = client.Git.GetRef(context.Background(), owner, repo, fmt.Sprintf("heads/%s", tagOrBranch))
+
+		if err != nil {
+			fmt.Println("err: ", err)
+			return res
+		}
+	}
+	return res
+}
+
+/*
 	var index, count int = 0, 0
 	var urlpath, branch_name string = "", "master"
 	for i := 0; i < len(filePath); i++ {
@@ -160,3 +193,4 @@ func testUrlpath(filePath string) *http.Response {
 	return response
 
 }
+*/
