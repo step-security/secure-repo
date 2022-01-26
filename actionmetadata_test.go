@@ -43,10 +43,10 @@ func TestKnowledgeBase(t *testing.T) {
 			// validating the action repo
 			var response *github.Response = doesActionRepoExist(filePath)
 			if response.Response.StatusCode != http.StatusOK {
-				fmt.Println("res: ", response.StatusCode)
 				lintIssues = append(lintIssues, fmt.Sprintf("Action repo does not exist at %s", filePath))
 				return nil
 			}
+			defer response.Body.Close()
 
 			input, err := ioutil.ReadFile(filePath)
 
@@ -157,10 +157,8 @@ func doesActionRepoExist(filePath string) *github.Response {
 	if err != nil {
 		_, res, err = client.Git.GetRef(context.Background(), owner, repo, fmt.Sprintf("heads/%s", Branch))
 		if err != nil {
-			fmt.Println("err: ", err)
 			return res
 		}
 	}
-	defer res.Body.Close()
 	return res
 }
