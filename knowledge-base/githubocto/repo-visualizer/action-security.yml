@@ -6,7 +6,8 @@ github-token:
   permissions:
     contents: write
     contents-if: ${{ !contains(with, 'should_push') || with['should_push'] == 'true' }}
-    contents-reason: to read and push into repo directories
+    contents-reason: to commit and push diagrams
+    #Reference: https://github.com/githubocto/repo-visualizer/blob/ccc127b6bb1ef7123ea50544cc22a90e9f5f6f3d/src/index.jsx#L76
 outbound-endpoints:
   - fqdn: github.com
     port: 443
