@@ -1,0 +1,4 @@
+name: "KinD (Kubernetes in Docker) Action"
+# NOTE: GITHUB_TOKEN NOT USED
+    
+# FIX: #105

@@ -1,0 +1,10 @@
+name: Build and push Docker images
+github-token:
+  action-input:
+    input: github-token # CHECKOUT: https://github.com/docker/build-push-action/blob/1814d3dfb36d6f84174e61f4a4b05bd84089a4b9/action.yml#L83
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to read repo content # CHECKOUT: https://github.com/docker/build-push-action/tree/1814d3dfb36d6f84174e61f4a4b05bd84089a4b9#git-context
+    
+# FIX: #157
