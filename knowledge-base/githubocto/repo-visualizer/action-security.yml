@@ -1,0 +1,15 @@
+name: 'Repo Visualizer'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: write
+    contents-if: ${{ !contains(with, 'should_push') || with['should_push'] == 'true' }}
+    contents-reason: to commit and push diagrams
+    #Reference: https://github.com/githubocto/repo-visualizer/blob/ccc127b6bb1ef7123ea50544cc22a90e9f5f6f3d/src/index.jsx#L76
+outbound-endpoints:
+  - fqdn: github.com
+    port: 443
+    reason: to fetch contents and push diagrams
+harden-runner-link: https://app.stepsecurity.io/github/jauderho/sandbox/actions/runs/1734928151
