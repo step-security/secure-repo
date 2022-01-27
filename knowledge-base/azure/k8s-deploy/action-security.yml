@@ -1,0 +1,10 @@
+name: 'Deploy to Kubernetes cluster'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: read
+    actions-reason: to query workflow path #Reference: https://github.com/Azure/k8s-deploy/blob/ac49626466364585521685ccaad17e499a8263a8/src/githubClient.ts#L11
+    
+harden-runner-link: https://app.stepsecurity.io/github/arjundashrath/StepSecurity_Tests/actions/runs/1729871674 
