@@ -3,7 +3,7 @@ github-token:
   environment-variable-name: COMPOSER_TOKEN
   permissions:
     contents: read
-    contents-reason: to access matching refs GitHub API, clone the repos, and get release assets.
+    contents-reason: to clone the repos and get release assets #Reference: https://github.com/shivammathur/setup-php/blob/c38f1acc3878025148540820642612cec3b0bcf9/dist/index.js#L531
 outbound-endpoints:
   - fqdn: '*.launchpad.net'
     port: 80
@@ -49,7 +49,7 @@ outbound-endpoints:
     reason: to fetch git objects, release information and code
   - fqdn: 'api.github.com'
     port: 443
-    reason: to call GitHub API to get matching refs, releases and tags.
+    reason: to call GitHub API to get matching refs, releases and tags
   - fqdn: 'codeload.github.com'
     port: 443
     reason: to get GitHub release assets
