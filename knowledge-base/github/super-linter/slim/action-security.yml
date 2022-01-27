@@ -1,0 +1,8 @@
+name: 'Super-Linter slim'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    statuses: write
+    statuses-reason: to mark status of each linter run
+# FIX#192

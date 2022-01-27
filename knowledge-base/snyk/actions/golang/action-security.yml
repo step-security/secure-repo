@@ -1,0 +1,3 @@
+name: "Snyk Golang"
+# NOTE: GITHUB_TOKEN NOT USED
+# Solves#198

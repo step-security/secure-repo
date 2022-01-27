@@ -4,7 +4,8 @@ on:
     branches: main
   workflow_dispatch:
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   lint:

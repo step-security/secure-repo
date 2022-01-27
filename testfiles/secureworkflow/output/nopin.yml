@@ -4,7 +4,8 @@ on:
     branches: main
   workflow_dispatch:
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -17,6 +18,7 @@ jobs:
         uses: step-security/harden-runner@v1
         with:
           egress-policy: audit
+
       - uses: actions/checkout@v1
       - uses: github/super-linter@v3
         env:

@@ -1,0 +1,3 @@
+name: 'Gosec Security Checker'
+# NOTE: GITHUB_TOKEN NOT USED
+# Solves#199

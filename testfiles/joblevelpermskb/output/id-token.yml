@@ -12,8 +12,6 @@ env:
 
 jobs:
   test:
-    permissions:
-      contents: read # for actions/checkout to fetch code
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -51,8 +49,6 @@ jobs:
           path: packaged-testing.yaml
 
   deploy-testing:
-    permissions:
-      contents: read # for actions/checkout to fetch code
     needs: [build-and-package]
     runs-on: ubuntu-latest
     steps:

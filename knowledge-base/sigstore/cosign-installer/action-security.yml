@@ -1,0 +1,8 @@
+name: 'cosign-installer'
+outbound-endpoints:
+  - fqdn: 'storage.googleapis.com'
+    port: 443
+    reason: to download cosign 
+    
+#No github token required, reference: https://github.com/sigstore/cosign-installer/blob/353e21c35cdb907793efa84b167e496c151ef843/README.md?plain=1#L85
+harden-runner-link: https://app.stepsecurity.io/github/jauderho/bl3auto/actions/runs/1732141963

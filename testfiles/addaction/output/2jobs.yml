@@ -9,6 +9,7 @@ jobs:
        uses: step-security/harden-runner@v1
        with:
          egress-policy: audit
+
      - run: ls -R
   list-directory1:
     runs-on: ubuntu-latest
@@ -17,4 +18,5 @@ jobs:
        uses: step-security/harden-runner@v1
        with:
          egress-policy: audit
+
      - run: ls -R

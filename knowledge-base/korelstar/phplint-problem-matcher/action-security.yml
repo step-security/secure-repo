@@ -1,0 +1,4 @@
+name: 'phplint problem matcher'
+# NOTE: GITHUB_TOKEN NOT USED
+    
+# FIX: #142
