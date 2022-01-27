@@ -14,4 +14,5 @@ jobs:
        uses: step-security/harden-runner@v1
        with:
          egress-policy: audit
+
      - run: ls -R

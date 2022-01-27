@@ -1,0 +1,9 @@
+name: 'Docker Setup QEMU'
+outbound-endpoints:
+  - fqdn: '*.docker.io'
+    port: 443
+    reason: to access and authenticate docker 
+  - fqdn: production.cloudflare.docker.com
+    port: 443
+    reason: to pull image configuration 
+harden-runner-link: https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1732376871

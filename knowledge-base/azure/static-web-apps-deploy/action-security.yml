@@ -1,0 +1,8 @@
+name: "Azure Static Web Apps Deploy"
+github-token:
+  action-input:
+    input: repo_token # CHECKOUT: https://github.com/Azure/static-web-apps-deploy/blob/v1/action.yml#L31
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to comment on PRs # CHECKOUT: https://github.com/Azure/static-web-apps-deploy/blob/v1/action.yml#L32

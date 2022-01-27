@@ -1,0 +1,13 @@
+name: 'Docker Metadata action'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to query repo information # CHECKOUT: https://github.com/docker/metadata-action/blob/84dbd576635d3ee07680c0b62136e8eee116dd89/src/main.ts#L16
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to query repo information
+harden-runner-link: https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/1723947678

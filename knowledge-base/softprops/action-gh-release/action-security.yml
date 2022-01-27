@@ -1,0 +1,8 @@
+name: "GH Release"
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to create GitHub release #Reference: https://github.com/softprops/action-gh-release/blob/fe9a9bd3295828558c7a3c004f23f3bf77d155b2/README.md?plain=1#L70 

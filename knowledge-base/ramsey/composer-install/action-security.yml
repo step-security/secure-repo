@@ -1,0 +1,4 @@
+name: "Install PHP Dependencies with Composer"
+# NOTE: GITHUB_TOKEN NOT USED
+    
+# FIX: #144
