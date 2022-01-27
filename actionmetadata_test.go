@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,12 +40,10 @@ func TestKnowledgeBase(t *testing.T) {
 			}
 
 			// validating the action repo
-			var response *github.Response = doesActionRepoExist(filePath)
-			if response.Response.StatusCode != http.StatusOK {
+			if !doesActionRepoExist(filePath) {
 				lintIssues = append(lintIssues, fmt.Sprintf("Action repo does not exist at %s", filePath))
 				return nil
 			}
-			defer response.Body.Close()
 
 			input, err := ioutil.ReadFile(filePath)
 
@@ -136,14 +133,12 @@ func TestKnowledgeBase(t *testing.T) {
 	}
 }
 
-func doesActionRepoExist(filePath string) *github.Response {
-	var Branch string = "master"
+func doesActionRepoExist(filePath string) bool {
 	splitOnSlash := strings.Split(filePath, "/")
 	owner := splitOnSlash[1]
 	repo := splitOnSlash[2]
 
 	PAT := os.Getenv("PAT")
-
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: PAT},
@@ -152,13 +147,18 @@ func doesActionRepoExist(filePath string) *github.Response {
 
 	client := github.NewClient(tc)
 
-	_, res, err := client.Git.GetRef(context.Background(), owner, repo, fmt.Sprintf("tags/%s", Branch))
+	folder := ""
+	// does the path to folder is correct for action repository
+	if len(splitOnSlash) > 4 {
+		folder = strings.Join(splitOnSlash[3:len(splitOnSlash)-1], "/")
+		folder += "/"
+	}
+	u := fmt.Sprintf("repos/%v/%v/contents/%vaction.yml", owner, repo, folder)
+	_, err := client.NewRequest("GET", u, nil)
 
 	if err != nil {
-		_, res, err = client.Git.GetRef(context.Background(), owner, repo, fmt.Sprintf("heads/%s", Branch))
-		if err != nil {
-			return res
-		}
+		fmt.Println("err: ", err)
+		return false
 	}
-	return res
+	return true
 }
