@@ -147,18 +147,23 @@ func doesActionRepoExist(filePath string) bool {
 
 	client := github.NewClient(tc)
 
-	folder := ""
+	repository, _, err := client.Repositories.Get(context.Background(), owner, repo)
+	if err != nil {
+		return false
+	}
+	branch := repository.DefaultBranch
+	var ref github.RepositoryContentGetOptions
+	ref.Ref = *branch
+
 	// does the path to folder is correct for action repository
 	if len(splitOnSlash) > 4 {
-		folder = strings.Join(splitOnSlash[3:len(splitOnSlash)-1], "/")
-		folder += "/"
-	}
-	u := fmt.Sprintf("repos/%v/%v/contents/%vaction.yml", owner, repo, folder)
-	_, err := client.NewRequest("GET", u, nil)
+		folder := strings.Join(splitOnSlash[3:len(splitOnSlash)-1], "/")
+		folder += "/action.yml"
+		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 
-	if err != nil {
-		fmt.Println("err: ", err)
-		return false
+		if err != nil {
+			return false
+		}
 	}
 	return true
 }
