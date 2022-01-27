@@ -61,7 +61,7 @@ func createIssue(Action string) (*github.Issue, error) {
 	title := fmt.Sprintf("[KB] Add KB for %s", Action)
 	labels := []string{kblabel}
 	bodyLines := []string{}
-	bodyLines = append(bodyLines, "Knowledge Base is missing for %s.", Action)
+	bodyLines = append(bodyLines, fmt.Sprintf("Knowledge Base is missing for %s.", Action))
 	body := strings.Join(bodyLines, "\r\n")
 	issue, _, err := client.Issues.Create(context.Background(), stepsecurityowner, stepsecurityrepo, &github.IssueRequest{Title: &title, Labels: &labels, Body: &body})
 
