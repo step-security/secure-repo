@@ -90,6 +90,11 @@ func TestKnowledgeBase(t *testing.T) {
 					lintIssues = append(lintIssues, fmt.Sprintf("Reason must start with 'to '. It is currently %s in action-security.yml at %s", endpoint.Reason, filePath))
 					return nil
 				}
+
+				if strings.HasSuffix(endpoint.Reason, ".") {
+					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not end with '.'. It is currently %s in action-security.yml at %s", endpoint.Reason, filePath))
+					return nil
+				}
 			}
 
 			validScopes := []string{"actions", "checks", "contents", "deployments", "id-token", "issues", "packages",
@@ -116,6 +121,16 @@ func TestKnowledgeBase(t *testing.T) {
 				if !strings.HasPrefix(scope.Reason, "to ") {
 					lintIssues = append(lintIssues, fmt.Sprintf("Reason must start with 'to '. It is currently %s in action-security.yml at %s", scope.Reason, filePath))
 					return nil
+				}
+
+				if strings.HasSuffix(scope.Reason, ".") {
+					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not end with '.'. It is currently %s in action-security.yml at %s", scope.Reason, filePath))
+					return nil
+				}
+
+				//Since the reason is added as a comment in the workflow file, limit the length to 50 to not clutter the workflow file
+				if len(scope.Reason) > 50 {
+					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not exceed 50 char limit. It is currently %d in action-security.yml at %s", len(scope.Reason), filePath))
 				}
 			}
 
