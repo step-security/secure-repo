@@ -29,5 +29,5 @@ jobs:
     - name: Run coverage
       run: go test -race -coverprofile=coverage.txt -covermode=atomic
       env: 
-        PAT: ${{ secrets.PAT }} 
+        PAT: ${{ secrets.GITHUB_TOKEN }} 
     - uses: codecov/codecov-action@v2
