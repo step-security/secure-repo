@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-github/v40/github"
+	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,6 +38,13 @@ func TestKnowledgeBase(t *testing.T) {
 				lintIssues = append(lintIssues, fmt.Sprintf("File must be named action-security.yml, not %s at %s", info.Name(), filePath))
 				return nil
 			}
+
+			// validating the action repo
+			if !doesActionRepoExist(filePath) {
+				lintIssues = append(lintIssues, fmt.Sprintf("Action repo does not exist at %s", filePath))
+				return nil
+			}
+
 			input, err := ioutil.ReadFile(filePath)
 
 			if err != nil {
@@ -80,11 +90,6 @@ func TestKnowledgeBase(t *testing.T) {
 					lintIssues = append(lintIssues, fmt.Sprintf("Reason must start with 'to '. It is currently %s in action-security.yml at %s", endpoint.Reason, filePath))
 					return nil
 				}
-
-				if strings.HasSuffix(endpoint.Reason, ".") {
-					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not end with '.'. It is currently %s in action-security.yml at %s", endpoint.Reason, filePath))
-					return nil
-				}
 			}
 
 			validScopes := []string{"actions", "checks", "contents", "deployments", "id-token", "issues", "packages",
@@ -112,16 +117,6 @@ func TestKnowledgeBase(t *testing.T) {
 					lintIssues = append(lintIssues, fmt.Sprintf("Reason must start with 'to '. It is currently %s in action-security.yml at %s", scope.Reason, filePath))
 					return nil
 				}
-
-				if strings.HasSuffix(scope.Reason, ".") {
-					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not end with '.'. It is currently %s in action-security.yml at %s", scope.Reason, filePath))
-					return nil
-				}
-
-				//Since the reason is added as a comment in the workflow file, limit the length to 50 to not clutter the workflow file
-				if len(scope.Reason) > 50 {
-					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not exceed 50 char limit. It is currently %d in action-security.yml at %s", len(scope.Reason), filePath))
-				}
 			}
 
 			return nil
@@ -136,4 +131,39 @@ func TestKnowledgeBase(t *testing.T) {
 		}
 		t.Fail()
 	}
+}
+
+func doesActionRepoExist(filePath string) bool {
+	splitOnSlash := strings.Split(filePath, "/")
+	owner := splitOnSlash[1]
+	repo := splitOnSlash[2]
+
+	PAT := os.Getenv("PAT")
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: PAT},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+
+	repository, _, err := client.Repositories.Get(context.Background(), owner, repo)
+	if err != nil {
+		return false
+	}
+	branch := repository.DefaultBranch
+	var ref github.RepositoryContentGetOptions
+	ref.Ref = *branch
+
+	// does the path to folder is correct for action repository
+	if len(splitOnSlash) > 4 {
+		folder := strings.Join(splitOnSlash[3:len(splitOnSlash)-1], "/")
+		folder += "/action.yml"
+		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
+
+		if err != nil {
+			return false
+		}
+	}
+	return true
 }
