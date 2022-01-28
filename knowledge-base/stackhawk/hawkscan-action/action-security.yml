@@ -1,0 +1,10 @@
+name: 'StackHawk HawkScan Action'
+github-token:
+  action-input:
+    input: githubToken
+    is-default: true
+  permissions:
+    security-events: write
+    security-events-reason: to upload code scanning alert info
+    security-events-if: ${{ contains(with, 'codeScanningAlerts') && with['codeScanningAlerts'] == 'true'}}
+    #Reference: https://github.com/stackhawk/hawkscan-action/blob/599f152766d96cbffcb7cb0fdb2a692cbac41346/action.yml#L33

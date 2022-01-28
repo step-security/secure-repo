@@ -1,0 +1,12 @@
+name: 'Checkmarx CxFlow Action'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: write 
+    pull-requests-reason: to write feedback to PR
+    issues: write
+    issues-reason: to write feedback to github issues
+    #Reference: https://github.com/checkmarx-ts/checkmarx-cxflow-github-action#inputs
