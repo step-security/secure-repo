@@ -27,4 +27,6 @@ jobs:
         go-version: 1.15
     - name: Run coverage
       run: go test -race -coverprofile=coverage.txt -covermode=atomic
+      env: 
+        PAT: ${{ secrets.PAT }} 
     - uses: codecov/codecov-action@v2
