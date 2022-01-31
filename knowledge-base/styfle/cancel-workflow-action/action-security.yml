@@ -1,0 +1,9 @@
+name: 'Cancel Workflow Action'
+github-token:
+  action-input:
+    input: access_token
+    is-default: true
+  permissions:
+    actions: write 
+    actions-reason: to cancel/stop running workflows
+    #Reference: https://github.com/styfle/cancel-workflow-action/blob/dffcefda964529302c673388c65a8137995e9603/README.md?plain=1#L129
