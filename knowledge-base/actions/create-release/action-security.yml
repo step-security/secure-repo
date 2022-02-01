@@ -1,0 +1,6 @@
+name: 'Create a Release'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to create a release #Reference: https://github.com/actions/create-release/blob/4c11c9fe1dcd9636620a16455165783b20fc7ea0/dist/index.js#L8789
