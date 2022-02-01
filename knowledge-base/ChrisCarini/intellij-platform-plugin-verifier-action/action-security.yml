@@ -1,0 +1,6 @@
+name: 'IntelliJ Platform Plugin Verifier'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: read
+    contents-reason: to avoid github rate limiting #Reference: https://github.com/ChrisCarini/intellij-platform-plugin-verifier-action#github-token-authentication
