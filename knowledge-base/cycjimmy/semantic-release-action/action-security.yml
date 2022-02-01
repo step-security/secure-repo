@@ -1,0 +1,9 @@
+name: 'Action For Semantic Release'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    contents: write
+    contents-reason: to create release tags # CHECKOUT:https://github.com/semantic-release/semantic-release/blob/master/docs/usage/ci-configuration.md#authentication
+# CHECKOUT: https://github.com/cycjimmy/semantic-release-action/blob/master/src/index.js#L27    
+# FIX: #245
