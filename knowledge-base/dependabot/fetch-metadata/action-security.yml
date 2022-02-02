@@ -1,18 +1,4 @@
 name: 'Fetch Metadata from Dependabot PRs'
-github-token:
-  action-input:
-    input: github-token
-    is-default: true
-  permissions:
-    pull-requests: write
-    pull-requests-reason: to create a pr with updated dependencies
-    contents: write
-    contents-reason: to enable auto-merge
-    contents-if: ${{ contains(run, 'gh pr merge')}}
-    issues: write
-    issues-reason: to upload results to Github Code Scanning
-    issues-if: ${{ contains(run, 'gh pr edit')}}
-    repository-projects: write
-    repository-projects-reason: to upload results to Github Code Scanning
-    repository-projects-if: ${{ contains(run, 'gh pr edit')}}
-    #Reference: https://github.com/dependabot/fetch-metadata#usage-instructions
+#No Permission is needed for action step. 
+#Permissions for Run steps like(auto-approve, auto-merge and auto-label) is added in pemissions.go file.
+#Reference: https://github.com/dependabot/fetch-metadata#usage-instructions

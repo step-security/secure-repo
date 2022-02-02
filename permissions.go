@@ -368,6 +368,33 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) 
 		}
 	}
 
+	// Dependabot auto approve
+	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
+		if strings.Contains(runStep, "gh pr review --approve") {
+			permissions = append(permissions, "pull-requests: write")
+			return permissions, nil
+		}
+	}
+
+	// Dependabot auto merge
+	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
+		if strings.Contains(runStep, "gh pr merge --auto --merge") {
+			permissions = append(permissions, "pull-requests: write")
+			permissions = append(permissions, "contents: write")
+			return permissions, nil
+		}
+	}
+
+	// Dependabot auto label
+	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
+		if strings.Contains(runStep, "gh pr edit") && strings.Contains(runStep, "--add-label") {
+			permissions = append(permissions, "pull-requests: write")
+			permissions = append(permissions, "issues: write")
+			permissions = append(permissions, "repository-projects: write")
+			return permissions, nil
+		}
+	}
+
 	if strings.Contains(runStep, "secrets.GITHUB_TOKEN") || strings.Contains(runStep, "github.token") {
 		return nil, fmt.Errorf(errorSecretInRunStep)
 	}
