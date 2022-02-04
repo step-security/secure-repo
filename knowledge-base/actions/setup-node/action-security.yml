@@ -1,9 +1,6 @@
 name: 'Setup Node.js environment'
-github-token:
-  action-input:
-    input: token
-    is-default: true
-  permissions: # Used to pull node distributions from node-versions. Metadata permissions is present by default
+#github-token is used only to pull node distributions from node-versions. Metadata permissions is present by default
+
 outbound-endpoints:
   - fqdn: nodejs.org
     port: 443
