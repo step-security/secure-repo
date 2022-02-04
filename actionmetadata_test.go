@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -99,6 +100,30 @@ func TestKnowledgeBase(t *testing.T) {
 
 				if strings.HasSuffix(endpoint.Reason, ".") {
 					lintIssues = append(lintIssues, fmt.Sprintf("Reason must not end with '.'. It is currently %s in action-security.yml at %s", endpoint.Reason, filePath))
+					return nil
+				}
+			}
+
+			//If permission does not exist, Env variable and Action input must not exist
+			if len(actionMetadata.GitHubToken.Permissions.Scopes) == 0 {
+				if actionMetadata.GitHubToken.EnvironmentVariableName != "" {
+					lintIssues = append(lintIssues, fmt.Sprintf("Environment variable name must not exist when there is no permissions. It is currently set to '%s' in action-security.yml at %s", actionMetadata.GitHubToken.EnvironmentVariableName, filePath))
+					return nil
+				}
+				if !reflect.DeepEqual(actionMetadata.GitHubToken.ActionInput, ActionInput{}) {
+					lintIssues = append(lintIssues, fmt.Sprintf("Action input must not exist when there is no permissions. It is currently set to '%s' in action-security.yml at %s", actionMetadata.GitHubToken.ActionInput.Input, filePath))
+					return nil
+				}
+			}
+
+			//If permissions exist, Either Env variable or Action input must exist(not both)
+			if len(actionMetadata.GitHubToken.Permissions.Scopes) != 0 {
+				if actionMetadata.GitHubToken.EnvironmentVariableName != "" && !reflect.DeepEqual(actionMetadata.GitHubToken.ActionInput, ActionInput{}) {
+					lintIssues = append(lintIssues, fmt.Sprintf("Either Environment variable or Action input should exist, both exist in action-security.yml at %s", filePath))
+					return nil
+				}
+				if actionMetadata.GitHubToken.EnvironmentVariableName == "" && reflect.DeepEqual(actionMetadata.GitHubToken.ActionInput, ActionInput{}) {
+					lintIssues = append(lintIssues, fmt.Sprintf("Either Environment variable or Action input should exist, none exist in action-security.yml at %s", filePath))
 					return nil
 				}
 			}

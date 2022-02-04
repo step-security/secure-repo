@@ -1,9 +1,5 @@
 name: 'Setup Python'
-github-token:
-  action-input:
-    input: token
-    is-default: true
-  permissions: # Used to pull python distributions from python-versions.
+# github-token is used only to pull python distributions from python-versions.
 
 outbound-endpoints:
   - fqdn: raw.githubusercontent.com

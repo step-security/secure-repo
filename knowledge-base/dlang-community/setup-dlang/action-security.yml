@@ -1,9 +1,5 @@
 name: "D Compiler Installation"
-github-token:
-  action-input:
-    input: gh_token
-    is-default: true
-  permissions: # to get release with the specified tag 
+#github-token is used only to get release with the specified tag 
    
 outbound-endpoints:
   - fqdn: downloads.dlang.org
