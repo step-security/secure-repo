@@ -208,7 +208,7 @@ func doesActionRepoExist(filePath string) bool {
 		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 
 		if err != nil {
-			lintIssues = append(lintIssues, fmt.Sprintf("ErrorL: %s",err))
+			fmt.printf(err)
 			return false
 		}
 	}
