@@ -408,6 +408,14 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 	}
 
 	// Dependabot run steps reference: https://github.com/dependabot/fetch-metadata#usage-instructions
+	// Dependabot auto approve
+	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
+		if strings.Contains(runStep, "gh pr review --approve") {
+			permissions = append(permissions, Permission{permission: pull_requests_write, action: "dependabot", reason: "to enable auto-approve"})
+			return permissions, nil
+		}
+	}
+
 	// Dependabot auto merge
 	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
 		if strings.Contains(runStep, "gh pr merge --auto --merge") {
