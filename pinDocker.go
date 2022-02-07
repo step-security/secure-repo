@@ -10,9 +10,9 @@ import (
 )
 
 func pinDocker(action, jobName, inputYaml string) string {
-	leftOfAt := strings.Split(action, "@")
-	tag := leftOfAt[1]
-	image := leftOfAt[0][9:]
+	leftOfAt := strings.Split(action, ":")
+	tag := leftOfAt[2]
+	image := leftOfAt[1][2:]
 
 	ref, err := name.ParseReference(image)
 	if err != nil {
@@ -30,7 +30,7 @@ func pinDocker(action, jobName, inputYaml string) string {
 		return inputYaml
 	}
 
-	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], imghash, tag)
+	pinnedAction := fmt.Sprintf("%s:%s@%s # %s", leftOfAt[0], leftOfAt[1], imghash, tag)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
 	return inputYaml
 }
