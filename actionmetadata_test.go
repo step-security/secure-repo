@@ -35,6 +35,12 @@ func TestKnowledgeBase(t *testing.T) {
 				lintIssues = append(lintIssues, fmt.Sprintf("Error reading %s: %v", filePath, err))
 				return nil
 			}
+
+			if strings.ToLower(filePath) != filePath {
+				lintIssues = append(lintIssues, fmt.Sprintf("File path should be lowercase, not %s", filePath))
+				return nil
+			}
+
 			if info.Name() != "action-security.yml" {
 				lintIssues = append(lintIssues, fmt.Sprintf("File must be named action-security.yml, not %s at %s", info.Name(), filePath))
 				return nil
