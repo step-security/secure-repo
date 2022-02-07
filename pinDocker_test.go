@@ -22,18 +22,34 @@ func TestDockerActions(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://ghcr.io/token?scope=repository%3Astep-security%2Fintegration-test%2Fnt%3Apull&service=ghcr.io",
-		httpmock.NewStringResponder(200, `{
-			"token":"djE6c3RlcC1zZWN1cml0eS9pbnRlZ3JhdGlvbi10ZXN0L2ludDoxNjQ0MjI5Njc0MzY2ODE1NDA2"
-		  }`))
 
 	// add Table-Driven Tests
+	httpmock.RegisterResponder("GET", "v2/step-security/integration-test/int/manifests/latest",
+		httpmock.NewStringResponder(200, `{
+			"schemaVersion": 2,
+			"mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+			"config": {
+				"mediaType": "application/vnd.docker.container.image.v1+json",
+				"size": 7023,
+				"digest": "sha256:f1f95204dc1f12a41eaf41080185e2d289596b3e7637a8c50a3f6fbe17f99649"
+			},
+		  }`))
+
+	httpmock.RegisterResponder("GET", "v2/gcp-runtimes/container-structure-test/manifests/latest",
+		httpmock.NewStringResponder(200, `{
+		"schemaVersion": 2,
+		"mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+		"config": {
+			"mediaType": "application/vnd.docker.container.image.v1+json",
+			"size": 7023,
+			"digest": "sha256:4affda1c8f058f8d6c86dcad965cdb438a3d1d9a982828ff6737ea492b6bc8ce"
+		},
+	}`))
 
 	for _, f := range files {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
 
 		if err != nil {
-			fmt.Println("c1")
 			log.Fatal(err)
 		}
 
@@ -46,7 +62,6 @@ func TestDockerActions(t *testing.T) {
 		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, f.Name()))
 
 		if err != nil {
-			fmt.Println("c2")
 			log.Fatal(err)
 		}
 
