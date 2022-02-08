@@ -155,6 +155,8 @@ func (p *Permissions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func GetActionKnowledgeBase(action string) (*ActionMetadata, error) {
 	kbFolder := os.Getenv("KBFolder")
 
+	// converting actionKey to lowercase to fix ISSUE#286
+	action = strings.ToLower(action)
 	if kbFolder == "" {
 		kbFolder = "knowledge-base"
 	}
