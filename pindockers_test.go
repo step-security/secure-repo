@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"log"
-	"net/http"
 	"path"
 	"testing"
 
@@ -22,36 +21,11 @@ func TestDockerActions(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	// add Table-Driven Tests
-	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
-		func(req *http.Request) (*http.Response, error) {
-			resp := httpmock.NewStringResponse(200, ``)
-
-			resp.Header.Add("Host", "ghcr.io")
-			resp.Header.Add("Authorization", "1234")
-			return resp, nil
-		},
-	)
-
-	httpmock.RegisterResponder("GET", "https://gcr.io/v2/",
-		func(req *http.Request) (*http.Response, error) {
-			resp := httpmock.NewStringResponse(200, ``)
-
-			resp.Header.Add("Host", "gcr.io")
-			resp.Header.Add("Authorization", "1234")
-			return resp, nil
-		},
-	)
-
-	httpmock.RegisterResponder("GET", "https://ghcr.io/token?scope=repository%3Astep-security%2Fintegration-test%2Fnt%3Apull&service=ghcr.io",
+	httpmock.RegisterResponder("GET", "https://ghcr.io/v2",
 		httpmock.NewStringResponder(200, `{
-			"token":"djE6c3RlcC1zZWN1cml0eS9pbnRlZ3JhdGlvbi10ZXN0L2ludDoxNjQ0MjI5Njc0MzY2ODE1NDA2"
-		  }`))
+		}`))
 
-	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
-		httpmock.NewStringResponder(200, `{
-		  }`))
-
-	httpmock.RegisterResponder("GET", "https://gcr.io/v2/",
+	httpmock.RegisterResponder("GET", "https://gcr.io/v2",
 		httpmock.NewStringResponder(200, `{
 		}`))
 
@@ -87,7 +61,7 @@ func TestDockerActions(t *testing.T) {
 		output, err := PinDockers(string(input))
 
 		if err != nil {
-			t.Errorf("Error not expected: %v", err)
+			t.Errorf("Error: %v", err)
 		}
 
 		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, f.Name()))
@@ -97,7 +71,6 @@ func TestDockerActions(t *testing.T) {
 		}
 
 		if output != string(expectedOutput) {
-			ioutil.WriteFile("out.yml", []byte(output), 0644)
 			t.Errorf("test failed %s did not match expected output\n%s", f.Name(), output)
 		}
 	}
