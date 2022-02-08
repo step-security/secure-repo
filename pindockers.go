@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -9,6 +10,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"gopkg.in/yaml.v3"
 )
+
+var Tr http.RoundTripper = remote.DefaultTransport
 
 func PinDockers(inputYaml string) (string, error) {
 	workflow := Workflow{}
@@ -24,10 +27,7 @@ func PinDockers(inputYaml string) (string, error) {
 
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, "docker://") {
-				out, err = pinDocker(step.Uses, jobName, out)
-				if err != nil {
-					return out, err
-				}
+				out = pinDocker(step.Uses, jobName, out)
 			}
 		}
 	}
@@ -35,28 +35,28 @@ func PinDockers(inputYaml string) (string, error) {
 	return out, nil
 }
 
-func pinDocker(action, jobName, inputYaml string) (string, error) {
+func pinDocker(action, jobName, inputYaml string) string {
 	leftOfAt := strings.Split(action, ":")
 	tag := leftOfAt[2]
 	image := leftOfAt[1][2:]
 
-	ref, err := name.ParseReference(image)
+	ref, err := name.ParseReference(image, name.WithDefaultTag(tag))
 	if err != nil {
-		return inputYaml, err
+		return inputYaml
 	}
 
-	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithTransport(Tr))
 	if err != nil {
-		return inputYaml, err
+		return inputYaml
 	}
 
 	// Getting image digest
 	imghash, err := img.Digest()
 	if err != nil {
-		return inputYaml, err
+		return inputYaml
 	}
 
-	pinnedAction := fmt.Sprintf("%s:%s@%s # %s", leftOfAt[0], leftOfAt[1], imghash, tag)
+	pinnedAction := fmt.Sprintf("%s:%s@%s # %s", leftOfAt[0], leftOfAt[1], imghash.String(), tag)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
-	return inputYaml, nil
+	return inputYaml
 }
