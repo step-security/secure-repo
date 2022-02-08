@@ -1,15 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"path"
-	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"gopkg.in/yaml.v3"
 )
 
 func TestDockerActions(t *testing.T) {
@@ -24,7 +22,40 @@ func TestDockerActions(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	// add Table-Driven Tests
-	httpmock.RegisterResponder("GET", "v2/step-security/integration-test/int/manifests/latest",
+	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, ``)
+
+			resp.Header.Add("Host", "ghcr.io")
+			resp.Header.Add("Authorization", "1234")
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://gcr.io/v2/",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, ``)
+
+			resp.Header.Add("Host", "gcr.io")
+			resp.Header.Add("Authorization", "1234")
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://ghcr.io/token?scope=repository%3Astep-security%2Fintegration-test%2Fnt%3Apull&service=ghcr.io",
+		httpmock.NewStringResponder(200, `{
+			"token":"djE6c3RlcC1zZWN1cml0eS9pbnRlZ3JhdGlvbi10ZXN0L2ludDoxNjQ0MjI5Njc0MzY2ODE1NDA2"
+		  }`))
+
+	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
+		httpmock.NewStringResponder(200, `{
+		  }`))
+
+	httpmock.RegisterResponder("GET", "https://gcr.io/v2/",
+		httpmock.NewStringResponder(200, `{
+		}`))
+
+	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/step-security/integration-test/int/manifests/latest",
 		httpmock.NewStringResponder(200, `{
 			"schemaVersion": 2,
 			"mediaType": "application/vnd.docker.distribution.manifest.v2+json",
@@ -35,7 +66,7 @@ func TestDockerActions(t *testing.T) {
 			},
 		  }`))
 
-	httpmock.RegisterResponder("GET", "v2/gcp-runtimes/container-structure-test/manifests/latest",
+	httpmock.RegisterResponder("GET", "https://gcr.io/v2/gcp-runtimes/container-structure-test/manifests/latest",
 		httpmock.NewStringResponder(200, `{
 		"schemaVersion": 2,
 		"mediaType": "application/vnd.docker.distribution.manifest.v2+json",
@@ -53,10 +84,10 @@ func TestDockerActions(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, err := PinDocker(string(input))
+		output, err := PinDockers(string(input))
 
 		if err != nil {
-			t.Errorf("Error not expected")
+			t.Errorf("Error not expected: %v", err)
 		}
 
 		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, f.Name()))
@@ -70,25 +101,4 @@ func TestDockerActions(t *testing.T) {
 			t.Errorf("test failed %s did not match expected output\n%s", f.Name(), output)
 		}
 	}
-}
-func PinDocker(inputYaml string) (string, error) {
-	workflow := Workflow{}
-
-	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
-	if err != nil {
-		return inputYaml, fmt.Errorf("unable to parse yaml %v", err)
-	}
-
-	out := inputYaml
-
-	for jobName, job := range workflow.Jobs {
-
-		for _, step := range job.Steps {
-			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, "docker://") {
-				out = pinDocker(step.Uses, jobName, out)
-			}
-		}
-	}
-
-	return out, nil
 }

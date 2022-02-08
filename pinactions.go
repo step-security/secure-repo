@@ -35,12 +35,8 @@ func PinActions(inputYaml string) (string, error) {
 
 func pinAction(action, jobName, inputYaml string) string {
 
-	if strings.HasPrefix(action, "docker://") {
-		return pinDocker(action, jobName, inputYaml) // Pinning docker action
-	}
-
-	if !strings.Contains(action, "@") {
-		return inputYaml // Cannot pin local actions
+	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
+		return inputYaml // Cannot pin local actions and docker actions
 	}
 
 	leftOfAt := strings.Split(action, "@")
