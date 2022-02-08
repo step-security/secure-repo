@@ -1,0 +1,16 @@
+name: 'Prisma Cloud IaC Scan'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to add a comment in PR with the scan report
+    pull-requests-if: ${{ contains(with, 'create_pull_request_comment') && with['create_pull_request_comment'] == 'true'}}
+    checks: write
+    checks-reason: to add a check in PR with the scan report
+    checks-if: ${{ contains(with, 'create_pull_request_check') && with['create_pull_request_check'] == 'true'}}
+    issues: write
+    issues-reason: to add a issue with the scan report
+    issues-if: ${{ contains(with, 'create_issue') && with['create_issue'] == 'true'}}
+    #Reference: https://github.com/prisma-cloud-shiftleft/iac-scan-action/blob/99756e24d7340fb3f9532ade771bb92e6bd69271/action.yml#L11

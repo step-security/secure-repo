@@ -1,0 +1,4 @@
+name: 'IntelliJ Platform Plugin Verifier'
+#Only metadata permission is required to avoid github rate limiting which gets added by default
+#So no permission is needed for this action
+#Reference: https://github.com/ChrisCarini/intellij-platform-plugin-verifier-action#github-token-authentication

@@ -1,0 +1,10 @@
+name: 'Fetch Metadata from Dependabot PRs'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create a pr with updated dependencies
+#Permissions for Run steps like(auto-approve, auto-merge and auto-label) is added in pemissions.go file.
+#Reference: https://github.com/dependabot/fetch-metadata#usage-instructions

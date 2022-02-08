@@ -32,6 +32,36 @@ const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base
 const errorAlreadyHasPermissions = "KnownIssue-5: Jobs that already have permissions are not modified"
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
+//To avoid a typo while adding the permissions
+const (
+	actions_read              = "actions: read"
+	actions_write             = "actions: write"
+	checks_read               = "checks: read"
+	checks_write              = "checks: write"
+	contents_read             = "contents: read"
+	contents_write            = "contents: write"
+	deployments_read          = "deployments: read"
+	deployments_write         = "deployments: write"
+	id_token_read             = "id-token: read"
+	id_token_write            = "id-token: write"
+	issues_read               = "issues: read"
+	issues_write              = "issues: write"
+	discussions_read          = "discussions: read"
+	discussions_write         = "discussions: write"
+	packages_read             = "packages: read"
+	packages_write            = "packages: write"
+	pages_read                = "pages: read"
+	pages_write               = "pages: write"
+	pull_requests_read        = "pull-requests: read"
+	pull_requests_write       = "pull-requests: write"
+	repository_projects_read  = "repository-projects: read"
+	repository_projects_write = "repository-projects: write"
+	security_events_read      = "security-events: read"
+	security_events_write     = "security-events: write"
+	statuses_read             = "statuses: read"
+	statuses_write            = "statuses: write"
+)
+
 func alreadyHasJobPermissions(job Job) bool {
 	return job.Permissions.IsSet
 }
@@ -146,7 +176,7 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			if strings.Compare(inputYaml, fixWorkflowPermsReponse.FinalOutput) != 0 {
 				fixWorkflowPermsReponse.IsChanged = true
 
-				if len(perms) == 1 && strings.Contains(perms[0], "contents: read") {
+				if len(perms) == 1 && strings.Contains(perms[0], contents_read) {
 					// Don't add contents: read, because it will get defined at workflow level
 					continue
 				} else {
@@ -292,16 +322,25 @@ func evaluateEnvironmentVariables(step Step) string {
 	return run
 }
 
-func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) {
-	permissions := []string{}
+type Permission struct {
+	permission string
+	action     string
+	reason     string
+}
+
+func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, error) {
+	permissions := []Permission{}
 
 	runStep := evaluateEnvironmentVariables(step)
+
+	//Note: Add permissions in this format
+	//permissions = append(permissions, Permission{permission: "", action: "", reason: ""})
 
 	// reviewdog
 	if step.Env["REVIEWDOG_GITHUB_API_TOKEN"] != "" && isGitHubToken(step.Env["REVIEWDOG_GITHUB_API_TOKEN"]) {
 		if strings.Contains(runStep, "reviewdog") {
-			permissions = append(permissions, "checks: write")
-			permissions = append(permissions, "pull-requests: write")
+			permissions = append(permissions, Permission{permission: checks_write, action: "reviewdog", reason: ""})
+			permissions = append(permissions, Permission{permission: pull_requests_write, action: "reviewdog", reason: ""})
 			return permissions, nil
 		}
 	}
@@ -309,10 +348,10 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) 
 	// if it is a run step and has set node token, we may need to give packages permission
 	if step.Env["NODE_AUTH_TOKEN"] != "" && (strings.Contains(step.Env["NODE_AUTH_TOKEN"], "secrets.GITHUB_TOKEN") || strings.Contains(step.Env["NODE_AUTH_TOKEN"], "github.token")) && strings.Contains(jobState.CurrentNpmPackageRegistry, "npm.pkg.github.com") {
 		if strings.Contains(runStep, "install") {
-			permissions = append(permissions, "packages: read")
+			permissions = append(permissions, Permission{permission: packages_read, action: "node", reason: "to install packages"})
 			return permissions, nil
 		} else if strings.Contains(runStep, "publish") {
-			permissions = append(permissions, "packages: write")
+			permissions = append(permissions, Permission{permission: packages_write, action: "node", reason: "to publish packages"})
 			return permissions, nil
 		}
 	}
@@ -324,17 +363,17 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) 
 			// If setup-dotnet action has set the source url and token already
 			if strings.Contains(jobState.CurrentNuGetSourceURL, "pkg.github.com") && (strings.Contains(jobState.CurrentNugetAuthToken, "secrets.GITHUB_TOKEN") || strings.Contains(jobState.CurrentNugetAuthToken, "github.token")) {
 
-				permissions = append(permissions, "packages: write")
+				permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
 				return permissions, nil
 			}
 			// If current step has env
 			if step.Env["NUGET_AUTH_TOKEN"] != "" && (strings.Contains(step.Env["NUGET_AUTH_TOKEN"], "secrets.GITHUB_TOKEN") || strings.Contains(step.Env["NUGET_AUTH_TOKEN"], "github.token")) {
 
-				permissions = append(permissions, "packages: write")
+				permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
 				return permissions, nil
 			}
 		} else if strings.Contains(runStep, "-k ${{ secrets.GITHUB_TOKEN }}") || strings.Contains(runStep, "-k ${{ github.token }}") || strings.Contains(runStep, "--api-key ${{ secrets.GITHUB_TOKEN }}") || strings.Contains(runStep, "--api-key ${{ github.token }}") {
-			permissions = append(permissions, "packages: write")
+			permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
 			return permissions, nil
 		}
 	}
@@ -342,17 +381,17 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) 
 	// Dotnet. See action-setupdotnet-publish-curl test case
 	if strings.Contains(runStep, "curl") && strings.Contains(runStep, "PUT") {
 		if (strings.Contains(runStep, "secrets.GITHUB_TOKEN") || strings.Contains(runStep, "github.token")) && strings.Contains(runStep, "nuget.pkg.github.com") {
-			permissions = append(permissions, "packages: write")
+			permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
 			return permissions, nil
 		}
 	}
 
 	// Git push/ apply. See content-write-run-step.yml
 	if strings.Contains(runStep, "git apply") {
-		permissions = append(permissions, "contents: write # for git apply")
+		permissions = append(permissions, Permission{permission: contents_write, action: "Git", reason: "to git apply"})
 		return permissions, nil
 	} else if strings.Contains(runStep, "git push") {
-		permissions = append(permissions, "contents: write # for git push")
+		permissions = append(permissions, Permission{permission: contents_write, action: "Git", reason: "to git push"})
 		return permissions, nil
 	}
 
@@ -362,9 +401,35 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]string, error) 
 		// if any of the environment variables have the github token
 		for _, value := range step.Env {
 			if strings.Contains(value, "secrets.GITHUB_TOKEN") || strings.Contains(value, "github.token") {
-				permissions = append(permissions, "packages: write")
+				permissions = append(permissions, Permission{permission: packages_write, action: "setup-java", reason: ""})
 				return permissions, nil
 			}
+		}
+	}
+
+	// Dependabot run steps reference: https://github.com/dependabot/fetch-metadata#usage-instructions
+	// Dependabot auto approve
+	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
+		if strings.Contains(runStep, "gh pr review --approve") {
+			permissions = append(permissions, Permission{permission: pull_requests_write, action: "dependabot", reason: "to enable auto-approve"})
+			return permissions, nil
+		}
+	}
+
+	// Dependabot auto merge
+	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
+		if strings.Contains(runStep, "gh pr merge --auto --merge") {
+			permissions = append(permissions, Permission{permission: contents_write, action: "dependabot", reason: "to enable auto-merge"})
+			return permissions, nil
+		}
+	}
+
+	// Dependabot auto label
+	if step.Env["GITHUB_TOKEN"] != "" && isGitHubToken(step.Env["GITHUB_TOKEN"]) {
+		if strings.Contains(runStep, "gh pr edit") && strings.Contains(runStep, "--add-label") {
+			permissions = append(permissions, Permission{permission: repository_projects_write, action: "dependabot", reason: "to enable auto-label"})
+			permissions = append(permissions, Permission{permission: issues_write, action: "dependabot", reason: "to enable auto-label"})
+			return permissions, nil
 		}
 	}
 
@@ -397,10 +462,14 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 
 			permissions = append(permissions, permsForAction...)
 		} else if step.Run != "" { // if it is a run step
-			permsForRunStep, err := jobState.getPermissionsForRunStep(step)
-
+			RunStepPerms, err := jobState.getPermissionsForRunStep(step)
 			if err != nil {
 				jobState.Errors = append(jobState.Errors, err)
+			}
+
+			permsForRunStep := []string{}
+			for runStep := range RunStepPerms {
+				permsForRunStep = append(permsForRunStep, fmt.Sprintf("%s # for %s %s", RunStepPerms[runStep].permission, RunStepPerms[runStep].action, RunStepPerms[runStep].reason))
 			}
 
 			permissions = append(permissions, permsForRunStep...)
