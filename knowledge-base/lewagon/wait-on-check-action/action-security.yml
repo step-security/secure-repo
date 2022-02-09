@@ -1,0 +1,11 @@
+name: "Wait on check"
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    checks: read
+    checks-reason: to get check runs for specific ref # CHECKOUT: https://github.com/lewagon/wait-on-check-action/blob/5e937358caba2c7876a2ee06e4a48d0664fe4967/app/services/github_checks_verifier.rb#L29
+
+    
+# FIX: #270
