@@ -1,0 +1,11 @@
+name: 'cobertura-report'
+github-token:
+  action-input:
+    input: repo_token
+    is-default: true
+  permissions:
+    pull-requests: write 
+    pull-requests-reason: to comment with coverage report
+    checks: write
+    checks-reason: to check threshold of coverage report
+    #Reference: https://github.com/Kapiche/cobertura-action/blob/5ab225cba949db5740a12c487fa865412c25a002/dist/index.js#L18433
