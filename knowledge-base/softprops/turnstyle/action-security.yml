@@ -1,0 +1,9 @@
+name: 'action turnstyle'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    actions: read
+    actions-reason: to list workflows # CHECKOUT:https://github.com/softprops/turnstyle/blob/master/src/github.ts#L53
+    
+# FIX: #285

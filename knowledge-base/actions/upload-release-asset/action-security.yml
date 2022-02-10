@@ -1,0 +1,8 @@
+name: 'Upload a Release Asset'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    contents: write # CHECKOUT:https://github.com/actions/upload-release-asset/blob/ef2adfe8cb8ebfa540930c452c576b3819990faa/src/upload-release-asset.js#L25
+    contents-reason: to upload release asset 
+# FIX: #279
