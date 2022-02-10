@@ -1,0 +1,9 @@
+name: "Conventional Pull Request"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to get specific PR & list commits # CHECKOUT: https://github.com/CondeNast/conventional-pull-request-action/blob/9fe307d4fdb5c23c67a3563d3da40923ea0dd406/src/lint-pr.js#L30
+    
+# FIX: #273
