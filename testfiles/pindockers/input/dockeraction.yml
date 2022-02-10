@@ -1,0 +1,74 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push' }}
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout this repo
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Checkout baserom
+      uses: actions/checkout@v2
+      with:
+        repository: mkst/conker-private
+        token: ${{ secrets.PRIVATE_REPO_ACCESS }}
+        path: baserom
+    - name: Decrypt baserom
+      run: echo ${{ secrets.CONKER_BASEROM_US }} | openssl enc -d -aes-256-cbc -pass stdin -pbkdf2 -in baserom/baserom.us.z64.aes -out baserom.us.z64
+
+    - name: Perform make extract (rom)
+      uses: docker://docker.io/markstreet/conker:latest
+      with:
+        args: make extract
+
+    - name: Perform make extract (code)
+      uses: docker://docker.io/markstreet/conker:latest
+      with:
+        args: sh -c "cd conker && make extract"
+    - name: Perform make (code)
+      uses: docker://docker.io/markstreet/conker:latest
+      with:
+        args: sh -c "cd conker && make --jobs"
+    - name: Perform make replace
+      uses: docker://docker.io/markstreet/conker:latest
+      with:
+        args: sh -c "cd conker && make replace"
+
+    - name: Perform make
+      uses: docker://docker.io/markstreet/conker:latest
+      with:
+        args: make --jobs
+
+    - name: Create progress.csv
+      uses: docker://docker.io/markstreet/conker:latest
+      with:
+        args: sh -c "cd conker && make progress"
+
+    - name: Create progress_filename variable
+      id: vars
+      shell: bash
+      run: |
+        echo "::set-output name=progress_filename::$(echo ${GITHUB_SHA}.$(git show -s --format=%at ${GITHUB_SHA}).csv)"
+
+    - name: Rename progress.csv
+      run: mv conker/progress.csv "${{ steps.vars.outputs.progress_filename }}"
+
+    - name: Push progress.csv to conker-website repo
+      if: ${{ github.event_name == 'push' }}
+      uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.WEBSITE_REPO_ACCESS }}
+      with:
+        source_file: "${{ steps.vars.outputs.progress_filename }}"
+        destination_repo: 'mkst/conker-website'
+        destination_folder: 'progress/data'
+        user_email: 'streetster@gmail.com'
+        user_name: 'mkst'

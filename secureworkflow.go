@@ -49,7 +49,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if pinActions {
 		secureWorkflowReponse.FinalOutput, _ = PinActions(secureWorkflowReponse.FinalOutput)
-		secureWorkflowReponse.FinalOutput, _ = PinDockers(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.FinalOutput, _ = PinDocker(secureWorkflowReponse.FinalOutput)
 	}
 
 	return secureWorkflowReponse, nil

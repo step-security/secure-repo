@@ -13,7 +13,7 @@ import (
 
 var Tr http.RoundTripper = remote.DefaultTransport
 
-func PinDockers(inputYaml string) (string, error) {
+func PinDocker(inputYaml string) (string, error) {
 	workflow := Workflow{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -47,6 +47,7 @@ func pinDocker(action, jobName, inputYaml string) string {
 
 	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithTransport(Tr))
 	if err != nil {
+		//TODO: Log the error
 		return inputYaml
 	}
 

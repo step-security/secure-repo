@@ -1,0 +1,86 @@
+{
+    "schemaVersion": 1,
+    "name": "markstreet/conker",
+    "tag": "latest",
+    "architecture": "amd64",
+    "fsLayers": [
+       {
+          "blobSum": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1"
+       },
+       {
+          "blobSum": "sha256:d3acc6981f87d6086b267e317e0b7fdc3721b7ea25bf1dd9747a2771ecee052b"
+       },
+       {
+          "blobSum": "sha256:fb5c3254f27694f67b9bebbef7e0079ab085150b5e59247ca927da7c273dadf4"
+       },
+       {
+          "blobSum": "sha256:9514adb63029fa2ea87caa8d4499db3ac1f4c1cbc96ef7d6ae5e7aaf0b48ed58"
+       },
+       {
+          "blobSum": "sha256:fd0256ef22a2e7391f1d8ac937b1b659aa14c64bdd3a4b0a6375b9eec1967483"
+       },
+       {
+          "blobSum": "sha256:86811f99092a866a2095bac7abd0e101fbe3fcb265a4f92812e3e3ec4471be3f"
+       },
+       {
+          "blobSum": "sha256:30662b152b256520ae3669cc2433abe3687c8de16bebd99ee83d524b318cb7f1"
+       },
+       {
+          "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+       },
+       {
+          "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+       },
+       {
+          "blobSum": "sha256:16ec32c2132b43494832a05f2b02f7a822479f8250c173d0ab27b3de78b2f058"
+       }
+    ],
+    "history": [
+       {
+          "v1Compatibility": "{\"architecture\":\"amd64\",\"config\":{\"Env\":[\"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\"DEBIAN_FRONTEND=noninteractive\"],\"Cmd\":[\"bash\"],\"WorkingDir\":\"/conker\",\"OnBuild\":null},\"created\":\"2021-09-01T11:40:47.949863098Z\",\"id\":\"8f3ef20974bd82c1c91546a148e49421f9c2027ed161b8a26cca1a275147917d\",\"os\":\"linux\",\"parent\":\"3dc21afc177994d6466c6c20f81978b3b4b90d8238662a850ad9cc8c692fc8c0\"}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"3dc21afc177994d6466c6c20f81978b3b4b90d8238662a850ad9cc8c692fc8c0\",\"parent\":\"c0a549d6e68fb8cdd6ba1f32e0e9e70ead5fbd44ee3456fc7578ff7d30323556\",\"comment\":\"buildkit.dockerfile.v0\",\"created\":\"2021-09-01T11:40:47.881812087Z\",\"container_config\":{\"Cmd\":[\"RUN /bin/sh -c mkdir /conker # buildkit\"]}}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"c0a549d6e68fb8cdd6ba1f32e0e9e70ead5fbd44ee3456fc7578ff7d30323556\",\"parent\":\"ccd4535cff758dc68bcc78b36ab50f08acc96106039f01f5bfc548a832a94111\",\"comment\":\"buildkit.dockerfile.v0\",\"created\":\"2021-09-01T11:40:47.587387081Z\",\"container_config\":{\"Cmd\":[\"COPY .bash_aliases /root/.bash_aliases # buildkit\"]}}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"ccd4535cff758dc68bcc78b36ab50f08acc96106039f01f5bfc548a832a94111\",\"parent\":\"dd2ef27210cb1de92b3a42739c2302baba8f2903f3586f2030b54c4aab82336e\",\"comment\":\"buildkit.dockerfile.v0\",\"created\":\"2021-09-01T11:40:47.491088934Z\",\"container_config\":{\"Cmd\":[\"RUN /bin/sh -c python3 -m pip install -r /requirements.txt --no-cache-dir # buildkit\"]}}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"dd2ef27210cb1de92b3a42739c2302baba8f2903f3586f2030b54c4aab82336e\",\"parent\":\"aaa27a93d8c246e59099e7ead0ce4eafa7172f8b92eb3928f2b76ce1599db2b7\",\"comment\":\"buildkit.dockerfile.v0\",\"created\":\"2021-09-01T11:40:41.199300232Z\",\"container_config\":{\"Cmd\":[\"COPY requirements.txt / # buildkit\"]}}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"aaa27a93d8c246e59099e7ead0ce4eafa7172f8b92eb3928f2b76ce1599db2b7\",\"parent\":\"1104628c0bf90be1e89e44e7f664573b478e076501213d3f8fc235947fd4e9d1\",\"comment\":\"buildkit.dockerfile.v0\",\"created\":\"2021-09-01T11:40:41.138152491Z\",\"container_config\":{\"Cmd\":[\"RUN /bin/sh -c apt-get update \\u0026\\u0026 apt-get install -y $(cat /packages.txt) # buildkit\"]}}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"1104628c0bf90be1e89e44e7f664573b478e076501213d3f8fc235947fd4e9d1\",\"parent\":\"fbe449bf360604fa6870d45d4f6cfa9730acc83ac8eeaada9022f89300df5453\",\"comment\":\"buildkit.dockerfile.v0\",\"created\":\"2021-09-01T11:39:36.512372831Z\",\"container_config\":{\"Cmd\":[\"COPY /packages.txt / # buildkit\"]}}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"fbe449bf360604fa6870d45d4f6cfa9730acc83ac8eeaada9022f89300df5453\",\"parent\":\"f0b6158065f18f7def69ae14bfd3005101da09a134be535e714285d5c9240473\",\"comment\":\"buildkit.dockerfile.v0\",\"created\":\"2021-09-01T11:39:36.512372831Z\",\"container_config\":{\"Cmd\":[\"ENV DEBIAN_FRONTEND=noninteractive\"]},\"throwaway\":true}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"f0b6158065f18f7def69ae14bfd3005101da09a134be535e714285d5c9240473\",\"parent\":\"8528bdbb8ec667dabc4901fa292d1bebf887dc0c2bd4f27e79f8794f1b491cfc\",\"created\":\"2021-07-26T21:21:40.307832875Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop)  CMD [\\\"bash\\\"]\"]},\"throwaway\":true}"
+       },
+       {
+          "v1Compatibility": "{\"id\":\"8528bdbb8ec667dabc4901fa292d1bebf887dc0c2bd4f27e79f8794f1b491cfc\",\"created\":\"2021-07-26T21:21:39.951432409Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ADD file:524e8d93ad65f08a0cb0d144268350186e36f508006b05b8faf2e1289499b59f in / \"]}}"
+       }
+    ],
+    "signatures": [
+       {
+          "header": {
+             "jwk": {
+                "crv": "P-256",
+                "kid": "K4RD:FBOR:6SE7:WTIC:KHLH:G5OE:2NKH:JWYZ:OW7R:5I2G:SX4D:LEJI",
+                "kty": "EC",
+                "x": "3aeiKyC9tXH4fkLRNZlfO7xa8lx7_O_7Ksb3wHBLKQU",
+                "y": "OKB70FFj4vNWX0Ezzfv04rxmkMJ6eENQA_s2ShZjNIQ"
+             },
+             "alg": "ES256"
+          },
+          "signature": "wrIuxIKj75OxH7kinku00SHmWPncB8GDyIARgz-w3nE63oSnLrrX3Dff7dOOoZ_2Q1cEC4GvJk-mGB8hFm4iTg",
+          "protected": "eyJmb3JtYXRMZW5ndGgiOjUwODQsImZvcm1hdFRhaWwiOiJDbjAiLCJ0aW1lIjoiMjAyMi0wMi0xMFQxMTo0Nzo1NVoifQ"
+       }
+    ]
+ }
