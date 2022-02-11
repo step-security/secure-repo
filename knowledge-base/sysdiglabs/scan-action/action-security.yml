@@ -1,0 +1,8 @@
+name: 'Sysdig Secure Inline Scan'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to publish the checks #Reference: https://github.com/sysdiglabs/scan-action/blob/dabf59ef286a48c0a2884c13b5fad026a33956fc/action.yml#L11
