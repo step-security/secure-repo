@@ -5,7 +5,6 @@ github-token:
     is-default: false
   permissions:
     contents: write
-    contents-if: ${{  }}
     contents-reason: to query, create & update refs #CHECKOUT:https://github.com/google/mirror-branch-action/blob/884625cd18fadb1bdb646df951a7b486a5d9f3fc/index.ts#L43
     
 # FIX: #271
