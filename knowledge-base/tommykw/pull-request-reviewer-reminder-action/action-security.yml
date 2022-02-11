@@ -1,0 +1,12 @@
+name: 'Pull request reviewer reminder action'
+github-token:
+  action-input:
+    input: github-token
+    is-default: false
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to get specific PR #CHECKOUT:https://github.com/tommykw/pull-request-reviewer-reminder-action/blob/bc62999543e1220874b74e4c500a2559f5dfe42e/src/main.ts#L13
+    issues: write
+    issues-reason: to comment on specific PR #CHECKOUT: https://github.com/tommykw/pull-request-reviewer-reminder-action/blob/bc62999543e1220874b74e4c500a2559f5dfe42e/src/main.ts#L105
+    
+# FIX: #302

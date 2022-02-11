@@ -1,0 +1,3 @@
+name: 'Authenticate to Google Cloud'
+# NOTE: GITHUB_TOKEN NOT USED
+# FIX: #290
