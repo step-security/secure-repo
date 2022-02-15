@@ -5,4 +5,6 @@ github-token:
     is-default: false
   permissions:
     contents: read
-    contents-reason: to query PMD release #Reference: https://github.com/pmd/pmd-github-action/blob/0abbef95aa340c943d06fea7a3ad3d5eaf681ca5/action.yml#L9
+    contents-reason: to determine modified files #Reference: https://github.com/pmd/pmd-github-action/blob/0abbef95aa340c943d06fea7a3ad3d5eaf681ca5/action.yml#L9
+    pull-requests: read
+    pull-requests-reason: to query PRs #Reference: https://github.com/pmd/pmd-github-action/blob/79475d6cfdb0eced16531b676ee81d333620d323/lib/util.js#L117
