@@ -223,7 +223,7 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 	permissions := []string{}
 	atIndex := strings.Index(action.Uses, "@")
 
-	//Do not check for permissions in KB for docker actions
+	//Do not check for permissions in KB, if it is a docker action
 	if strings.HasPrefix(action.Uses, "docker://") {
 		return permissions, nil
 	}
