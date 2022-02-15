@@ -1,0 +1,17 @@
+name: IntegrationTest
+
+on:
+  pull_request:
+    branches:
+      - int
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Integration test
+      uses: docker://ghcr.io/step-security/integration-test/int@sha256:f1f95204dc1f12a41eaf41080185e2d289596b3e7637a8c50a3f6fbe17f99649 # latest
+      env:
+        PAT: ${{ secrets.PAT }}
