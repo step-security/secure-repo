@@ -195,6 +195,7 @@ func doesActionRepoExist(filePath string) bool {
 
 	repository, _, err := client.Repositories.Get(context.Background(), owner, repo)
 	if err != nil {
+		log.Println(fmt.Sprintf("error in doesActionRepoExist: %v", err))
 		return false
 	}
 	branch := repository.DefaultBranch
@@ -208,6 +209,7 @@ func doesActionRepoExist(filePath string) bool {
 		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 
 		if err != nil {
+			log.Println(fmt.Sprintf("error in doesActionRepoExist: %v", err))
 			return false
 		}
 	}
