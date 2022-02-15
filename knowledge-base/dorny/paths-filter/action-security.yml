@@ -1,0 +1,8 @@
+name: 'Paths Changes Filter'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to fetch a list of changed files #Reference:https://github.com/dorny/paths-filter/blob/1ec7035ff53cbd7a98744bd986f6ca1c7e17d1cb/README.md?plain=1#L145
