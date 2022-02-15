@@ -6,3 +6,5 @@ github-token:
   permissions:
     contents: read
     contents-reason: to fetch a list of changed files #Reference:https://github.com/dorny/paths-filter/blob/1ec7035ff53cbd7a98744bd986f6ca1c7e17d1cb/README.md?plain=1#L145
+    pull-requests: read
+    pull-requests-reason: to read pull requests #Reference:https://github.com/dorny/paths-filter/blob/78ab00f87740f82aec8ed8826eb4c3c851044126/src/main.ts#L171
