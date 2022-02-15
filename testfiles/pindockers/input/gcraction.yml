@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT
+name: ci
+on:
+  push:
+
+jobs:
+  local-build:
+    name: Local build
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Container structure test (scratch)
+      uses: docker://gcr.io/gcp-runtimes/container-structure-test:latest
+      with:
+        args: 'test --image ffurrer/semver:latest --config test/semver_container_test.yml'
+
+    - name: Container structure test (alpine)
+      uses: docker://gcr.io/gcp-runtimes/container-structure-test:latest
+      with:
+        args: 'test --image ffurrer/semver:alpine --config test/semver_alpine_container_test.yml'
+
+    - name: Container Scan (scratch)
+      uses: azure/container-scan@v0
+      with:
+        image-name: ffurrer/semver:latest
+        severity-threshold: HIGH
+
+    - name: Container Scan (alpine)
+      uses: azure/container-scan@v0
+      with:
+        image-name: ffurrer/semver:alpine
+        severity-threshold: HIGH
