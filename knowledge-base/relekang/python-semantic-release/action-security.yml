@@ -1,7 +1,7 @@
 name: 'Python Semantic Release'
 github-token:
   action-input:
-    input: github-token
+    input: github_token
     is-default: false
   permissions:
     contents: write # CHECKOUT: https://github.com/relekang/python-semantic-release/blob/master/action.yml#L11
