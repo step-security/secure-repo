@@ -11,7 +11,7 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@7206db2ec98c5538323a6d70e51f965d55c11c87 # v1
         with:
-          egress-policy: audit
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
       - uses: actions/missingaction@v2
       - uses: github/super-linter@34b2f8032d759425f6b42ea2e52231b33ae05401 # v3

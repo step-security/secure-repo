@@ -13,7 +13,7 @@ func TestCreateIssue(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/secure-workflows/issues?labels=knowledge-base&per_page=100&state=all",
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/secure-workflows/issues?labels=knowledge-base&per_page=100&state=open",
 		httpmock.NewStringResponder(200, `[
 			{
 			  "url": "https://api.github.com/repos/step-security/secure-workflows/issues/84",
