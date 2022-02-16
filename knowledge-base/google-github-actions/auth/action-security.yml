@@ -1,7 +1,8 @@
 name: Authenticate to Google Cloud
 github-token:
-  environment-variable-name: ACTIONS_ID_TOKEN_REQUEST_TOKEN
-  is-default: false
+  action-input:
+    input: token
+    is-default: true
   permissions:
     id-token: write
     id-token-if: ${{ contains(with, 'workload_identity_provider') }}
