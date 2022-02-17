@@ -1,0 +1,10 @@
+name: 'Labeler'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to determine modified files #Reference: https://github.com/actions/labeler/blob/c49f5acd80c2e9eea6ba380b8209695d5bc237dc/src/labeler.ts#L115
+    pull-requests: write
+    pull-requests-reason: to add labels to PRs #Reference: https://github.com/actions/labeler/blob/c49f5acd80c2e9eea6ba380b8209695d5bc237dc/src/labeler.ts#L237
