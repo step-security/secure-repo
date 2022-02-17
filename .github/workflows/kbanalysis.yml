@@ -1,0 +1,21 @@
+name: KBAnalysis
+
+on:
+  issues:
+    types:
+     - opened
+    
+permissions:
+  contents: read
+
+jobs:
+  Analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: KBAnalysis
+        uses: h0x0er/kbanalysis@master
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN }}
+          issue-id: ${{ github.event.issue.number}}
