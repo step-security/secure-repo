@@ -1,0 +1,11 @@
+name: Authenticate to Google Cloud
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    id-token: write
+    id-token-if: ${{ contains(with, 'workload_identity_provider') }}
+    id-token-reason: to generate id-token for google-cloud auth # CHECKOUT: https://github.com/google-github-actions/auth/blob/48c46e6a594e8bd0b0b4806155ace5cad3aa8e24/src/main.ts#L92
+    
+# FIX: #290

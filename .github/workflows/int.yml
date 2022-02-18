@@ -31,6 +31,8 @@ jobs:
           aws-region: us-west-2
       
       - run: go test
+        env: 
+          PAT: ${{ secrets.PAT }}
       
       - name: Deploy to AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4

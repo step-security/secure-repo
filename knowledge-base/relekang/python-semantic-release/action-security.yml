@@ -1,0 +1,10 @@
+name: 'Python Semantic Release'
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    contents: write # CHECKOUT: https://github.com/relekang/python-semantic-release/blob/master/action.yml#L11
+    contents-reason: to push release notes and new commits/tags
+    
+# FIX: #272

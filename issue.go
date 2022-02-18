@@ -15,6 +15,7 @@ const (
 	stepsecurityowner = "step-security"
 	stepsecurityrepo  = "secure-workflows"
 	allIssues         = "all"
+	openIssues        = "open"
 )
 
 func CreateIssue(Action string) (int, error) {
@@ -92,7 +93,7 @@ func getExistingIssue(action string) (*github.Issue, error) {
 	client := getClient(PAT)
 
 	issues, _, err := client.Issues.ListByRepo(context.Background(), stepsecurityowner, stepsecurityrepo,
-		&github.IssueListByRepoOptions{Labels: []string{kblabel}, State: allIssues, ListOptions: github.ListOptions{PerPage: 100}})
+		&github.IssueListByRepoOptions{Labels: []string{kblabel}, State: openIssues, ListOptions: github.ListOptions{PerPage: 100}})
 
 	if err != nil {
 		return nil, err
