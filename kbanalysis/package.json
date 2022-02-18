@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "ncc build src/index.ts -o dist/src",
-    "test": "ncc build tests/utils.test.ts -o tests/build/ && npm run run_tests",
+    "test": "ncc build tests/utils.test.ts -o tests/build/ && npm run run_tests"
   },
   "keywords": [],
   "author": "",
