@@ -1,0 +1,20 @@
+name: KBAnalysis
+on:
+  issues:
+    types:
+     - opened
+
+permissions:
+  contents: read
+
+jobs:
+  Analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: KBAnalysis
+        uses: step-security/secure-workflows/kbanalysis@main
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN }}
+          issue-id: ${{ github.event.issue.number}} 
