@@ -2,7 +2,7 @@ name: 'PMD'
 github-token:
   action-input:
     input: token
-    is-default: false
+    is-default: true
   permissions:
     contents: read
     contents-reason: to determine modified files #Reference: https://github.com/pmd/pmd-github-action/blob/0abbef95aa340c943d06fea7a3ad3d5eaf681ca5/action.yml#L9
