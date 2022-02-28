@@ -4,4 +4,4 @@ github-token:
   permissions:
     contents: read 
     contents-reason: to download rules for private repo
-    #Reference: https://github.com/clj-holmes/clj-holmes/blob/1918dbb5d16a8e37461a4233891a6f9f84229c63/src/clj_holmes/rules/wagon/github.clj#L14
+    #Reference: https://github.com/clj-holmes/clj-holmes/blob/main/src/clj_holmes/rules/wagon/github.clj#L14

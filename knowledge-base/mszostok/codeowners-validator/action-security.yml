@@ -1,0 +1,4 @@
+name: "GitHub CODEOWNERS Validator"
+#Only metadata permission is required to avoid github rate limiting which gets added by default
+#So no permission is needed for this action
+#Reference: https://github.com/mszostok/codeowners-validator#configuration
