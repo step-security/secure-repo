@@ -1,0 +1,10 @@
+name: 'Download workflow artifact'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to query commit hash #Reference: https://github.com/dawidd6/action-download-artifact/blob/c776311571668da4ded92c1376aa799424360b2d/main.js#L36
+    actions: read
+    actions-reason: to query and download artifacts #Reference: https://github.com/dawidd6/action-download-artifact/blob/c776311571668da4ded92c1376aa799424360b2d/main.js#L136 
