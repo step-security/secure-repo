@@ -9,7 +9,7 @@ on:
 jobs:
   lock-issues:
     permissions:
-      issues: write # for dessant/lock-threads to lock issues
+      issues: write  # for dessant/lock-threads to lock issues
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'flutter/flutter' }}
     steps:
@@ -26,8 +26,8 @@ jobs:
             `flutter doctor -v` and a minimal reproduction of the issue.
   lock-both:
     permissions:
-      issues: write # for dessant/lock-threads to lock issues
-      pull-requests: write # for dessant/lock-threads to lock PRs
+      issues: write  # for dessant/lock-threads to lock issues
+      pull-requests: write  # for dessant/lock-threads to lock PRs
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'flutter/flutter' }}
     steps:
@@ -43,7 +43,7 @@ jobs:
             `flutter doctor -v` and a minimal reproduction of the issue.
   lock-prs:
     permissions:
-      pull-requests: write # for dessant/lock-threads to lock PRs
+      pull-requests: write  # for dessant/lock-threads to lock PRs
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'flutter/flutter' }}
     steps:

@@ -5,7 +5,7 @@ on:
 jobs:
   Dependabot Pull Request:
     permissions:
-      pull-requests: write # for dependabot/fetch-metadata to create a pr with updated dependencies
+      pull-requests: write  # for dependabot/fetch-metadata to create a pr with updated dependencies
     runs-on: ubuntu-latest
     steps:
     - name: Fetch Dependabot metadata
@@ -16,7 +16,7 @@ jobs:
 
   Dependabot auto-approve:
     permissions:
-      pull-requests: write # for dependabot/fetch-metadata to create a pr with updated dependencies
+      pull-requests: write  # for dependabot/fetch-metadata to create a pr with updated dependencies
     runs-on: ubuntu-latest
     # Checking the actor will prevent your Action run failing on non-Dependabot PRs
     if: ${{ github.actor == 'dependabot[bot]' }}
@@ -34,8 +34,8 @@ jobs:
 
   Dependabot auto-merge:
     permissions:
-      contents: write # for dependabot to enable auto-merge
-      pull-requests: write # for dependabot/fetch-metadata to create a pr with updated dependencies
+      contents: write  # for dependabot to enable auto-merge
+      pull-requests: write  # for dependabot/fetch-metadata to create a pr with updated dependencies
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
@@ -53,9 +53,9 @@ jobs:
           
   Dependabot auto-label:
     permissions:
-      issues: write # for dependabot to enable auto-label
-      pull-requests: write # for dependabot/fetch-metadata to create a pr with updated dependencies
-      repository-projects: write # for dependabot to enable auto-label
+      issues: write  # for dependabot to enable auto-label
+      pull-requests: write  # for dependabot/fetch-metadata to create a pr with updated dependencies
+      repository-projects: write  # for dependabot to enable auto-label
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
