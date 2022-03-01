@@ -1,0 +1,4 @@
+name: 'Setup Minikube Kubernetes Cluster'
+#Only metadata permission is required to avoid github rate limiting which gets added by default
+#So no permission is needed for this action
+#Reference: https://github.com/manusa/actions-setup-minikube/blob/master/src/download.js#L15-L17
