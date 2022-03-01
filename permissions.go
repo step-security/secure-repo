@@ -260,7 +260,7 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 	// TODO: Fix the order
 	for scope, value := range actionMetadata.GitHubToken.Permissions.Scopes {
 		if len(value.Expression) == 0 || evaluateExpression(value.Expression, action) {
-			permissions = append(permissions, fmt.Sprintf("%s: %s # for %s %s", scope, value.Permission, actionKey, value.Reason))
+			permissions = append(permissions, fmt.Sprintf("%s: %s  # for %s %s", scope, value.Permission, actionKey, value.Reason))
 		}
 	}
 
@@ -339,8 +339,8 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 	// reviewdog
 	if step.Env["REVIEWDOG_GITHUB_API_TOKEN"] != "" && isGitHubToken(step.Env["REVIEWDOG_GITHUB_API_TOKEN"]) {
 		if strings.Contains(runStep, "reviewdog") {
-			permissions = append(permissions, Permission{permission: checks_write, action: "reviewdog", reason: ""})
-			permissions = append(permissions, Permission{permission: pull_requests_write, action: "reviewdog", reason: ""})
+			permissions = append(permissions, Permission{permission: checks_write, action: "reviewdog", reason: "to create check"})
+			permissions = append(permissions, Permission{permission: pull_requests_write, action: "reviewdog", reason: "to add comment to the PR"})
 			return permissions, nil
 		}
 	}
@@ -363,17 +363,17 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 			// If setup-dotnet action has set the source url and token already
 			if strings.Contains(jobState.CurrentNuGetSourceURL, "pkg.github.com") && (strings.Contains(jobState.CurrentNugetAuthToken, "secrets.GITHUB_TOKEN") || strings.Contains(jobState.CurrentNugetAuthToken, "github.token")) {
 
-				permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
+				permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: "to create package"})
 				return permissions, nil
 			}
 			// If current step has env
 			if step.Env["NUGET_AUTH_TOKEN"] != "" && (strings.Contains(step.Env["NUGET_AUTH_TOKEN"], "secrets.GITHUB_TOKEN") || strings.Contains(step.Env["NUGET_AUTH_TOKEN"], "github.token")) {
 
-				permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
+				permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: "to create package"})
 				return permissions, nil
 			}
 		} else if strings.Contains(runStep, "-k ${{ secrets.GITHUB_TOKEN }}") || strings.Contains(runStep, "-k ${{ github.token }}") || strings.Contains(runStep, "--api-key ${{ secrets.GITHUB_TOKEN }}") || strings.Contains(runStep, "--api-key ${{ github.token }}") {
-			permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
+			permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: "to create package"})
 			return permissions, nil
 		}
 	}
@@ -381,7 +381,7 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 	// Dotnet. See action-setupdotnet-publish-curl test case
 	if strings.Contains(runStep, "curl") && strings.Contains(runStep, "PUT") {
 		if (strings.Contains(runStep, "secrets.GITHUB_TOKEN") || strings.Contains(runStep, "github.token")) && strings.Contains(runStep, "nuget.pkg.github.com") {
-			permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: ""})
+			permissions = append(permissions, Permission{permission: packages_write, action: "setup-dotnet", reason: "to create package"})
 			return permissions, nil
 		}
 	}
@@ -401,7 +401,7 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 		// if any of the environment variables have the github token
 		for _, value := range step.Env {
 			if strings.Contains(value, "secrets.GITHUB_TOKEN") || strings.Contains(value, "github.token") {
-				permissions = append(permissions, Permission{permission: packages_write, action: "setup-java", reason: ""})
+				permissions = append(permissions, Permission{permission: packages_write, action: "setup-java", reason: "to create package"})
 				return permissions, nil
 			}
 		}
@@ -469,7 +469,7 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 
 			permsForRunStep := []string{}
 			for runStep := range RunStepPerms {
-				permsForRunStep = append(permsForRunStep, fmt.Sprintf("%s # for %s %s", RunStepPerms[runStep].permission, RunStepPerms[runStep].action, RunStepPerms[runStep].reason))
+				permsForRunStep = append(permsForRunStep, fmt.Sprintf("%s  # for %s %s", RunStepPerms[runStep].permission, RunStepPerms[runStep].action, RunStepPerms[runStep].reason))
 			}
 
 			permissions = append(permissions, permsForRunStep...)
