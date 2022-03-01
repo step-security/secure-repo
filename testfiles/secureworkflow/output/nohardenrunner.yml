@@ -10,8 +10,8 @@ permissions:
 jobs:
   lint:
     permissions:
-      contents: read # for actions/checkout to fetch code
-      statuses: write # for github/super-linter to mark status of each linter run
+      contents: read  # for actions/checkout to fetch code
+      statuses: write  # for github/super-linter to mark status of each linter run
     runs-on: ubuntu-latest  
     steps:
       - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1

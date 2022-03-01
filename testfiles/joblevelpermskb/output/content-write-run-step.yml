@@ -9,7 +9,7 @@ on:
 jobs:
   pr:
     permissions:
-      contents: write # for Git to git apply
+      contents: write  # for Git to git apply
     name: Create Pull Request
     needs: upgrade
     runs-on: ubuntu-latest

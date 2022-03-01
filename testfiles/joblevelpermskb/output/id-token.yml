@@ -20,8 +20,8 @@ jobs:
 
   build-and-package:
     permissions:
-      contents: read # for actions/checkout to fetch code
-      id-token: write # for aws-actions/configure-aws-credentials to get credentials from GitHub OIDC provider
+      contents: read  # for actions/checkout to fetch code
+      id-token: write  # for aws-actions/configure-aws-credentials to get credentials from GitHub OIDC provider
     needs: [test]
     runs-on: ubuntu-latest
     steps:
@@ -69,8 +69,8 @@ jobs:
 
   integration-test:
     permissions:
-      contents: read # for actions/checkout to fetch code
-      id-token: write # for aws-actions/configure-aws-credentials to get credentials from GitHub OIDC provider
+      contents: read  # for actions/checkout to fetch code
+      id-token: write  # for aws-actions/configure-aws-credentials to get credentials from GitHub OIDC provider
     needs: [deploy-testing]
     runs-on: ubuntu-latest
     steps:
