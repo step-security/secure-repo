@@ -1,0 +1,7 @@
+name: 'github-action-publish-binaries'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    actions: write
+    actions-reason: to attach binaries to release artifacts
+    #Reference: https://github.com/skx/github-action-publish-binaries#github_token

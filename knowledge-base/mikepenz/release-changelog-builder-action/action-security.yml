@@ -1,0 +1,7 @@
+name: 'Release Changelog Builder'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to create release notes 
+    #Reference: https://github.com/mikepenz/release-changelog-builder-action/blob/8151a3f1e050716f40ca4851549d282fc7e4bfff/src/releaseNotesBuilder.ts#L95
