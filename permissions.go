@@ -30,6 +30,7 @@ const errorSecretInRunStepEnvVariable = "KnownIssue-2: Jobs with run steps that 
 const errorLocalAction = "KnownIssue-3: Action %s is a local action. Local actions are not supported"
 const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base"
 const errorAlreadyHasPermissions = "KnownIssue-5: Jobs that already have permissions are not modified"
+const errorDockerAction = "KnownIssue-6: Action %s is a docker action. Docker actions are not supported"
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
 //To avoid a typo while adding the permissions
@@ -223,9 +224,9 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 	permissions := []string{}
 	atIndex := strings.Index(action.Uses, "@")
 
-	//Do not check for permissions in KB, if it is a docker action
+	//Do not check for permissions, if it is a docker action
 	if strings.HasPrefix(action.Uses, "docker://") {
-		return permissions, nil
+		return nil, fmt.Errorf(errorDockerAction, action.Uses)
 	}
 
 	if atIndex == -1 {
