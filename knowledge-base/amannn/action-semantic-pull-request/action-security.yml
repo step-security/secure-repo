@@ -1,0 +1,8 @@
+name: 'semantic-pull-request'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to analyze PRs #Reference: https://github.com/amannn/action-semantic-pull-request/blob/0eb081bc9c35210408951834a444794406eff6f8/src/index.js#L38
+    statuses: write
+    statuses-reason: to mark status of analyzed PR #Reference: https://github.com/amannn/action-semantic-pull-request/blob/0eb081bc9c35210408951834a444794406eff6f8/src/index.js#L126

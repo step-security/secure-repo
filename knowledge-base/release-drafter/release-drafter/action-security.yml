@@ -1,0 +1,11 @@
+name: 'Release Drafter'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to add label to PR
+    pull-requests-if: ${{ !contains(with, 'disable-autolabeler')}} 
+    contents: write
+    contents-reason: to create a github release 
+    contents-if: ${{ !contains(with, 'disable-releaser')}}
+    #Reference: https://github.com/release-drafter/release-drafter/blob/86d84ec2da66d17aacd899371012b817224d968c/index.js#L123

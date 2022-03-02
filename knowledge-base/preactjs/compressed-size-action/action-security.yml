@@ -1,0 +1,12 @@
+name: 'compressed-size-action'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to create and update the checks #Reference: https://github.com/preactjs/compressed-size-action/blob/8f07c1a68beff9bee674f43a8b084cf981079c25/src/index.js#L271
+    pull-requests: write
+    pull-requests-reason: to write a PR review #Reference: https://github.com/preactjs/compressed-size-action/blob/8f07c1a68beff9bee674f43a8b084cf981079c25/src/index.js#L237
+    issues: write
+    issues-reason: to create comments #Reference: https://github.com/preactjs/compressed-size-action/blob/8f07c1a68beff9bee674f43a8b084cf981079c25/src/index.js#L231

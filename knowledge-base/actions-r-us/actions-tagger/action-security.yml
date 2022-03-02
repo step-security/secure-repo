@@ -1,0 +1,9 @@
+name: "Actions Tagger"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to create a release and add latest tag
+    #Reference: https://github.com/Actions-R-Us/actions-tagger/blob/8082799423f3a68e8e1f4b9f2606ca6c8f558ec4/src/action.ts#L43

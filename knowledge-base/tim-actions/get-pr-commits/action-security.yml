@@ -1,0 +1,9 @@
+name: 'get-pr-commits'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    pull-requests: read 
+    pull-requests-reason: to get list of commits from the PR
+    #Reference: https://github.com/tim-actions/get-pr-commits/blob/master/index.js#L20

@@ -1,0 +1,7 @@
+name: 'clj-holmes (Clojure)'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: read 
+    contents-reason: to download rules for private repo
+    #Reference: https://github.com/clj-holmes/clj-holmes/blob/main/src/clj_holmes/rules/wagon/github.clj#L14

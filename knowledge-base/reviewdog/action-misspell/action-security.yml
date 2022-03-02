@@ -1,0 +1,12 @@
+name: 'Run misspell with reviewdog'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to report issues using checks
+    checks-if: ${{ !contains(with, 'reporter') || with['reporter'] == 'github-pr-check' }}
+    pull-requests: write
+    pull-requests-if: ${{ with['reporter'] == 'github-pr-review' }}
+    pull-requests-reason: to report issues using PR comments

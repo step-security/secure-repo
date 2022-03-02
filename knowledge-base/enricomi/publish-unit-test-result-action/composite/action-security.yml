@@ -1,0 +1,16 @@
+name: 'Publish Unit Test Results'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to fetch code
+    issues: read
+    issues-reason: to get issues
+    checks: write
+    checks-reason: to check test results
+    pull-requests: write 
+    pull-requests-reason: to post comment on PR
+    pull-requests-if: ${{ with['comment_mode'] != 'off' }}
+    #Reference: https://github.com/EnricoMi/publish-unit-test-result-action#permissions
