@@ -36,11 +36,9 @@ func CreateIssue(Action string) (int, error) {
 				issue, err = createIssue(Action)
 
 				if err != nil {
-					fmt.Printf("[CreateIssue] error in creating issue for action %s: %v", Action, err)
-					return 0, err
+					return 0, fmt.Errorf("[CreateIssue] error in creating issue for action %s: %v", Action, err)
 				}
 
-				fmt.Printf("[CreateIssue] Issue created for action %s: %d", Action, issue.Number)
 				return *issue.Number, nil
 			} else {
 				return *issue.Number, nil
