@@ -109,7 +109,7 @@ try{
                        
                     }
                     if(filtered_paths.length !== 0){
-                        body += `#### FollowUp Links.\n${filtered_paths.join("\n")}`
+                        body += `\n#### FollowUp Links.\n${filtered_paths.join("\n")}`
                     }
 
 
