@@ -60,7 +60,8 @@ try{
             if(matches.length === 0){
                 // no github_token pattern found in action_file & readme file 
                 core.warning("Action doesn't contains reference to github_token")
-                const template = `\n\`\`\`yaml\n${action_data.substring(0, action_data.indexOf("\n"))} # ${target_owner+"/"+target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`
+                const start = action_data.indexOf("name:")
+                const template = `\n\`\`\`yaml\n${action_data.substring(start, start+action_data.substring(start,).indexOf("\n"))} # ${target_owner+"/"+target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`
                 await comment(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN"+template)
             }else{
                 // we found some matches for github_token
