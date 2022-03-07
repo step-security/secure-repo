@@ -8343,6 +8343,8 @@ try {
         try {
             const action_data = await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .getActionYaml */ .o)(client, target_owner, target_repo);
             const readme_data = await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .getReadme */ .BQ)(client, target_owner, target_repo);
+            const start = action_data.indexOf("name:");
+            const action_yaml_name = action_data.substring(start, start + action_data.substring(start).indexOf("\n"));
             const action_type = (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .getRunsON */ .xA)(action_data);
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Action Type: ${action_type}`);
             let matches = []; // // list holding all matches.
@@ -8359,8 +8361,7 @@ try {
             if (matches.length === 0) {
                 // no github_token pattern found in action_file & readme file 
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Action doesn't contains reference to github_token");
-                const start = action_data.indexOf("name:");
-                const template = `\n\`\`\`yaml\n${action_data.substring(start, start + action_data.substring(start).indexOf("\n"))} # ${target_owner + "/" + target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`;
+                const template = `\n\`\`\`yaml\n${action_yaml_name} # ${target_owner + "/" + target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`;
                 await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .comment */ .UI)(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN\n### action-security.yml\n" + template);
             }
             else {
@@ -8369,7 +8370,7 @@ try {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Pattern Matches: " + matches.join(","));
                 if (lang === "NOT_FOUND" || action_type === "Docker" || action_type === "Composite") {
                     // Action is docker or composite based no need to perform token_queries
-                    const body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nStars: ${repo_info.data.stargazers_count}\nPrivate: ${repo_info.data.private}\`\`\``;
+                    const body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nStars: ${repo_info.data.stargazers_count}\nPrivate: ${repo_info.data.private}\nForks: ${repo_info.data.forks_count}\n\`\`\``;
                     await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .comment */ .UI)(client, repos, Number(issue_id), body);
                 }
                 else {
@@ -8392,19 +8393,26 @@ try {
                     const filtered_paths = paths_found.filter((value, index, self) => self.indexOf(value) === index);
                     src_files = src_files.filter((value, index, self) => self.indexOf(value) === index); // filtering src files.
                     _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Src File found: ${src_files}`);
-                    let body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nTop language: ${lang}\nStars: ${repo_info.data.stargazers_count}\nPrivate: ${repo_info.data.private}\n\`\`\``;
+                    let body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nTop language: ${lang}\nStars: ${repo_info.data.stargazers_count}\nPrivate: ${repo_info.data.private}\nForks: ${repo_info.data.forks_count}\n\`\`\``;
+                    let action_security_yaml = "";
+                    const valid_input = (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .getTokenInput */ .Ih)(action_data, matches);
+                    let token_input = valid_input !== "env_var" ? `action-input:\n    input: ${valid_input}` : `environment-variable-name: <FigureOutYourself>`;
                     if (is_used_github_api) {
                         if (src_files.length !== 0) {
                             body += "\n### Endpoints Found\n";
                             const perms = await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .findEndpoints */ ._T)(client, target_owner, target_repo, src_files);
-                            let str_perms = (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .permsToString */ .W5)(perms);
-                            body += str_perms;
-                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`${str_perms}`);
+                            if (perms !== {}) {
+                                let str_perms = (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .permsToString */ .W5)(perms);
+                                body += str_perms;
+                                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`${str_perms}`);
+                                action_security_yaml += (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .actionSecurity */ .LU)({ name: action_yaml_name, token_input: token_input, perms: (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .normalizePerms */ .So)(perms) });
+                            }
                         }
                     }
                     if (filtered_paths.length !== 0) {
-                        body += `\n#### FollowUp Links.\n${filtered_paths.join("\n")}`;
+                        body += `\n#### FollowUp Links.\n${filtered_paths.join("\n")}\n`;
                     }
+                    body += "\n### action-security.yml\n" + action_security_yaml;
                     await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .comment */ .UI)(client, repos, Number(issue_id), body);
                     (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .printArray */ .wq)(filtered_paths, "Paths Found: ");
                 }
@@ -8434,6 +8442,7 @@ __webpack_handle_async_dependencies__();
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
+  "LU": () => (/* binding */ actionSecurity),
   "ft": () => (/* binding */ checkDependencies),
   "UI": () => (/* binding */ comment),
   "_T": () => (/* binding */ findEndpoints),
@@ -8442,8 +8451,10 @@ __nccwpck_require__.d(__webpack_exports__, {
   "o": () => (/* binding */ getActionYaml),
   "BQ": () => (/* binding */ getReadme),
   "xA": () => (/* binding */ getRunsON),
+  "Ih": () => (/* binding */ getTokenInput),
   "yx": () => (/* binding */ isKBIssue),
   "hy": () => (/* binding */ isValidLang),
+  "So": () => (/* binding */ normalizePerms),
   "W5": () => (/* binding */ permsToString),
   "wq": () => (/* binding */ printArray)
 });
@@ -8454,32 +8465,32 @@ __nccwpck_require__.d(__webpack_exports__, {
 var core = __nccwpck_require__(6066);
 ;// CONCATENATED MODULE: ./src/endpoints.ts
 const ENDPOINTS = {
-    "pulls.listFiles": "pull-requests: read",
-    "pulls.checkIfMerged": "pull-requests: read",
-    "pulls.create": "pull-requests: write",
-    'pulls.createReplyForReviewComment': 'pull-requests: write',
-    'pulls.createReview': 'pull-requests: write',
-    'pull.createReviewComment': "pull-requests: write",
-    'pulls.deletePendingReview': 'pull-requests: write',
-    'pulls.deleteReviewComment': 'pull-requests: write',
-    'pulls.dismissReview': 'pull-requests: write',
-    'pulls.get': 'pull-requests: read',
-    'pulls.getReview': 'pull-requests: read',
-    'pulls.getReviewComment': 'pull-requests: read',
-    'pulls.list': 'pull-requests: read',
-    'pulls.listCommentsForReview': 'pull-requests: read',
-    'pulls.listCommits': 'pull-requests: read',
-    'pulls.listRequestedReviewers': 'pull-requests: read',
-    'pulls.listReviewComments': 'pull-requests: read',
-    'pulls.listReviewCommentsForRepo': 'pull-requests: read',
-    'pulls.listReviews': 'pull-requests: read',
-    'pulls.merge': 'pull-requests: write',
-    'pulls.removeRequestedReviewers': 'pull-requests: write',
-    'pulls.requestReviewers': 'pull-requests: write',
-    'pulls.submitReview': 'pull-requests: write',
-    'pulls.update': 'pull-requests: write',
-    'pulls.updateBranch': 'pull-requests: write',
-    'pulls.updateReview': 'pull-requests: write',
+    "pulls.listFiles": "read",
+    "pulls.checkIfMerged": "read",
+    "pulls.create": "write",
+    'pulls.createReplyForReviewComment': 'write',
+    'pulls.createReview': 'write',
+    'pull.createReviewComment': "write",
+    'pulls.deletePendingReview': 'write',
+    'pulls.deleteReviewComment': 'write',
+    'pulls.dismissReview': 'write',
+    'pulls.get': 'read',
+    'pulls.getReview': 'read',
+    'pulls.getReviewComment': 'read',
+    'pulls.list': 'read',
+    'pulls.listCommentsForReview': 'read',
+    'pulls.listCommits': 'read',
+    'pulls.listRequestedReviewers': 'read',
+    'pulls.listReviewComments': 'read',
+    'pulls.listReviewCommentsForRepo': 'read',
+    'pulls.listReviews': 'read',
+    'pulls.merge': 'write',
+    'pulls.removeRequestedReviewers': 'write',
+    'pulls.requestReviewers': 'write',
+    'pulls.submitReview': 'write',
+    'pulls.update': 'write',
+    'pulls.updateBranch': 'write',
+    'pulls.updateReview': 'write',
     'actions.addSelectedRepoToOrgSecret': 'write',
     'actions.approveWorkflowRun': 'write',
     'actions.cancelWorkflowRun': 'write',
@@ -9278,6 +9289,53 @@ function isValidLang(lang) {
 }
 async function comment(client, repos, issue_id, body) {
     await client.rest.issues.createComment(Object.assign(Object.assign({}, repos), { issue_number: Number(issue_id), body: body }));
+}
+function getTokenInput(action_yml, tokens_found) {
+    let output = [];
+    for (let tok of tokens_found) {
+        if (action_yml.indexOf(tok + ":") !== -1) {
+            output.push(tok);
+        }
+    }
+    return output.length !== 0 ? output[0] : "env_var";
+}
+function actionSecurity(data) {
+    let template = ["```yaml"];
+    template.push(`${data.name}`);
+    template.push("github-token:");
+    template.push(`  ${data.token_input}`);
+    template.push("  permissions:");
+    for (let perm_key of Object.keys(data.perms)) {
+        template.push(`    ${perm_key}: ${data.perms[perm_key]}`);
+    }
+    template.push("```\n");
+    return template.join("\n");
+}
+function normalizePerms(perms) {
+    // const mapping = {"pul"}
+    const mapping = {
+        'actions': "actions",
+        'checks': "checks",
+        'git': "contents",
+        'issues': "issues",
+        'meta': "metadata",
+        'pulls': "pull-requests",
+        'repos': "contents",
+    };
+    let norm_perms = {};
+    for (let k of Object.keys(perms)) {
+        const prefix = mapping[k.split(".")[0]];
+        if (norm_perms[prefix] !== undefined) {
+            // key already exists
+            if (norm_perms[prefix] !== "write") {
+                norm_perms[prefix] = perms[k];
+            }
+        }
+        else {
+            norm_perms[prefix] = perms[k];
+        }
+    }
+    return norm_perms;
 }
 
 
