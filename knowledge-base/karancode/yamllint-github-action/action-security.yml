@@ -4,5 +4,5 @@ github-token:
   permissions:
    pull-requests: write
    pull-requests-reason: to post comments on PRs #Checkout: https://github.com/karancode/yamllint-github-action#secrets
-   issues-if: ${{ contains(with, 'yamllint_comment') && with['yamllint_comment'] == 'true' }}
+   pull-requests-if: ${{ contains(with, 'yamllint_comment') && with['yamllint_comment'] == 'true' }}
     
