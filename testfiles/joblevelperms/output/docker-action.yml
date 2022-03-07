@@ -1,1 +1,0 @@
-KnownIssue-6: Action docker://docker.io/markstreet/conker:latest is a docker action. Docker actions are not supported
