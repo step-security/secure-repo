@@ -8326,7 +8326,7 @@ try {
         const action_name_split = action_name.split("/");
         const target_owner = action_name_split[0];
         const target_repo = action_name_split.length > 2 ? action_name_split.slice(1).join("/") : action_name_split[1];
-        const repo_info = await client.rest.repos.get({ owner: target_owner, repo: target_repo }); // info related to repo.
+        const repo_info = await client.rest.repos.get({ owner: target_owner, repo: target_repo.split("/")[0] }); // info related to repo.
         let lang = "";
         try {
             const langs = await client.rest.repos.listLanguages({ owner: target_owner, repo: target_repo });
@@ -8361,7 +8361,7 @@ try {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Action doesn't contains reference to github_token");
                 const start = action_data.indexOf("name:");
                 const template = `\n\`\`\`yaml\n${action_data.substring(start, start + action_data.substring(start).indexOf("\n"))} # ${target_owner + "/" + target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`;
-                await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .comment */ .UI)(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN" + template);
+                await (0,_utils__WEBPACK_IMPORTED_MODULE_2__/* .comment */ .UI)(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN\n### action-security.yml\n" + template);
             }
             else {
                 // we found some matches for github_token
