@@ -2,7 +2,7 @@ name: 'Yamllint Github Action'
 github-token:
   environment-variable-name: GITHUB_ACCESS_TOKEN
   permissions:
-   issues: write
-   issues-reason: to post comments on PRs #Checkout: https://github.com/karancode/yamllint-github-action#secrets
+   pull-requests: write
+   pull-requests-reason: to post comments on PRs #Checkout: https://github.com/karancode/yamllint-github-action#secrets
    issues-if: ${{ contains(with, 'yamllint_comment') && with['yamllint_comment'] == 'true' }}
     
