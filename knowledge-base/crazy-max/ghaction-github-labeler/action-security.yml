@@ -1,0 +1,9 @@
+name: 'GitHub Labeler'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to create, rename, update and delete label
+    #Reference: https://github.com/crazy-max/ghaction-github-labeler/blob/f876ebe3854a04018dda344c130ba209d6ca9670/src/labeler.ts#L125

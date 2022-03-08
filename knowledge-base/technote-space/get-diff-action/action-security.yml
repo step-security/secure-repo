@@ -1,0 +1,9 @@
+name: Get Diff Action
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    pull-requests: read 
+    pull-requests-reason: to get git reference
+    #Reference: https://github.com/technote-space/get-diff-action/blob/a0d339559c849eea1818a26838c7e13d7b47570a/src/utils/command.ts#L73

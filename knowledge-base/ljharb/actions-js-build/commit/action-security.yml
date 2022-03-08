@@ -1,0 +1,7 @@
+name: 'GitHub Action for git commit'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to commit and push changes
+    #Reference: https://github.com/ljharb/actions-js-build/blob/0ce34323ced1451d2bbe9dc5662e5947851d4ddf/commit/entrypoint.sh#L6
