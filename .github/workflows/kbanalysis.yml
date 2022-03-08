@@ -13,9 +13,25 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      contents: write
+      pull-requests: write
+    
     steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: step-security/secure-workflows
+    
       - name: KBAnalysis
         uses: step-security/secure-workflows/kbanalysis@main
         with:
           github-token: ${{secrets.GITHUB_TOKEN }}
-          issue-id: ${{ github.event.issue.number}} 
+          issue-id: ${{ github.event.issue.number}}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          body: "Fixes #${{github.event.issue.number}}"
+          commit-message: "added KB for issue#${{github.event.issue.number}}"
+          title: "Add KB for issue${{github.event.issue.number}}"
+          branch: "issue#${{github.event.issue.number}}"
