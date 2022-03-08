@@ -8,3 +8,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         args: check --config-file ./composer-require-config.json composer.json
+  - name: PHPStan
+      uses: docker://oskarstark/phpstan-ga
+      with:
+        args: analyse src tests --level max --configuration phpstan.neon
+        token: ${{ secrets.GITHUB_TOKEN }}
