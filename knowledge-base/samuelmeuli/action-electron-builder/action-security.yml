@@ -1,0 +1,10 @@
+name: Electron Builder Action
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to create a release 
+    contents-reason-if: ${{ contains(with, 'release') && with['release'] == 'true'}}
+    #Reference: https://github.com/samuelmeuli/action-electron-builder/blob/e4b12cd06ddf023422f1ac4e39632bd76f6e6928/index.js#L128-L134

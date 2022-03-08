@@ -1,0 +1,7 @@
+name: 'GitHub Action for git commit'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to commit and push changes
+    #Reference: https://github.com/elstudio/actions-js-build/blob/8daaa81c63dc65f1883a75b34d0c6b33bbb878f6/commit/entrypoint.sh#L6
