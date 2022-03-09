@@ -30,6 +30,7 @@ const errorSecretInRunStepEnvVariable = "KnownIssue-2: Jobs with run steps that 
 const errorLocalAction = "KnownIssue-3: Action %s is a local action. Local actions are not supported"
 const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base"
 const errorAlreadyHasPermissions = "KnownIssue-5: Jobs that already have permissions are not modified"
+const errorDockerAction = "KnownIssue-6: Action %s is a docker action which uses Github token. Docker actions that uses token are not supported"
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
 //To avoid a typo while adding the permissions
@@ -222,6 +223,24 @@ func isGitHubToken(literal string) bool {
 func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error) {
 	permissions := []string{}
 	atIndex := strings.Index(action.Uses, "@")
+
+	//Do not check for permissions in KB, if it is a docker action
+	if strings.HasPrefix(action.Uses, "docker://") {
+		//Return error if it uses token in environment variable
+		for _, envValue := range action.Env {
+			if isGitHubToken(envValue) {
+				return nil, fmt.Errorf(errorDockerAction, action.Uses)
+			}
+		}
+		//Return error if it uses token in action input
+		for _, actionValue := range action.With {
+			if isGitHubToken(actionValue) {
+				return nil, fmt.Errorf(errorDockerAction, action.Uses)
+			}
+		}
+		//else return without raising error
+		return permissions, nil
+	}
 
 	if atIndex == -1 {
 		return nil, fmt.Errorf(errorLocalAction, action.Uses)

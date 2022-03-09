@@ -1,0 +1,15 @@
+on: push
+name: Qa workflow
+jobs:
+  composer:
+  - name: composer-require-checker
+      uses: docker://phpga/composer-require-checker-ga
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: check --config-file ./composer-require-config.json composer.json
+  - name: PHPStan
+      uses: docker://oskarstark/phpstan-ga
+      with:
+        args: analyse src tests --level max --configuration phpstan.neon
+        token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,16 @@
+name: Create progress report
+on:
+  workflow_dispatch:
+  
+permissions:
+  contents: read
+
+jobs:
+  job-with-error:
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Create progress.csv
+        uses: docker://docker.io/markstreet/conker:latest
+        with:
+          args: sh -c "cd conker && make progress"
