@@ -30,7 +30,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
-          token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{secrets.PAT}} #  need to use PAT since GITHUB_TOKEN does not initiate workflows
           body: "Fixes #${{github.event.issue.number}}"
           commit-message: "added KB for issue#${{github.event.issue.number}}"
           title: "Add KB for issue${{github.event.issue.number}}"
