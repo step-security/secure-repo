@@ -1,0 +1,7 @@
+name: 'Push a file to another repository'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: read
+    contents-reason: to read a file from the current repository
+    #Reference: https://github.com/dmnemec/copy_file_to_another_repo_action/blob/bbebd3da22e4a37d04dca5f782edd5201cb97083/entrypoint.sh#L42
