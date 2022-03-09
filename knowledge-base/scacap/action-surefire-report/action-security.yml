@@ -1,0 +1,10 @@
+name: 'Surefire Report'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    checks: write
+    checks-if: ${{ !contains(with, 'skip_publishing') || with['skip_publishing'] == 'false' }}
+    checks-reason: to publish result as PR check
+    #Reference: https://github.com/ScaCap/action-surefire-report/blob/f0a1b40820786c67914d78e04fd453f90eebe305/action.js#L52
