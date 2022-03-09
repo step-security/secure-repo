@@ -1,0 +1,9 @@
+name: 'GitHub Actions job_id parser'
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    actions: read
+    actions-reason: to read and parse workflow job id
+    #Reference: https://github.com/Tiryoh/gha-jobid-action/blob/02b87f7aad9f38a518f84e6b23851c736e4e55ef/README.md?plain=1#L3
