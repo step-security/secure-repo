@@ -25,7 +25,7 @@ If you are the owner of a GitHub Action, please [contribute to the knowledge bas
 To use SecureWorkflows, visit https://app.stepsecurity.io/
 
 <p align="left">
-  <img src="https://step-security-images.s3.us-west-2.amazonaws.com/secureworkflownew.png" alt="Secure workflow screenshot" >
+  <img src="https://github.com/arjundashrath/supply-chain-goat/blob/patch-2/images/secure-workflows/SecureWorkflows.png" alt="Secure workflow screenshot" >
 </p>
 
 [Twitter handle]: https://img.shields.io/twitter/follow/step_security.svg?style=social&label=Follow
