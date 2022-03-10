@@ -33,14 +33,14 @@ try{
             template.push(content)
             template.push("```")
             template.push("This issue is automatically created by our analysis bot, feel free to close after reading :)")
-            client.rest.issues.create({owner:"h0x0er", repo:"kb_setup", title:"GITHUB_TOKEN permissions used by this action", body: template.join("\n")})
+            client.rest.issues.create({owner:target_owner, repo:target_repo, title:"GITHUB_TOKEN permissions used by this action", body: template.join("\n")})
             
             core.info(`Created issue in ${target_owner}/${target_repo}`)
 
         }
 
         core.info("===== Performing analysis =====")
-        if(!existsSync(`knowledge-base/${target_owner}/${target_repo}/action-security.yml`)){
+        if(!existsSync(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)){
             
         
         const repo_info = await client.rest.repos.get({owner:target_owner, repo: target_repo.split("/")[0]}) // info related to repo.
