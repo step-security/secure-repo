@@ -24,7 +24,7 @@ jobs:
       - name: KBAnalysis
         uses: step-security/secure-workflows/kbanalysis@main
         with:
-          github-token: ${{secrets.GITHUB_TOKEN }}
+          github-token: ${{secrets.PAT }}
           issue-id: ${{ github.event.issue.number}}
 
       - name: Create Pull Request
