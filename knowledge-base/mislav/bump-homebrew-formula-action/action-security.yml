@@ -1,9 +1,2 @@
 name: bump-homebrew-formula
-github-token:
-  environment-variable-name: GITHUB_TOKEN
-  permissions:
-    contents: write
-    contents-if: ${{ !contains(with, 'push-to') && with['push-to'] == 'false'}}
-    contents-reason: to edit formula in forked repo
-    # If COMMITTER_TOKEN has push access then no permission is needed for GITHUB_TOKEN as the changes will be made directly to external repo
-    #Reference: https://github.com/mislav/bump-homebrew-formula-action/blob/9b046b474647276a0f892dad7268a9abd3fbaf00/action.yml#L21
+# No explicit permission needs to be defined for the github token being used
