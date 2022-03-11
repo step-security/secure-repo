@@ -1,0 +1,14 @@
+name: 'Cancel Workflow Runs'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: write
+    actions-reason: to cancel duplicates and failed workflows
+    pull-requests: write
+    pull-requests-if: ${{ (contains(with, 'notifyPRMessageStart') && with['notifyPRMessageStart'] != '') || (contains(with, 'notifyPRCancel') && with['notifyPRCancel'] == 'true') }}
+    pull-requests-reason: to notify start, cancel for PR triggered workflow
+    #Reference:
+    # https://github.com/potiuk/cancel-workflow-runs/blob/4723494a065d162f8e9efd071b98e0126e00f866/src/main.ts#L1434
+    # https://github.com/potiuk/cancel-workflow-runs/blob/4723494a065d162f8e9efd071b98e0126e00f866/src/main.ts#L952

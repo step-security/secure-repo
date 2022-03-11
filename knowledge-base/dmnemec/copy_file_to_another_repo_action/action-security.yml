@@ -1,0 +1,2 @@
+name: 'Push a file to another repository'
+# No explicit permission needs to be defined for the github token being used
