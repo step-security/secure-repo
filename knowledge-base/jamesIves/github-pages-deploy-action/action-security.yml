@@ -1,0 +1,10 @@
+name: 'Deploy to GitHub Pages'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to push changes in repo #Checkout: https://github.com/JamesIves/github-pages-deploy-action/blob/263638904148da7a66c507a99fd5ac976774a447/src/git.ts#L221
+    
+#Fixes #450

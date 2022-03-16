@@ -1,0 +1,10 @@
+name: "arduino/setup-task"
+github-token:
+  action-input:
+    input: repo-token
+  permissions:
+    contents: read
+    contents-reason: to avoid rate limiting #Checkout: https://github.com/arduino/setup-task#repo-token
+  
+
+#FIX: #452
