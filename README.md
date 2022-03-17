@@ -1,9 +1,9 @@
-# SecureWorkflows 
+# Secure-Workflows 
 
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/step-security/secure-workflows/main/LICENSE)
 
-Secure Workflows is an open-source API to secure GitHub Actions workflows by automatically updating the workflow (YAML) files.
+Secure-Workflows is an open-source API to secure GitHub Actions workflows by automatically updating the workflow (YAML) files. To use secure workflows, go to https://app.stepsecurity.io/
 
 The API takes in a GitHub Actions workflow file as an input and returns a transformed workflow YAML file with the following changes:
 1. Minimum `GITHUB_TOKEN` permissions are set for each job
@@ -25,7 +25,7 @@ If you are the owner of a GitHub Action, please [contribute to the knowledge bas
 To use SecureWorkflows, visit https://app.stepsecurity.io/
 
 <p align="left">
-  <img src="https://step-security-images.s3.us-west-2.amazonaws.com/secureworkflownew.png" alt="Secure workflow screenshot" >
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows.png" alt="Secure workflow screenshot" >
 </p>
 
 [Twitter handle]: https://img.shields.io/twitter/follow/step_security.svg?style=social&label=Follow
