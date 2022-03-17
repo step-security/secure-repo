@@ -1,0 +1,2 @@
+KnownIssue-6: Action docker://phpga/composer-require-checker-ga is a docker action which uses Github token. Docker actions that uses token are not supported
+KnownIssue-6: Action docker://oskarstark/phpstan-ga is a docker action which uses Github token. Docker actions that uses token are not supported

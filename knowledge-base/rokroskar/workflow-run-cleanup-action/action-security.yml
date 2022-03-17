@@ -1,0 +1,9 @@
+name:  Workflow run cleanup action
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    actions: write
+    actions-reason: to obtain workflow name & cancel it #Checkout: https://github.com/rokroskar/workflow-run-cleanup-action#configuration
+    contents: read
+    contents-reason: to obtain branch #Checkout: https://github.com/rokroskar/workflow-run-cleanup-action#configuration
+    

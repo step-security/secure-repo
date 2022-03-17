@@ -1,6 +1,7 @@
 import * as core from "@actions/core"
 import * as github from "@actions/github"
-import { isKBIssue, getAction, getActionYaml, findToken, printArray, comment, getRunsON, getReadme, checkDependencies, findEndpoints, permsToString, isValidLang} from "./utils"
+import { createPR } from "./pr_utils";
+import { isKBIssue, getAction, getActionYaml, findToken, printArray, comment, getRunsON, getReadme, checkDependencies, findEndpoints, permsToString, isValidLang, actionSecurity, getTokenInput, normalizePerms} from "./utils"
 
 try{
 
@@ -21,6 +22,10 @@ try{
         const target_owner = action_name_split[0]
         const target_repo = action_name_split.length > 2 ? action_name_split.slice(1,).join("/") : action_name_split[1]
 
+
+        const repo_info = await client.rest.repos.get({owner:target_owner, repo: target_repo.split("/")[0]}) // info related to repo.
+        
+
         let lang:String = ""
         try{
             const langs = await client.rest.repos.listLanguages({owner:target_owner, repo:target_repo})
@@ -32,10 +37,15 @@ try{
         core.info(`Issue Title: ${title}`)
         core.info(`Action: ${action_name}`) 
         core.info(`Top language: ${lang}`)
+        core.info(`Stars: ${repo_info.data.stargazers_count}`)
+        core.info(`Private: ${repo_info.data.private}`)
 
         try{
             const action_data = await getActionYaml(client, target_owner, target_repo)
             const readme_data = await getReadme(client, target_owner, target_repo)
+
+            const start = action_data.indexOf("name:")
+            const action_yaml_name = action_data.substring(start, start+action_data.substring(start,).indexOf("\n"))
 
             const action_type = getRunsON(action_data)
             core.info(`Action Type: ${action_type}`)
@@ -54,7 +64,11 @@ try{
             if(matches.length === 0){
                 // no github_token pattern found in action_file & readme file 
                 core.warning("Action doesn't contains reference to github_token")
-                await comment(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN")
+                const template = `\n\`\`\`yaml\n${action_yaml_name} # ${target_owner+"/"+target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`
+                const pr_content = `${action_yaml_name} # ${target_owner+"/"+target_repo}\n# GITHUB_TOKEN not used\n`
+                await createPR(pr_content, `knowledge-base/${target_owner}/${target_repo}`)
+
+                await comment(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN\n### action-security.yml\n"+template)
             }else{
                 // we found some matches for github_token
                 matches = matches.filter((value, index, self)=>self.indexOf(value)===index) // unique matches only.
@@ -62,7 +76,7 @@ try{
                 
                 if(lang === "NOT_FOUND" || action_type === "Docker" || action_type === "Composite"){
                     // Action is docker or composite based no need to perform token_queries
-                    const body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\n\`\`\``
+                    const body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nStars: ${repo_info.data.stargazers_count}\nPrivate: ${repo_info.data.private}\nForks: ${repo_info.data.forks_count}\n\`\`\``
                     await comment(client, repos, Number(issue_id), body)
 
                 }else{
@@ -89,21 +103,36 @@ try{
                     const filtered_paths = paths_found.filter((value, index, self)=>self.indexOf(value)===index)
                     src_files = src_files.filter((value, index, self)=>self.indexOf(value)===index) // filtering src files.
                     core.info(`Src File found: ${src_files}`)
-                    let body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nTop language: ${lang}\n\`\`\``
+                    let body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nTop language: ${lang}\nStars: ${repo_info.data.stargazers_count}\nPrivate: ${repo_info.data.private}\nForks: ${repo_info.data.forks_count}\n\`\`\``
+                    
+
+                    let action_security_yaml = ""
+                    const valid_input = getTokenInput(action_data, matches)
+                    let token_input = valid_input !== "env_var" ? `action-input:\n    input: ${valid_input}` : `environment-variable-name: <FigureOutYourself>`
 
                     if(is_used_github_api){
                         if(src_files.length !== 0){
                             body += "\n### Endpoints Found\n"
                             const perms = await findEndpoints(client, target_owner, target_repo, src_files)
-                            let str_perms = permsToString(perms)
-                            body += str_perms
-                            core.info(`${str_perms}`)
+                            if(perms !== {}){
+                                let str_perms = permsToString(perms)
+                                body += str_perms
+                                core.info(`${str_perms}`)
+                                action_security_yaml += actionSecurity({name:action_yaml_name, token_input: token_input, perms:normalizePerms(perms)})
+
+
+                            }
+ 
                         }
                        
                     }
-                    
-                    body += `#### FollowUp Links.\n${filtered_paths.join("\n")}`
 
+                    if(filtered_paths.length !== 0){
+                        body += `\n#### FollowUp Links.\n${filtered_paths.join("\n")}\n`
+
+                    }
+
+                    body += "\n### action-security.yml\n"+action_security_yaml
 
                     await comment(client, repos, Number(issue_id), body)
                     

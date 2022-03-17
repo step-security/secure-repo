@@ -1,0 +1,8 @@
+name: 'Coveralls GitHub Action'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to create new checks #Checkout: https://github.com/coverallsapp/github-action#inputs

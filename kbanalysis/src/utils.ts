@@ -145,3 +145,65 @@ export async function comment(client, repos, issue_id, body){
         body: body
     })
 }
+
+export function getTokenInput(action_yml:String, tokens_found:String[]){
+
+    let output = []
+    for(let tok of tokens_found){
+        if(action_yml.indexOf(tok+":") !== -1){
+            output.push(tok)
+        }
+    }
+    
+    return output.length !== 0 ? output[0] : "env_var"
+
+}
+
+export function actionSecurity(data:{name:string, token_input:string, perms:{}}){
+
+    let template = ["```yaml"]
+    template.push(`${data.name}`)
+    template.push("github-token:")
+    template.push(`  ${data.token_input}`)
+    template.push("  permissions:")
+    for(let perm_key of Object.keys(data.perms)){
+        template.push(`    ${perm_key}: ${data.perms[perm_key]}`)
+    }
+
+    template.push("```\n")
+
+    return template.join("\n")
+
+
+}
+
+export function normalizePerms(perms:{}){
+
+    // const mapping = {"pul"}
+    const mapping = {
+        'actions':"actions", 
+        'checks':"checks",
+        'git':"contents",
+        'issues':"issues",
+        'meta':"metadata",            
+        'pulls':"pull-requests",
+        'repos':"contents",
+    }
+
+    let norm_perms = {}
+    for(let k of Object.keys(perms)){
+        const prefix = mapping[k.split(".")[0]]
+        if(norm_perms[prefix] !== undefined){
+            // key already exists
+            if(norm_perms[prefix] !== "write"){
+                norm_perms[prefix] = perms[k]
+            }
+        }else{
+            norm_perms[prefix] = perms[k]
+        }
+        
+    }
+
+    return norm_perms;
+
+}

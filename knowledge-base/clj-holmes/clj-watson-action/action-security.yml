@@ -1,0 +1,7 @@
+name: 'clj-watson (Clojure)'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: read 
+    contents-reason: to analyze dependency vulnerabilities
+    #Reference: https://github.com/clj-holmes/clj-watson/blob/48fe5592fcc3ea18c525f8ff4a1d1574163658e6/src/clj_watson/diplomat/github/advisory.clj#L20
