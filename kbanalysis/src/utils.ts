@@ -207,3 +207,12 @@ export function normalizePerms(perms:{}){
     return norm_perms;
 
 }
+
+export function isPaused(labels:any[]){
+    // checks if issue labels contains `pause-issue-creation` label
+    let names = []
+    for(let label of labels){
+        names.push(label.name)
+    }
+    return names.indexOf("pause-issue-creation") >= 0
+}

@@ -3,7 +3,7 @@ import * as github from "@actions/github"
 import { existsSync, fstat, readFileSync } from "fs";
 import { exit } from "process";
 import { createPR } from "./pr_utils";
-import { isKBIssue, getAction, getActionYaml, findToken, printArray, comment, getRunsON, getReadme, checkDependencies, findEndpoints, permsToString, isValidLang, actionSecurity, getTokenInput, normalizePerms} from "./utils"
+import { isKBIssue, getAction, getActionYaml, findToken, printArray, comment, getRunsON, getReadme, checkDependencies, findEndpoints, permsToString, isValidLang, actionSecurity, getTokenInput, normalizePerms, isPaused} from "./utils"
 
 try{
 
@@ -14,7 +14,7 @@ try{
     const event = github.context.eventName
 
     const client = github.getOctokit(token) // authenticated octokit
-    const resp = await client.rest.issues.get({issue_number: Number(issue_id ), owner: repos.owner, repo:repos.repo})
+    const resp = await client.rest.issues.get({issue_number: Number(issue_id ), owner: repos.owner, repo:repos.repo}) // target issue
 
     const title = resp.data.title // extracting title of the issue.
 
@@ -32,8 +32,12 @@ try{
 
 
     if(resp.data.state === "closed"){
-        const issue_number = 460 // Data Store Issue ID
-        const comment_id = 1070531666 // Data Store comment ID
+        if(isPaused(resp.data.labels)){
+            core.info(`Issue creation is paused for ${target_owner}/${target_repo}`)
+            exit(0)
+        }
+        const issue_number = 71 // Data Store Issue ID
+        const comment_id = 1070348821 // Data Store comment ID
         const target_main_repo = target_repo.split("/")[0]
 
         const comment_resp = await client.rest.issues.getComment({owner:repos.owner, repo:repos.repo, issue_number:issue_number, comment_id:comment_id})

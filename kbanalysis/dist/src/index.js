@@ -8327,7 +8327,7 @@ try {
     const repos = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo; // context repo
     const event = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.eventName;
     const client = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(token); // authenticated octokit
-    const resp = await client.rest.issues.get({ issue_number: Number(issue_id), owner: repos.owner, repo: repos.repo });
+    const resp = await client.rest.issues.get({ issue_number: Number(issue_id), owner: repos.owner, repo: repos.repo }); // target issue
     const title = resp.data.title; // extracting title of the issue.
     if (!(0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .isKBIssue */ .yx)(title)) {
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Not performing analysis as issue is not a valid KB issue");
@@ -8338,8 +8338,12 @@ try {
     const target_owner = action_name_split[0];
     const target_repo = action_name_split.length > 2 ? action_name_split.slice(1).join("/") : action_name_split[1];
     if (resp.data.state === "closed") {
-        const issue_number = 460; // Data Store Issue ID
-        const comment_id = 1070531666; // Data Store comment ID
+        if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .isPaused */ .aC)(resp.data.labels)) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Issue creation is paused for ${target_owner}/${target_repo}`);
+            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
+        }
+        const issue_number = 71; // Data Store Issue ID
+        const comment_id = 1070348821; // Data Store comment ID
         const target_main_repo = target_repo.split("/")[0];
         const comment_resp = await client.rest.issues.getComment({ owner: repos.owner, repo: repos.repo, issue_number: issue_number, comment_id: comment_id });
         const comment_body = comment_resp.data.body;
@@ -8540,6 +8544,7 @@ __nccwpck_require__.d(__webpack_exports__, {
   "xA": () => (/* binding */ getRunsON),
   "Ih": () => (/* binding */ getTokenInput),
   "yx": () => (/* binding */ isKBIssue),
+  "aC": () => (/* binding */ isPaused),
   "hy": () => (/* binding */ isValidLang),
   "So": () => (/* binding */ normalizePerms),
   "W5": () => (/* binding */ permsToString),
@@ -9423,6 +9428,14 @@ function normalizePerms(perms) {
         }
     }
     return norm_perms;
+}
+function isPaused(labels) {
+    // checks if issue labels contains `pause-issue-creation` label
+    let names = [];
+    for (let label of labels) {
+        names.push(label.name);
+    }
+    return names.indexOf("pause-issue-creation") >= 0;
 }
 
 
