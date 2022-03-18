@@ -1,0 +1,8 @@
+name: "Google Java Format"
+github-token:
+  action-input:
+    input: githubToken #Checkout: https://github.com/axel-op/googlejavaformat-action#githubtoken
+  permissions:
+    # To avoid rate limiting
+   
+# FIX: #451
