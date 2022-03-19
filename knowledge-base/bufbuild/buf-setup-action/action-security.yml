@@ -4,5 +4,5 @@ github-token:
     input: github_token
   permissions:
     contents: read
-    contents-reason: to get release tag and prevent rate-limit
+    contents-reason: to get release tag
     #Reference: https://github.com/bufbuild/buf-setup-action/blob/59e7de1964538e72aaa0ad402365298e7a1f183d/src/buf.ts#L116
