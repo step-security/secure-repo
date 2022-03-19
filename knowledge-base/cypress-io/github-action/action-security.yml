@@ -1,0 +1,7 @@
+name: 'Cypress.io'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    actions: read
+    actions-reason: to correctly identify workflow run
+    #Reference: https://github.com/cypress-io/github-action/blob/9c473bbdeb57610b3c03af2e2b4efcbbdfb5060d/index.js#L438
