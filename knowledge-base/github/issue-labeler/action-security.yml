@@ -1,0 +1,11 @@
+name: 'RegEx Issue Labeler'
+github-token:
+  action-input:
+    input: repo-token
+  permissions:
+    issues: write
+    issues-reason: to create or remove labels #Checkout: https://github.com/github/issue-labeler/blob/0207bb58c165f7229d560291b28d8de891bc46d1/src/main.ts#L212
+    contents: read
+    contents-reason: to get repo contents #Checkout: https://github.com/github/issue-labeler/blob/0207bb58c165f7229d560291b28d8de891bc46d1/src/main.ts#L133
+
+# Fix: #476
