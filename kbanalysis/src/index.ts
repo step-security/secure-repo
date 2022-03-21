@@ -36,8 +36,8 @@ try{
             core.info(`Issue creation is paused for ${target_owner}/${target_repo}`)
             exit(0)
         }
-        const issue_number = 71 // Data Store Issue ID
-        const comment_id = 1070348821 // Data Store comment ID
+        const issue_number = 460 // Data Store Issue ID
+        const comment_id = 1070531666 // Data Store comment ID
         const target_main_repo = target_repo.split("/")[0]
 
         const comment_resp = await client.rest.issues.getComment({owner:repos.owner, repo:repos.repo, issue_number:issue_number, comment_id:comment_id})
