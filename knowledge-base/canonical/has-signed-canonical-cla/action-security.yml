@@ -1,0 +1,10 @@
+name: 'Has Signed Canonical CLA'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create & update comments #Checkout: https://github.com/canonical/has-signed-canonical-cla/blob/3eb79ef290553f0de096b3948a6770c15171fb15/index.js#L193
+
+#Fixes #491

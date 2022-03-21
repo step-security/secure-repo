@@ -1,0 +1,9 @@
+name: Actions Ecosystem Remove Labels
+github-token:
+  action-input:
+    input: github_token
+  permissions:
+    issues: write
+    issues-reason: to remove issue labels #Checkout: https://github.com/actions-ecosystem/action-remove-labels/blob/2ce5d41b4b6aa8503e285553f75ed56e0a40bae0/src/main.ts#L27
+
+# FIX: #487
