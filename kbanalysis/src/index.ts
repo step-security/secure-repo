@@ -35,13 +35,20 @@ try{
 
 
     if(resp.data.state === "closed"){
-        if(isPaused(resp.data.labels)){
-            core.info(`Issue creation is paused for ${target_owner}/${target_repo}`)
-            exit(0)
-        }
+
         const issue_number = 460 // Data Store Issue ID
         const comment_id = 1070531666 // Data Store comment ID
         const target_main_repo = target_repo.split("/")[0]
+
+        const resp2 = await client.rest.issues.get({issue_number: Number(issue_number ), owner: repos.owner, repo:repos.repo}) // getting the tracking issue
+
+        // Pausing issue creation if encountered 2 conditions:
+        // 1. Particular KB issue is having pause-issue-creation label.
+        // 2. Tracking Issue is having pause-issue-creation label
+        if(isPaused(resp.data.labels) || isPaused(resp2.data.labels)){
+            core.info(`Issue creation is paused for ${target_owner}/${target_repo}`)
+            exit(0)
+        }
 
         const comment_resp = await client.rest.issues.getComment({owner:repos.owner, repo:repos.repo, issue_number:issue_number, comment_id:comment_id})
         const comment_body = comment_resp.data.body
@@ -54,14 +61,15 @@ try{
         const content = readFileSync(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)
         let template = []
         template.push("At https://github.com/step-security/secure-workflows we are building a knowledge-base (KB) of GITHUB_TOKEN permissions needed by different GitHub Actions. When developers try to set minimum token permissions for their workflows, they can use this knowledge-base instead of trying to research permissions needed by each GitHub Action they use.")
-        template.push("Below you can see the KB of your GITHUB Action.")
+        template.push("\nBelow you can see the KB of your GITHUB Action.")
         template.push("```yaml")
         template.push(content)
         template.push("```")
-        template.push("This issue is automatically created by our analysis bot, feel free to close after reading :)")
+        template.push("If you think this information is not accurate, or if in the future your GitHub Action starts using a different set of permissions, please create an issue at https://github.com/step-security/secure-workflows/issues to let us know.")
+        template.push("\nThis issue is automatically created by our analysis bot, feel free to close after reading :)")
         template.push("### References:")
         template.push("GitHub asks users to define workflow permissions, see https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/ and https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token for securing GitHub workflows against supply-chain attacks.")
-        template.push("Setting minimum token permissions is also checked for by Open Source Security Foundation (OpenSSF) [Scorecards](https://github.com/ossf/scorecard). Scorecards recommend using https://github.com/step-security/secure-workflows so developers can fix this issue in an easier manner.")
+        template.push("\nSetting minimum token permissions is also checked for by Open Source Security Foundation (OpenSSF) [Scorecards](https://github.com/ossf/scorecard). Scorecards recommend using https://github.com/step-security/secure-workflows so developers can fix this issue in an easier manner.")
         client.rest.issues.create({owner:target_owner, repo:target_main_repo, title:"GITHUB_TOKEN permissions used by this action", body: template.join("\n")})
         
         core.info(`Created issue in ${target_owner}/${target_main_repo}`)
