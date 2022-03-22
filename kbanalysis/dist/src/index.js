@@ -8357,7 +8357,7 @@ try {
         const content = (0,fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync)(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`);
         let template = [];
         template.push("At https://github.com/step-security/secure-workflows we are building a knowledge-base (KB) of GITHUB_TOKEN permissions needed by different GitHub Actions. When developers try to set minimum token permissions for their workflows, they can use this knowledge-base instead of trying to research permissions needed by each GitHub Action they use.");
-        template.push("Below you can see the KB of this action.");
+        template.push("Below you can see the KB of your GITHUB Action.");
         template.push("```yaml");
         template.push(content);
         template.push("```");
