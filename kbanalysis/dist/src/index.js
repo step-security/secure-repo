@@ -8336,6 +8336,8 @@ try {
     const action_name = (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .getAction */ .s7)(title); // target action
     const action_name_split = action_name.split("/");
     const target_owner = action_name_split[0];
+    // target_repo is the full path to action_folder
+    //  i.e github.com/owner/someRepo/someActionPath
     const target_repo = action_name_split.length > 2 ? action_name_split.slice(1).join("/") : action_name_split[1];
     if (resp.data.state === "closed") {
         if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .isPaused */ .aC)(resp.data.labels)) {
@@ -8354,12 +8356,15 @@ try {
         }
         const content = (0,fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync)(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`);
         let template = [];
-        template.push("At https://github.com/step-security/secure-workflows we are building a knowledge-base (KB) of permissions needed by different GitHub Actions. When developers try to remediate ossf/Scorecards checks, they use the knowledge-base to secure their GitHub Workflows.");
+        template.push("At https://github.com/step-security/secure-workflows we are building a knowledge-base (KB) of GITHUB_TOKEN permissions needed by different GitHub Actions. When developers try to set minimum token permissions for their workflows, they can use this knowledge-base instead of trying to research permissions needed by each GitHub Action they use.");
         template.push("Below you can see the KB of this action.");
         template.push("```yaml");
         template.push(content);
         template.push("```");
         template.push("This issue is automatically created by our analysis bot, feel free to close after reading :)");
+        template.push("### References:");
+        template.push("GitHub asks users to define workflow permissions, see https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/ and https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token for securing GitHub workflows against supply-chain attacks.");
+        template.push("Setting minimum token permissions is also checked for by Open Source Security Foundation (OpenSSF) [Scorecards](https://github.com/ossf/scorecard). Scorecards recommend using https://github.com/step-security/secure-workflows so developers can fix this issue in an easier manner.");
         client.rest.issues.create({ owner: target_owner, repo: target_main_repo, title: "GITHUB_TOKEN permissions used by this action", body: template.join("\n") });
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Created issue in ${target_owner}/${target_main_repo}`);
         // updating comment in data_store
