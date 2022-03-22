@@ -8,11 +8,11 @@ Secure-Workflows is an open-source API to secure GitHub Actions workflows by aut
 The API takes in a GitHub Actions workflow file as an input and returns a transformed workflow YAML file with the following changes:
 1. Minimum `GITHUB_TOKEN` permissions are set for each job
 2. Actions are pinned to a full length commit SHA
-3. Step Security [Harden Runner](https://github.com/step-security/harden-runner) GitHub Action is added to each job
+3. [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) is added to each job
 
 [GitHub Actions Hardening Guide](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions) recommends #1 and #2 as security best practices. [OSSF Scorecards](https://opensource.googleblog.com/2020/11/security-scorecards-for-open-source.html) recommends using [SecureWorkflows](https://app.stepsecurity.io/) for [#1](https://github.com/ossf/scorecard/blob/main/docs/checks.md#token-permissions) and [#2](https://github.com/ossf/scorecard/blob/main/docs/checks.md#pinned-dependencies). 
 
-Harden-Runner GitHub Action (#3) installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.
+[Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.
 
 ## GitHub Actions Security Knowledge Base
 
