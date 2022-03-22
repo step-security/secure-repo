@@ -1,0 +1,8 @@
+name: 'Helm Publisher'
+github-token:
+  action-input:
+    input: token
+  permissions:
+    contents: write
+    contents-reason: to push all Helm charts on target dir
+    #Reference: https://github.com/stefanprodan/helm-gh-pages/blob/b43a8719cc63fdb3aa943cc57359ab19118eab3f/src/entrypoint.sh#L179

@@ -1,0 +1,8 @@
+name: 'Wait For Check'
+github-token:
+  action-input:
+    input: token
+  permissions:
+    checks: read
+    checks-reason: to wait for another GitHub check to complete
+    #Reference: https://github.com/fountainhead/action-wait-for-check/blob/7ee38294c9e2ee911a1db471a8095ee7e00d4663/src/poll.ts#L35

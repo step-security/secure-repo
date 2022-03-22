@@ -1,0 +1,9 @@
+name: Delete Release Assets
+github-token:
+  action-input:
+    input: token
+  permissions:
+    contents: write
+    contents-reason: to delete release assets #Checkout: https://github.com/mknejp/delete-release-assets/blob/f12d227580bc83443bfe54e13cd9910cba7cf9c3/src/delete_assets.ts#L67
+
+# Fix: #472

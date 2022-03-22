@@ -1,0 +1,10 @@
+name: 'Go Release Binaries'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to upload release assets #Checkout: https://github.com/wangyoucao577/go-release-action#parameters
+    
+#Fixes #473

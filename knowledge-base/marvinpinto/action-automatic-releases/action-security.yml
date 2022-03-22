@@ -1,0 +1,10 @@
+name: "Automatic Releases"
+github-token:
+  action-input:
+    input: repo_token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to generate pre-release #Checkout: https://github.com/marvinpinto/action-automatic-releases#create-a-new-github-release-when-tags-are-pushed-to-the-repository
+    
+#Fixes #427

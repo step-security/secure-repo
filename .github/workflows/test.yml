@@ -21,6 +21,8 @@ jobs:
             storage.googleapis.com:443
       - name: Checkout
         uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Go
         uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8 # v2.1.3
         with:
@@ -28,5 +30,5 @@ jobs:
       - name: Run coverage
         run: go test -race -coverprofile=coverage.txt -covermode=atomic
         env:
-          PAT: ${{ secrets.PAT }}
+          PAT: ${{ secrets.PAT_READ_ONLY }}
       - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # v2

@@ -1,0 +1,9 @@
+name: "Pull Request Updater GitHub Action"
+github-token:
+  action-input:
+    input: repo-token
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to update PRs #Checkout: https://github.com/tzkhan/pr-update-action/blob/bbd4c9395df8a9c4ef075b8b7fe29f2ca76cdca9/index.js#L139
+
+# FIX #477

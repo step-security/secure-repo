@@ -1,0 +1,9 @@
+name: Git Auto Commit
+github-token:
+  action-input:
+    input: github-token # 
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to push code in repo #Checkout: https://github.com/stefanzweifel/git-auto-commit-action#usage
+#Fixes #455
