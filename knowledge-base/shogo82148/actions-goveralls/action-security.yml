@@ -1,0 +1,8 @@
+name: 'actions-goveralls'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to create a new check based on the results # CHECKOUT: https://github.com/shogo82148/actions-goveralls/blob/8421e834e36ca639db42f46a9c494d1a8cc5c306/action.yml#L6
