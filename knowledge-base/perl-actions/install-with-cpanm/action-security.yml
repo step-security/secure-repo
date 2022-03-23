@@ -1,0 +1,2 @@
+name: "install with cpanm" # perl-actions/install-with-cpanm
+# GITHUB_TOKEN not used
