@@ -1,0 +1,2 @@
+name: 'Run tfsec with sarif upload' # tfsec/tfsec-sarif-action
+# GITHUB_TOKEN not used
