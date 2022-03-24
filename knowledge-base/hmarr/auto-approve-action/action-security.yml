@@ -1,0 +1,9 @@
+name: 'Auto Approve'
+github-token:
+  action-input:
+    input: github-token
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to approve PRs #Checkout: https://github.com/hmarr/auto-approve-action/blob/6a9ec7556f0a7fa5b49527a1eea4878b8a22d2e0/src/approve.ts#L27
+#Fixes #505

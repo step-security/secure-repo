@@ -1,0 +1,10 @@
+name: "Sticky Pull Request Comment"
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create or update PR comment #Checkout: https://github.com/marocchino/sticky-pull-request-comment/blob/main/action.yml#L49
+
+# FIX: #515
