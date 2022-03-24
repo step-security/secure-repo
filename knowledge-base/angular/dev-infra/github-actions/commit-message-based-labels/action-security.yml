@@ -1,0 +1,2 @@
+name: 'Breaking Changes Labeling' # angular/dev-infra/github-actions/commit-message-based-labels
+# GITHUB_TOKEN not used
