@@ -1,0 +1,16 @@
+name: no-actions
+on:
+  workflow_dispatch
+jobs:
+  job-with-error:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    steps:
+     - run: ls -R
+  list-directory1:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    steps:
+     - run: ls -R
