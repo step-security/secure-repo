@@ -17,3 +17,4 @@ testfiles/.DS_Store
 .DS_Store
 .vscode
 kbanalysis/node_modules/
+Automate-PR/node_modules/
