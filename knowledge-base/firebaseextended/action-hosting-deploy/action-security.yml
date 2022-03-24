@@ -2,7 +2,7 @@ name: "Deploy to Firebase Hosting"
 github-token:
   action-input:
     input: repoToken
-    is-default: true
+    is-default: false
   permissions:
     pull-requests: write
     pull-requests-reason: to comment on PRs #Checkout: https://github.com/FirebaseExtended/action-hosting-deploy#repotoken-string
