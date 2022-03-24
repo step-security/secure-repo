@@ -1,0 +1,10 @@
+name: 'DingTalk Release Notify'
+github-token:
+  action-input:
+    input: TOKEN
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to get latest release # Checkout: https://github.com/visiky/dingtalk-release-notify/blob/e8f7ccb947937bb317bd4b16f5ae5e9a62f5c9da/src/main.js#L79
+
+# Fix: #545

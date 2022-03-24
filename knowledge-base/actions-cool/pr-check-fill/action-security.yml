@@ -1,0 +1,8 @@
+name: 'PR Check Fill'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create or update PR comments #Checkout: https://github.com/actions-cool/pr-check-fill/blob/017a9a2573c0b8d43018ff05fa66360376877d97/src/util.js#L53

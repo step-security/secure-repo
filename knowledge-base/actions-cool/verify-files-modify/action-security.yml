@@ -1,0 +1,13 @@
+name: 'Verify Files Modify'
+github-token:
+  action-input:
+    input: token
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to update status of PRs #Checkout: https://github.com/actions-cool/verify-files-modify/blob/61404155b337d24034af65ea3527be289c4d9994/src/main.js#L154
+    issues: read
+    issues-reason: to query comment in issues #Checkout:https://github.com/actions-cool/verify-files-modify/blob/61404155b337d24034af65ea3527be289c4d9994/src/main.js#L108
+    contents: read
+    contents-reason: to query creator permission level #Checkout: https://github.com/actions-cool/verify-files-modify/blob/61404155b337d24034af65ea3527be289c4d9994/src/main.js#L59
+
+# Fix #554
