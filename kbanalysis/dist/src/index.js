@@ -8402,6 +8402,8 @@ try {
         const action_yaml_name = action_data.substring(start, start + action_data.substring(start).indexOf("\n"));
         const action_type = (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .getRunsON */ .xA)(action_data);
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Action Type: ${action_type}`);
+        // determining if token is being set by default 
+        const is_default_token = action_data.indexOf('default: "${{github.token}}"') !== -1;
         let matches = []; // // list holding all matches.
         const action_matches = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .findToken */ .pS)(action_data);
         if (readme_data !== null) {
@@ -8462,7 +8464,7 @@ try {
                             let str_perms = (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .permsToString */ .W5)(perms);
                             body += str_perms;
                             _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`${str_perms}`);
-                            action_security_yaml += (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .actionSecurity */ .LU)({ name: action_yaml_name, token_input: token_input, perms: (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .normalizePerms */ .So)(perms) });
+                            action_security_yaml += (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .actionSecurity */ .LU)({ name: action_yaml_name, token_input: token_input, perms: (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .normalizePerms */ .So)(perms), default_token: is_default_token });
                         }
                     }
                 }
@@ -9406,6 +9408,7 @@ function actionSecurity(data) {
     template.push(`${data.name}`);
     template.push("github-token:");
     template.push(`  ${data.token_input}`);
+    template.push(`    is-default: ${data.default_token}`);
     template.push("  permissions:");
     for (let perm_key of Object.keys(data.perms)) {
         template.push(`    ${perm_key}: ${data.perms[perm_key]}`);
