@@ -1,0 +1,11 @@
+name: 'Maintain One Comment'
+github-token:
+  action-input:
+    input: token
+  permissions:
+    issues: write
+    issues-reason: to modify or create issue comments # Checkout: https://github.com/actions-cool/maintain-one-comment/blob/8e93c1ac4bb589ba5f9308d08f0de82ec7eb8612/src/main.js#L78
+    pull-requests: write # requires because sometime have to work on PR comments
+    pull-requests-reason: to modify or create PR comments #Checkout: https://github.com/actions-cool/maintain-one-comment/blob/8e93c1ac4bb589ba5f9308d08f0de82ec7eb8612/src/main.js#L78
+
+# Fix: 550
