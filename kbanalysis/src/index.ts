@@ -112,6 +112,9 @@ try{
         const action_type = getRunsON(action_data)
         core.info(`Action Type: ${action_type}`)
 
+        // determining if token is being set by default 
+        const is_default_token = action_data.indexOf('default: "${{github.token}}"') !== -1
+
         let matches:String[] = [] // // list holding all matches.
         const action_matches = await findToken(action_data) 
         if(readme_data !== null){
@@ -180,7 +183,7 @@ try{
                             let str_perms = permsToString(perms)
                             body += str_perms
                             core.info(`${str_perms}`)
-                            action_security_yaml += actionSecurity({name:action_yaml_name, token_input: token_input, perms:normalizePerms(perms)})
+                            action_security_yaml += actionSecurity({name:action_yaml_name, token_input: token_input, perms:normalizePerms(perms), default_token: is_default_token})
 
 
                         }
