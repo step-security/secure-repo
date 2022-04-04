@@ -1,0 +1,10 @@
+name: 'Cancel Previous Workflow Runs'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    actions: write
+    actions-reason: to create & stop workflow runs #Checkout: https://github.com/n1hility/cancel-previous-runs/blob/master/src/main.ts#L201
+
+#Fixes #558
