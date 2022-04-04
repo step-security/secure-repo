@@ -1,0 +1,10 @@
+name: Create an issue
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: read
+    contents-reason: to read template files 
+    issues: write
+    issues-reason: to create new issues #Checkout: https://github.com/JasonEtco/create-an-issue/blob/main/src/action.ts#L23
+   
+#Fixes #533
