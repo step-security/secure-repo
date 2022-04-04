@@ -1,0 +1,10 @@
+name: "ESLint Annotate from Report JSON"
+github-token:
+  action-input:
+    input: repo-token
+  permissions:
+    checks: write
+    checks-reason: to create checks  #Checkout: https://github.com/ataylorme/eslint-annotate-action/blob/a1bf7cb320a18aa53cb848a267ce9b7417221526/src/eslint-action.ts#L82
+    pull-requests: read
+    pull-requests-reason: to get changed PR files #Checkout: https://github.com/ataylorme/eslint-annotate-action/blob/f92355332c64bc5c2d474cc6555edcb1315fdd12/src/get-pr-files-changed.ts#L14
+    

@@ -1,0 +1,10 @@
+name: GitHub Pull Request Action
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create pull requests #Checkout: https://github.com/repo-sync/pull-request#features
+
+#Fixes #497

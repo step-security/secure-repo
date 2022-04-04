@@ -1,0 +1,8 @@
+name: 'Pull Request size labeler'
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to add labels & comment on PRs #Checkout:https://github.com/CodelyTV/pr-size-labeler/blob/main/src/github.sh#L33 

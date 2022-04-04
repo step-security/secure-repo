@@ -1,0 +1,10 @@
+name: 'Create or Update Comment'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to create or update comment
+    pull-requests: write
+    pull-requests-reason: to create or update comment #Checkout: https://github.com/peter-evans/create-or-update-comment#action-inputs

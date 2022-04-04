@@ -1,0 +1,10 @@
+name: 'Find Comment'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    issues: read
+    issues-reason: to get issue comment #Checkout: https://github.com/peter-evans/find-comment#accessing-issues-and-pull-requests-in-other-repositories
+    pull-requests: read
+    pull-requests-reason: to get PR comment
