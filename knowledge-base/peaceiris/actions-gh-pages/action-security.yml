@@ -2,6 +2,7 @@ name: 'GitHub Pages action'
 github-token:
   action-input:
     input: github_token
+    is-default: false
   permissions:
     id-token: read
     id-token-reason: to authenticate using token #Reference: https://github.com/peaceiris/actions-gh-pages/blob/2decf4e752abab9095efc5ace22a0e92ae2e6fec/src/get-inputs.ts#L9
