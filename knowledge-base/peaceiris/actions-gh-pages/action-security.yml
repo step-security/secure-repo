@@ -1,0 +1,9 @@
+name: 'GitHub Pages action'
+github-token:
+  action-input:
+    input: github_token
+  permissions:
+    id-token: read
+    id-token-reason: to authenticate using token #Reference: https://github.com/peaceiris/actions-gh-pages/blob/2decf4e752abab9095efc5ace22a0e92ae2e6fec/src/get-inputs.ts#L9
+    pages: write
+    pages-reason: to deploy static files to pages #Reference: https://github.com/peaceiris/actions-gh-pages/blob/c006717cf0bd938969390db21de9e6e3bcb288c0/README.md?plain=1#L35
