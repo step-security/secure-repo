@@ -1,0 +1,9 @@
+name: 'Check User Permission'
+github-token:
+  action-input:
+    input: token
+  permissions:
+    contents: read
+    contents-reason: to list users permission level #Checkout: https://github.com/actions-cool/check-user-permission/blob/03bc95735303a2e2c0935cfec24a306bb237f03a/src/main.js#L23
+
+#FIX: #544

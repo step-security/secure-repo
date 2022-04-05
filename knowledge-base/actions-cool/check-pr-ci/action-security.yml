@@ -1,0 +1,16 @@
+name: 'Check PR CI'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create review &merge pull requests #Checkout: https://github.com/actions-cool/check-pr-ci/blob/62a2dbe3878c79ccc24083c49abbc266c03205bf/src/octokit.js#L154
+    issues: write
+    issues-reason: to update issues #Checkout: https://github.com/actions-cool/check-pr-ci/blob/62a2dbe3878c79ccc24083c49abbc266c03205bf/src/octokit.js#L159
+    contents: read
+    contents-reason: to get collaborator permission level #Checkout: https://github.com/actions-cool/check-pr-ci/blob/62a2dbe3878c79ccc24083c49abbc266c03205bf/src/octokit.js#L45
+    checks: read
+    checks-reason: to get check reference #Checkout: https://github.com/actions-cool/check-pr-ci/blob/62a2dbe3878c79ccc24083c49abbc266c03205bf/src/octokit.js#L108
+ 
+#Fixes #547
