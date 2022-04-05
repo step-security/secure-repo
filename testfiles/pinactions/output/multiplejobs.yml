@@ -8,7 +8,7 @@ jobs:
     name: build, pack & publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1
+      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9
 
       # - name: Setup dotnet
       #   uses: actions/setup-dotnet@v1
@@ -18,7 +18,7 @@ jobs:
       # Publish
       - name: publish on version change
         id: publish_nuget
-        uses: brandedoutcast/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc # v2
+        uses: brandedoutcast/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc
         with:
           PROJECT_FILE_PATH: Core/Core.csproj
           NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
@@ -27,7 +27,7 @@ jobs:
     name: build, pack & publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1
+      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9
 
       # - name: Setup dotnet
       #   uses: actions/setup-dotnet@v1
@@ -37,7 +37,7 @@ jobs:
       # Publish
       - name: publish on version change
         id: publish_nuget
-        uses: rohith/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc # v2
+        uses: rohith/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc
         with:
           PROJECT_FILE_PATH: Core/Core.csproj
           NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
