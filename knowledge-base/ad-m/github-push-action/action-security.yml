@@ -5,6 +5,6 @@ github-token:
     is-default: true
   permissions:
     contents: write
-    contents-reason: to push changes local changes  #Checkout: https://github.com/ad-m/github-push-action#github-action-for-github-push 
+    contents-reason: to push local changes  #Checkout: https://github.com/ad-m/github-push-action#github-action-for-github-push 
     
 #Fixes #496
