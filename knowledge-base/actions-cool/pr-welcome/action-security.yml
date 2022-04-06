@@ -8,7 +8,6 @@ github-token:
     issues-reason: to create, update & react on issues #Checkout: https://github.com/actions-cool/pr-welcome/blob/main/src/main.js#L171
     pull-requests: write
     pull-requests-reason: to request reviewer #Checkout: https://github.com/actions-cool/pr-welcome/blob/main/src/main.js#L147
-
     contents: read
     contents-reason: to get collaborator permission level #Checkout: https://github.com/actions-cool/pr-welcome/blob/main/src/main.js#L57
 
