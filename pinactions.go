@@ -68,7 +68,7 @@ func pinAction(action, jobName, inputYaml string) string {
 	}
 
 	commitSHA := ref.Object.SHA
-	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], *commitSHA, tagOrBranch)
+	pinnedAction := fmt.Sprintf("%s@%s", leftOfAt[0], *commitSHA)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
 	return inputYaml
 }
