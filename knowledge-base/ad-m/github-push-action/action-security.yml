@@ -1,0 +1,10 @@
+name: 'GitHub Push'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to push local changes  #Checkout: https://github.com/ad-m/github-push-action#github-action-for-github-push 
+    
+#Fixes #496

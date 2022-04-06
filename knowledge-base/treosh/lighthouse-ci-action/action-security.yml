@@ -1,0 +1,3 @@
+name: 'Lighthouse CI Action'
+#GITHUB_TOKEN not used
+#FIXES: #563

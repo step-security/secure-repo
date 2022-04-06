@@ -1,0 +1,3 @@
+name: 'Netlify Deploy'
+#GITHUB_TOKEN not used
+#FIXES: #578

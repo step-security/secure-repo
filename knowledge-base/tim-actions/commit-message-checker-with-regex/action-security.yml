@@ -1,0 +1,3 @@
+name: 'Commit Message Checker for pull request'
+#GITHUB_TOKEN not used
+#FIXES: #537

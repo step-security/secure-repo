@@ -1,0 +1,11 @@
+name: 'Verify KubeBuilder PRs'
+github-token:
+  action-input:
+    input: github-token
+    is-default: false
+  permissions:
+    checks: write
+    checks-reason: to create and update checks #Checkout: https://github.com/kubernetes-sigs/kubebuilder-release-tools/blob/01981b8498d7b87658301e2a1b12c56b8c61067d/verify/pkg/action/plugin.go#L88
+    pull-requests: read
+    pull-requests-reason: to get PR title 
+#Fixes #573
