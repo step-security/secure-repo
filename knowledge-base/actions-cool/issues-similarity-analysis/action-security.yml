@@ -2,8 +2,9 @@ name: 'Issues Similarity Analysis'
 github-token:
   action-input:
     input: token
+    is-default: true
   permissions:
     issues: write
-    issues-reason: to update or create issue comments #Checkout: https://github.com/actions-cool/issues-similarity-analysis/blob/0b3065f6204ad62cfe1d67dd45c5282875a7b8ae/src/public.js#L71
+    issues-reason: to create issue comments #Checkout: https://github.com/actions-cool/issues-similarity-analysis/blob/0b3065f6204ad62cfe1d67dd45c5282875a7b8ae/src/public.js#L71
     
 # FIX: #546
