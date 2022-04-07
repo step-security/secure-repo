@@ -112,8 +112,9 @@ try{
         const action_type = getRunsON(action_data)
         core.info(`Action Type: ${action_type}`)
 
-        // determining if token is being set by default 
-        const is_default_token = action_data.indexOf('default: "${{github.token}}"') !== -1
+        // determining if token is being set by default
+        const pattern = /\${{.*github\.token.*}}/ // default github_token pattern
+        const is_default_token = action_data.match(pattern) !== null
 
         let matches:String[] = [] // // list holding all matches.
         const action_matches = await findToken(action_data) 
