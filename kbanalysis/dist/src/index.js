@@ -8402,8 +8402,9 @@ try {
         const action_yaml_name = action_data.substring(start, start + action_data.substring(start).indexOf("\n"));
         const action_type = (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .getRunsON */ .xA)(action_data);
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Action Type: ${action_type}`);
-        // determining if token is being set by default 
-        const is_default_token = action_data.indexOf('default: "${{github.token}}"') !== -1;
+        // determining if token is being set by default
+        const pattern = /\${{.*github\.token.*}}/; // default github_token pattern
+        const is_default_token = action_data.match(pattern) !== null;
         let matches = []; // // list holding all matches.
         const action_matches = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .findToken */ .pS)(action_data);
         if (readme_data !== null) {
