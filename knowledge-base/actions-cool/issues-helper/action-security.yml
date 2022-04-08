@@ -6,3 +6,5 @@ github-token:
   permissions:
     issues: write
     issues-reason: to update issues
+    pull-requests: write
+    pull-requests-reason: to update PRs
