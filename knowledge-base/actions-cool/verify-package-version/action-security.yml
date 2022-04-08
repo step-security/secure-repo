@@ -1,0 +1,9 @@
+name: 'Verify Package Version'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to comment on PR # Checkout: https://github.com/actions-cool/verify-package-version/blob/15b61879a4bc75cf113598ba5788558534110502/src/main.js#L94
+    pull-requests-if: ${{ contains(with, 'open-comment') && with['open-comment'] == 'true'}}
