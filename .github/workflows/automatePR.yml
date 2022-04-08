@@ -1,0 +1,27 @@
+name: Automate PR
+on:
+  issues:
+    types:
+      - labeled
+
+permissions:
+  contents: read
+
+jobs:
+  Automate:
+    if: github.event.label.name == 'Automate'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      actions: write
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: step-security/secure-workflows
+    
+      - name: Automate PR
+        uses: step-security/secure-workflows/Automate-PR@main
+        with:
+          github-token: ${{secrets.PAT }}
+          issue-id: ${{ github.event.issue.number}}
