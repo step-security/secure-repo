@@ -1,0 +1,7 @@
+name: 'GitHub Pages action'
+github-token:
+  action-input:
+    input: github_token
+  permissions:
+    contents: write
+    contents-reason: to push pages branch # Refer: https://github.com/peaceiris/actions-gh-pages/blob/12260875478175738e8a4e11917dcb2849b3ff23/src/main.ts#L81
