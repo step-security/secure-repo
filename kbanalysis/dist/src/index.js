@@ -9330,7 +9330,14 @@ async function checkDependencies(client, owner, repo) {
 }
 async function getActionYaml(client, owner, repo) {
     const norm = normalizeRepo(repo);
-    const action_data = await getFile(client, owner, norm.repo, norm.path + "/action.yml");
+    let action_data = "";
+    try {
+        action_data = await getFile(client, owner, norm.repo, norm.path + "/action.yml");
+    }
+    catch (err) {
+        // action.yaml is present
+        action_data = await getFile(client, owner, norm.repo, norm.path + "/action.yaml");
+    }
     return action_data;
 }
 async function getReadme(client, owner, repo) {
