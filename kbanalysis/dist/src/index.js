@@ -8564,7 +8564,7 @@ __nccwpck_require__.d(__webpack_exports__, {
   "wq": () => (/* binding */ printArray)
 });
 
-// UNUSED EXPORTS: normalizeRepo, readFile, validateAction
+// UNUSED EXPORTS: normalizeRepo, parseContent, readFile, validateAction
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(6066);
@@ -9340,13 +9340,28 @@ async function getActionYaml(client, owner, repo) {
     }
     return action_data;
 }
+function parseContent(data) {
+    let temp_content = data.data["content"].split("\n");
+    let content = temp_content.join("");
+    return Buffer.from(content, "base64").toString();
+}
 async function getReadme(client, owner, repo) {
     const norm = normalizeRepo(repo);
     let readme = "";
     try {
-        readme = await getFile(client, owner, norm.repo, norm.path + "/README.md");
+        if (norm.path !== "") {
+            // is nested action
+            let content = await client.rest.repos.getReadmeInDirectory({ owner: owner, repo: norm.repo, directory: norm.path });
+            readme = parseContent(content);
+        }
+        else {
+            console.log("here");
+            let content = await client.rest.repos.getReadme({ owner: owner, repo: norm.repo });
+            readme = parseContent(content);
+        }
     }
-    catch (_a) {
+    catch (err) {
+        console.log(err);
         readme = null;
     }
     return readme;
