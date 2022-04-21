@@ -19,6 +19,8 @@ jobs:
             github.com:443
             proxy.golang.org:443
             storage.googleapis.com:443
+            objects.githubusercontent.com:443
+            golang.org:443
       - name: Checkout
         uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
         with:
