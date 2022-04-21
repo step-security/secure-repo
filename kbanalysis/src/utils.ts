@@ -76,13 +76,26 @@ export async function getActionYaml(client: any, owner: String, repo: String){
     return action_data
 
 }
-
+export function parseContent(data){
+    let temp_content = data.data["content"].split("\n")
+    let content = temp_content.join("")
+    return Buffer.from(content, "base64").toString()
+}
 export async function getReadme(client:any, owner:String, repo:String){
     const norm = normalizeRepo(repo)
     let readme = ""
     try{
-        readme =  await getFile(client,owner, norm.repo,norm.path+"/README.md")
-    }catch{
+        if(norm.path !== ""){
+            // is nested action
+            let content = await client.rest.repos.getReadmeInDirectory({owner:owner, repo: norm.repo, directory:norm.path})
+            readme = parseContent(content)
+        }else{
+            console.log("here")
+            let content =  await client.rest.repos.getReadme({owner:owner, repo:norm.repo})
+            readme = parseContent(content)
+        }
+    }catch(err){
+        console.log(err)
         readme = null
     }
     return readme
