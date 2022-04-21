@@ -1,0 +1,8 @@
+name: 'Lazy Action Python'
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to fetch code
