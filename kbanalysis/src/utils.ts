@@ -66,7 +66,13 @@ export async function checkDependencies(client,owner:String, repo:String){
 export async function getActionYaml(client: any, owner: String, repo: String){
     
     const norm = normalizeRepo(repo)
-    const action_data =  await getFile(client,owner, norm.repo,norm.path+"/action.yml")
+    let action_data = ""
+    try{
+        action_data =  await getFile(client,owner, norm.repo,norm.path+"/action.yml")
+    }catch(err){
+        // action.yaml is present
+        action_data = await getFile(client,owner, norm.repo,norm.path+"/action.yaml")
+    }
     return action_data
 
 }
