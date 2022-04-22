@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
@@ -25,6 +27,12 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if queryStringParams["addPermissions"] == "false" {
 		addPermissions = false
+	}
+
+	if !strings.Contains(inputYaml, "ubuntu-latest") {
+		// this check will ensure that harden-runner will be added only
+		// if action runs-on ubuntu machine.
+		addHardenRunner = false
 	}
 
 	secureWorkflowReponse := &SecureWorkflowReponse{FinalOutput: inputYaml}
