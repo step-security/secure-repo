@@ -1,0 +1,10 @@
+name: "release-downloader"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to download release from private repo #Checkout: https://github.com/robinraju/release-downloader#usage
+    
+#Fixes #624

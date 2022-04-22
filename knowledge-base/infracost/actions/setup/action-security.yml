@@ -1,0 +1,10 @@
+name: "Setup Infracost"
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to get list of Infracost cli versions #Checkout: https://github.com/infracost/actions/blob/master/setup/action.yml#L22
+    
+#Fixes #616
