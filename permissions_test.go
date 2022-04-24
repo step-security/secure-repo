@@ -105,6 +105,10 @@ func TestAddWorkflowLevelPermissions(t *testing.T) {
 	}
 
 	for _, f := range files {
+		if !strings.HasSuffix(f.Name(), ".yml") {
+			return
+		}
+
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
 
 		if err != nil {

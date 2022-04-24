@@ -185,6 +185,10 @@ func doesActionRepoExist(filePath string) bool {
 	repo := splitOnSlash[2]
 
 	PAT := os.Getenv("PAT")
+	if len(PAT) == 0 {
+		log.Println("doesActionRepoExist: PAT not set, skipping")
+		return true
+	}
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: PAT},
