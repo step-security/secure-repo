@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"testing"
 
@@ -10,6 +11,14 @@ import (
 )
 
 func TestDockerActions(t *testing.T) {
+
+	CI := os.Getenv("CI")
+	if len(CI) == 0 {
+		// Only run on GitHub Actions workflow, since local docker config might interfere with test
+		log.Println("TestDockerActions: CI not set, skipping")
+		return
+	}
+
 	const inputDirectory = "./testfiles/pindockers/input"
 	const outputDirectory = "./testfiles/pindockers/output"
 	files, err := ioutil.ReadDir(inputDirectory)
