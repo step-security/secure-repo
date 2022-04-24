@@ -13,11 +13,13 @@ jobs:
     steps:
       - uses: step-security/harden-runner@14dc64f30986eaa2ad2dddcec073f5aab18e5a24 # v1
         with:
-          allowed-endpoints: api.github.com:443
+          allowed-endpoints: >
+            api.github.com:443
             codecov.io:443
             uploader.codecov.io:443
             github.com:443
             proxy.golang.org:443
+            sum.golang.org:443
             storage.googleapis.com:443
             objects.githubusercontent.com:443
             golang.org:443
