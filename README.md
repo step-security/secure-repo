@@ -14,6 +14,8 @@ The API takes in a GitHub Actions workflow file as an input and returns a transf
 
 [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.
 
+Secure-Workflows will be demoed at [SupplyChainSecurityCon](http://sched.co/11Pvu)! Goal is to [fix token permissions in top 100 most critical open source projects](https://github.com/step-security/secure-workflows/issues/462) by then.
+
 ## GitHub Actions Security Knowledge Base
 
 To calculate minimum token permissions for a given workflow, a [Knowledge Base of GitHub Actions](https://github.com/step-security/secure-workflows/tree/main/knowledge-base) has been setup. The knowledge base has information about what permissions a GitHub Action needs when using the `GITHUB_TOKEN`. 
