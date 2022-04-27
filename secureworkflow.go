@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
@@ -25,6 +27,12 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if queryStringParams["addPermissions"] == "false" {
 		addPermissions = false
+	}
+
+	if !isLinuxRunner(inputYaml) {
+		// this check will ensure that harden-runner will be added only
+		// if action runs-on ubuntu machine.
+		addHardenRunner = false
 	}
 
 	secureWorkflowReponse := &SecureWorkflowReponse{FinalOutput: inputYaml}
@@ -53,5 +61,28 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	return secureWorkflowReponse, nil
+
+}
+
+func isLinuxRunner(content string) bool {
+	if strings.Contains(content, "strategy:") && strings.Contains(content, "matrix:") && strings.Contains(content, "os:") {
+		// matrix runner
+		i := strings.Index(content, "os:")
+		return strings.Contains(getLine(content, i), "ubuntu")
+	}
+	// normal runner
+	i := strings.Index(content, "runs-on:")
+	return strings.Contains(getLine(content, i), "ubuntu")
+}
+
+func getLine(content string, start int) string {
+	end := start
+	for {
+		if content[end] == '\n' {
+			break
+		}
+		end += 1
+	}
+	return content[start:end]
 
 }
