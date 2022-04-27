@@ -41,7 +41,26 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 
 		if strings.Contains(httpRequest.RawPath, "/secure-workflow") {
 
-			fixResponse, err := SecureWorkflow(httpRequest.QueryStringParameters, httpRequest.Body, dynamoDbSvc)
+			inputYaml := ""
+			queryStringParams := httpRequest.QueryStringParameters
+			// if owner is set, assuming that repo, path are also set
+			// get the workflow using API
+			if _, ok := queryStringParams["owner"]; ok {
+				inputYaml, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
+				if err != nil {
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusInternalServerError,
+						Body:       err.Error(),
+					}
+					returnValue, _ := json.Marshal(&response)
+					return returnValue, nil
+				}
+			} else {
+				// if owner is not set, then workflow should be sent in the body
+				inputYaml = httpRequest.Body
+			}
+
+			fixResponse, err := SecureWorkflow(httpRequest.QueryStringParameters, inputYaml, dynamoDbSvc)
 
 			if err != nil {
 				response = events.APIGatewayProxyResponse{
