@@ -11,6 +11,7 @@ import (
 )
 
 type SecureWorkflowReponse struct {
+	OriginalInput         string
 	FinalOutput           string
 	IsChanged             bool
 	HasErrors             bool

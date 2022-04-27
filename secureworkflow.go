@@ -27,10 +27,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addPermissions = false
 	}
 
-	secureWorkflowReponse := &SecureWorkflowReponse{FinalOutput: inputYaml}
+	secureWorkflowReponse := &SecureWorkflowReponse{FinalOutput: inputYaml, OriginalInput: inputYaml}
 	var err error
 	if addPermissions {
 		secureWorkflowReponse, err = AddJobLevelPermissions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.OriginalInput = inputYaml
 		if err != nil {
 			return nil, err
 		} else {
