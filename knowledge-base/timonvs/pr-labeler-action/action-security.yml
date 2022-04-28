@@ -1,0 +1,9 @@
+name: 'PR Labeler'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to add labels in PR #Checkout: https://github.com/TimonVS/pr-labeler-action/blob/b30ed4c31985a393b2d25a62feb0e7c75d628883/src/action.ts#L31
+    
+#Fixes #632
