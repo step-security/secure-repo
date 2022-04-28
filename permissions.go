@@ -17,6 +17,7 @@ type SecureWorkflowReponse struct {
 	HasErrors             bool
 	AlreadyHasPermissions bool
 	IncorrectYaml         bool
+	WorkflowFetchError    bool
 	JobErrors             []JobError
 	MissingActions        []string
 }

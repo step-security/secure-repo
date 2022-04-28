@@ -48,9 +48,11 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			if _, ok := queryStringParams["owner"]; ok {
 				inputYaml, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
 				if err != nil {
+					fixResponse := &SecureWorkflowReponse{WorkflowFetchError: true}
+					output, _ := json.Marshal(fixResponse)
 					response = events.APIGatewayProxyResponse{
-						StatusCode: http.StatusInternalServerError,
-						Body:       err.Error(),
+						StatusCode: http.StatusOK,
+						Body:       string(output),
 					}
 					returnValue, _ := json.Marshal(&response)
 					return returnValue, nil
