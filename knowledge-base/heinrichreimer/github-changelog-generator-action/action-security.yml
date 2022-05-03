@@ -1,0 +1,10 @@
+name: "Generate changelog"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to evade rate limiting #Checkout: https://github.com/heinrichreimer/action-github-changelog-generator/blob/master/action.yml#L16
+    
+#Fixes #655
