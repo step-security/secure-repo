@@ -1,0 +1,10 @@
+name: "step-security/agent release"
+release-process:
+  artifact-location:
+    github-release:
+      repo: step-security/agent
+  pipeline:
+    github-action:
+      repo: step-security/agent
+      workflow: release.yml
+  branch: main

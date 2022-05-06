@@ -1,0 +1,10 @@
+name: "caffeine release"
+release-process:
+  artifact-location:
+    maven:
+      artifact: com.github.ben-manes.caffeine/caffeine
+  pipeline:
+    github-action:
+      repo: ben-manes/caffeine
+      workflow: release.yml
+  branch: master
