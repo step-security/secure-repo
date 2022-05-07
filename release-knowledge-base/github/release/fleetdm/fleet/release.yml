@@ -1,0 +1,10 @@
+name: "fleetdm release"
+release-process:
+  artifact-location:
+    github-release:
+      repo: fleetdm/fleet
+  pipeline:
+    github-action:
+      repo: fleetdm/fleet
+      workflow: goreleaser-fleet.yaml
+  branch: main

@@ -1,0 +1,10 @@
+name: "vue-segment-analytics publish"
+release-process:
+  artifact-location:
+    npm:
+      package: vue-segment-analytics
+  pipeline:
+    github-action:
+      repo: Kapiche/vue-segment-analytics
+      workflow: bump.yaml
+  branch: master
