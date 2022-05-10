@@ -7,4 +7,6 @@ release-process:
     github-action:
       repo: ben-manes/caffeine
       workflow: release.yml
-  branch: master
+    branches: 
+      - master
+      - v2.dev
