@@ -1,0 +1,2 @@
+name: Get release tags # babel/actions/get-release-tags
+# GITHUB_TOKEN not used
