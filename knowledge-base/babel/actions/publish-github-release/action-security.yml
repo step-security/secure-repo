@@ -1,0 +1,8 @@
+name: Publish GitHub release # babel/actions/publish-github-release
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: to create a release
