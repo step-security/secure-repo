@@ -7,4 +7,5 @@ release-process:
     github-action:
       repo: step-security/agent
       workflow: release.yml
-  branch: main
+    branches: 
+      - main

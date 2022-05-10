@@ -7,4 +7,5 @@ release-process:
     github-action:
       repo: fleetdm/fleet
       workflow: goreleaser-fleet.yaml
-  branch: main
+    branches: 
+      - main

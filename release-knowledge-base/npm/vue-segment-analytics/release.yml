@@ -7,4 +7,5 @@ release-process:
     github-action:
       repo: Kapiche/vue-segment-analytics
       workflow: bump.yaml
-  branch: master
+    branches: 
+      - master
