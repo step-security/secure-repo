@@ -1,0 +1,13 @@
+name: "Generate changelog"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to fetch tags
+    issues: read
+    issues-reason: to fetch issues and labels
+    pull-requests: read
+    pull-requests-reason: to fetch PRs and labels    
+#Fixes #655

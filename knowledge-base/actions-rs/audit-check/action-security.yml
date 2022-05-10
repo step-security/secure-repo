@@ -1,0 +1,11 @@
+name: 'rust-audit-check'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to create issues #Checkout: https://github.com/actions-rs/audit-check/blob/35b7b53b1e25b55642157ac01b4adceb5b9ebef3/src/reporter.ts#L243
+    checks: write
+    checks-reason: to create check #Checkout: https://github.com/actions-rs/audit-check/blob/35b7b53b1e25b55642157ac01b4adceb5b9ebef3/src/reporter.ts#L185
+#Fixes #643
