@@ -4,7 +4,7 @@ github-token:
     input: token
     is-default: true
   permissions:
-    contents: read
-    contents-reason: to get latest artifact #Checkout: https://github.com/ComunidadAylas/PackSquash-action/blob/master/entrypoint.sh#L36
+    actions: read
+    actions-reason: to get latest artifact #Checkout: https://github.com/ComunidadAylas/PackSquash-action/blob/master/entrypoint.sh#L36
     
 #Fixes #652
