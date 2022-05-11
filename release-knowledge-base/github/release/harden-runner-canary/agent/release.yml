@@ -1,0 +1,11 @@
+name: "harden-runner-canary/agent release - for testing"
+release-process:
+  artifact-location:
+    github-release:
+      repo: harden-runner-canary/agent
+  pipeline:
+    github-action:
+      repo: harden-runner-canary/agent
+      workflow: release.yml
+    branches: 
+      - main
