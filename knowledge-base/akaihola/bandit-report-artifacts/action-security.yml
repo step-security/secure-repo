@@ -1,0 +1,8 @@
+name: "python-bandit with code annotations"
+github-token:
+  action-input:
+    input: repo_token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to write bandit checks
