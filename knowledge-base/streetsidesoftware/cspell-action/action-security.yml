@@ -1,0 +1,10 @@
+name: "cspell-action"
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to fetch files for commit
+    pull-requests: read
+    pull-requests-reason: to fetch commits for PR
