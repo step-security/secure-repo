@@ -158,7 +158,7 @@ func GetActionKnowledgeBase(action string) (*ActionMetadata, error) {
 	// converting actionKey to lowercase to fix ISSUE#286
 	action = strings.ToLower(action)
 	if kbFolder == "" {
-		kbFolder = "knowledge-base"
+		kbFolder = "knowledge-base/actions"
 	}
 
 	input, err := ioutil.ReadFile(path.Join(kbFolder, action, "action-security.yml"))
