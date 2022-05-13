@@ -181,8 +181,8 @@ func TestKnowledgeBase(t *testing.T) {
 
 func doesActionRepoExist(filePath string) bool {
 	splitOnSlash := strings.Split(filePath, "/")
-	owner := splitOnSlash[1]
-	repo := splitOnSlash[2]
+	owner := splitOnSlash[2]
+	repo := splitOnSlash[3]
 
 	PAT := os.Getenv("PAT")
 	if len(PAT) == 0 {
