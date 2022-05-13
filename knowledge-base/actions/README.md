@@ -6,12 +6,12 @@ If you are the owner of a GitHub Action, please contribute information about the
 
 To contribute to the knowledge base:
 1. Add a folder under the knowledge base folder for your GitHub Action.
-2. In the folder for your GitHub Action, add an `action-security.yml` file. You can view existing files to understand the structure of these YAML files. See an example here [`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml)
+2. In the folder for your GitHub Action, add an `action-security.yml` file. You can view existing files to understand the structure of these YAML files. See an example here [`knowledge-base/actions/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/actions/checkout/action-security.yml)
 3. Add metadata in the `action-security.yml` file about the use of `GITHUB_TOKEN` and expected outbound traffic for your GitHub Action.
 
 ## Syntax for action-security.yml
 
-The metadata filename must be `action-security.yml`. It must be located in a folder for your GitHub Action under the `knowledge-base` folder, e.g. the location for `actions/checkout` is [`knowledge-base/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/checkout/action-security.yml) The data in the metadata file defines the permissions needed for `GITHUB_TOKEN` for your Action and the outbound calls made by your Action.
+The metadata filename must be `action-security.yml`. It must be located in a folder for your GitHub Action under the `knowledge-base` folder, e.g. the location for `actions/checkout` is [`knowledge-base/actions/actions/checkout/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/actions/checkout/action-security.yml) The data in the metadata file defines the permissions needed for `GITHUB_TOKEN` for your Action and the outbound calls made by your Action.
 
 ## `name`
 
@@ -25,7 +25,7 @@ The metadata filename must be `action-security.yml`. It must be located in a fol
 
 This example is for `peter-evans/close-issue` GitHub Action. It shows that the Action expects GitHub token as an action input, the name of the input is `token`, and that it is set to `GITHUB_TOKEN` as the default value. It also shows that the permissions needed for the Action are `issues: write` and the reason for that permission is specified in the `issues-reason` key. 
 
-[`knowledge-base/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/peter-evans/close-issue/action-security.yml)
+[`knowledge-base/actions/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/peter-evans/close-issue/action-security.yml)
 
 ```
 github-token:
@@ -57,7 +57,7 @@ github-token:
 
 This example is for `github/super-linter` GitHub Action. It shows that the Action expects GitHub token as an environment variable, the name of the environment variable is `GITHUB_TOKEN`. It also shows that the permissions needed for the Action are `statuses: write` and the reason for that permission is specified in the `statuses-reason` key. 
 
-[`knowledge-base/github/super-linter/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/github/super-linter/action-security.yml)
+[`knowledge-base/actions/github/super-linter/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/github/super-linter/action-security.yml)
 
 ```
 name: 'Super-Linter'
@@ -76,7 +76,7 @@ github-token:
 
 This example is for `actions/setup-node` GitHub Action. It shows that the Action expects GitHub token as an Action input. The permissions key is set, but no scopes are defined, since it only uses it for rate-limiting. 
 
-[`knowledge-base/actions/setup-node/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/setup-node/action-security.yml)
+[`knowledge-base/actions/actions/setup-node/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/actions/setup-node/action-security.yml)
 
 ```
 name: 'Setup Node.js environment'
@@ -99,7 +99,7 @@ github-token:
 
 As an example, consider this `action-security.yml` for `peter-evans/close-issue` GitHub Action.
 
-[`knowledge-base/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/peter-evans/close-issue/action-security.yml)
+[`knowledge-base/actions/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/peter-evans/close-issue/action-security.yml)
 
 ```
 github-token:
@@ -136,7 +136,7 @@ jobs:
 
 As an example, consider this `action-security.yml` for `dessant/lock-threads` GitHub Action. The `issues` scope only applies if either the `with` (action input) does not have `process-only` or `process-only` is set to `issues`. 
 
-[`knowledge-base/dessant/lock-threads/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/dessant/lock-threads/action-security.yml)
+[`knowledge-base/actions/dessant/lock-threads/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/dessant/lock-threads/action-security.yml)
 
 ```
 github-token:
