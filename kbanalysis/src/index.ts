@@ -58,7 +58,7 @@ try{
             core.info(`Issue for ${target_owner}/${target_main_repo} is already created.\nExiting`)
             exit(0)
         }
-        const content = readFileSync(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)
+        const content = readFileSync(`knowledge-base/actions/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)
         let template = []
         template.push("At https://github.com/step-security/secure-workflows we are building a knowledge-base (KB) of GITHUB_TOKEN permissions needed by different GitHub Actions. When developers try to set minimum token permissions for their workflows, they can use this knowledge-base instead of trying to research permissions needed by each GitHub Action they use.")
         template.push("\nBelow you can see the KB of your GITHUB Action.")
@@ -79,7 +79,7 @@ try{
 
     }
 
-    if(existsSync(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)){
+    if(existsSync(`knowledge-base/actions/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)){
         core.info("Not performing analysis as issue is already analyzed")
         exit(0)
     }
@@ -132,7 +132,7 @@ try{
             core.warning("Action doesn't contains reference to github_token")
             const template = `\n\`\`\`yaml\n${action_yaml_name} # ${target_owner+"/"+target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`
             const pr_content = `${action_yaml_name} # ${target_owner+"/"+target_repo}\n# GITHUB_TOKEN not used\n`
-            await createPR(pr_content, `knowledge-base/${target_owner}/${target_repo}`)
+            await createPR(pr_content, `knowledge-base/actions/${target_owner}/${target_repo}`)
 
             await comment(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN\n### action-security.yml\n"+template)
         }else{

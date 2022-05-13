@@ -44,7 +44,7 @@ Resources:
         Environment:
           Variables:
             PAT: !Ref PAT
-            KBFolder: "/knowledge-base"        
+            KBFolder: "/knowledge-base/actions"        
       
     ApiGatewayV2Api:
         Type: "AWS::ApiGatewayV2::Api"

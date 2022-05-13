@@ -18,9 +18,9 @@ Secure-Workflows will be demoed at [SupplyChainSecurityCon](http://sched.co/11Pv
 
 ## GitHub Actions Security Knowledge Base
 
-To calculate minimum token permissions for a given workflow, a [Knowledge Base of GitHub Actions](https://github.com/step-security/secure-workflows/tree/main/knowledge-base) has been setup. The knowledge base has information about what permissions a GitHub Action needs when using the `GITHUB_TOKEN`. 
+To calculate minimum token permissions for a given workflow, a [Knowledge Base of GitHub Actions](https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions) has been setup. The knowledge base has information about what permissions a GitHub Action needs when using the `GITHUB_TOKEN`. 
 
-If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/README.md). This will increase trust for your GitHub Action and more developers would be comfortable using it, and it will improve security for everyone's GitHub Actions workflows.
+If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md). This will increase trust for your GitHub Action and more developers would be comfortable using it, and it will improve security for everyone's GitHub Actions workflows.
 
 ## Try SecureWorkflows
 

@@ -20,7 +20,7 @@ func TestKnowledgeBase(t *testing.T) {
 	kbFolder := os.Getenv("KBFolder")
 
 	if kbFolder == "" {
-		kbFolder = "knowledge-base"
+		kbFolder = "knowledge-base/actions"
 	}
 
 	lintIssues := []string{}
@@ -181,8 +181,8 @@ func TestKnowledgeBase(t *testing.T) {
 
 func doesActionRepoExist(filePath string) bool {
 	splitOnSlash := strings.Split(filePath, "/")
-	owner := splitOnSlash[1]
-	repo := splitOnSlash[2]
+	owner := splitOnSlash[2]
+	repo := splitOnSlash[3]
 
 	PAT := os.Getenv("PAT")
 	if len(PAT) == 0 {
@@ -207,8 +207,8 @@ func doesActionRepoExist(filePath string) bool {
 	ref.Ref = *branch
 
 	// does the path to folder is correct for action repository
-	if len(splitOnSlash) > 4 {
-		folder := strings.Join(splitOnSlash[3:len(splitOnSlash)-1], "/")
+	if len(splitOnSlash) > 5 {
+		folder := strings.Join(splitOnSlash[4:len(splitOnSlash)-1], "/")
 		folder += "/action.yml"
 		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 
