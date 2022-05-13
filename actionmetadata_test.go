@@ -20,7 +20,7 @@ func TestKnowledgeBase(t *testing.T) {
 	kbFolder := os.Getenv("KBFolder")
 
 	if kbFolder == "" {
-		kbFolder = "knowledge-base/actions"
+		kbFolder = "knowledge-base"
 	}
 
 	lintIssues := []string{}
