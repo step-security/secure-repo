@@ -207,8 +207,8 @@ func doesActionRepoExist(filePath string) bool {
 	ref.Ref = *branch
 
 	// does the path to folder is correct for action repository
-	if len(splitOnSlash) > 4 {
-		folder := strings.Join(splitOnSlash[3:len(splitOnSlash)-1], "/")
+	if len(splitOnSlash) > 5 {
+		folder := strings.Join(splitOnSlash[4:len(splitOnSlash)-1], "/")
 		folder += "/action.yml"
 		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 
