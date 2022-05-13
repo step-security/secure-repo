@@ -8358,7 +8358,7 @@ try {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Issue for ${target_owner}/${target_main_repo} is already created.\nExiting`);
             (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
         }
-        const content = (0,fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync)(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`);
+        const content = (0,fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync)(`knowledge-base/actions/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`);
         let template = [];
         template.push("At https://github.com/step-security/secure-workflows we are building a knowledge-base (KB) of GITHUB_TOKEN permissions needed by different GitHub Actions. When developers try to set minimum token permissions for their workflows, they can use this knowledge-base instead of trying to research permissions needed by each GitHub Action they use.");
         template.push("\nBelow you can see the KB of your GITHUB Action.");
@@ -8376,7 +8376,7 @@ try {
         await client.rest.issues.updateComment({ owner: repos.owner, repo: repos.repo, comment_id: comment_id, body: comment_resp.data.body + `\n${target_owner}/${target_main_repo}` });
         (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
     }
-    if ((0,fs__WEBPACK_IMPORTED_MODULE_2__.existsSync)(`knowledge-base/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)) {
+    if ((0,fs__WEBPACK_IMPORTED_MODULE_2__.existsSync)(`knowledge-base/actions/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)) {
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Not performing analysis as issue is already analyzed");
         (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
     }
@@ -8421,7 +8421,7 @@ try {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Action doesn't contains reference to github_token");
             const template = `\n\`\`\`yaml\n${action_yaml_name} # ${target_owner + "/" + target_repo}\n# GITHUB_TOKEN not used\n\`\`\`\n`;
             const pr_content = `${action_yaml_name} # ${target_owner + "/" + target_repo}\n# GITHUB_TOKEN not used\n`;
-            await (0,_pr_utils__WEBPACK_IMPORTED_MODULE_4__/* .createPR */ .b)(pr_content, `knowledge-base/${target_owner}/${target_repo}`);
+            await (0,_pr_utils__WEBPACK_IMPORTED_MODULE_4__/* .createPR */ .b)(pr_content, `knowledge-base/actions/${target_owner}/${target_repo}`);
             await (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .comment */ .UI)(client, repos, Number(issue_id), "This action's `action.yml` & `README.md` doesn't contains any reference to GITHUB_TOKEN\n### action-security.yml\n" + template);
         }
         else {
