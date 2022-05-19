@@ -9,3 +9,4 @@ release-process:
       workflow: release.yml
     branches: 
       - main
+      - release/*
