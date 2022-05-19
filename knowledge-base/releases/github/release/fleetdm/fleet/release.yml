@@ -9,3 +9,4 @@ release-process:
       workflow: goreleaser-fleet.yaml
     branches: 
       - main
+      - patch-fleet-v*
