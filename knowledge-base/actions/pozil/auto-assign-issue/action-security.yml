@@ -1,0 +1,11 @@
+name: 'Auto-assign Issue'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to assign issues #Checkout: https://github.com/pozil/auto-assign-issue/blob/bc86e2d093b379ba5ced0f9e2f46c0e612ebbbfc/src/action.js#L103
+
+    
+#Fixes #668

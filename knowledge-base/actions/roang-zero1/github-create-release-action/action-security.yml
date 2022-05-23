@@ -1,0 +1,8 @@
+name: "GitHub Create Tag Release"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to create new releases #Checkout: https://github.com/Roang-zero1/github-create-release-action/blob/master/entrypoint.sh#L115
+    
+#Fixes #694
