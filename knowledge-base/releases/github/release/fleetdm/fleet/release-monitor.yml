@@ -10,3 +10,5 @@ release-process:
     branches: 
       - main
       - patch-fleet-v*
+    tags:
+      - fleet-v*
