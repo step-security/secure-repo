@@ -1,4 +1,4 @@
-name: "Infracost Comment"
+name: "Infracost Actions"
 github-token:
   action-input:
     input: github-token
