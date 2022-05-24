@@ -1,0 +1,10 @@
+name: "Merge pull requests (automerge-action)"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to get current PR #Checkout: https://github.com/pascalgn/automerge-action/blob/main/lib/api.js#L384
+    contents: write
+    contents-reason: to merge PRs #Checkout: https://github.com/pascalgn/automerge-action/blob/2e9644b0b86a2c052525921f181f905dc8102da5/lib/update.js#L89
+
+#Fixes #696
