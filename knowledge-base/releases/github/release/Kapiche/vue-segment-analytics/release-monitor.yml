@@ -1,0 +1,11 @@
+name: "vue-segment-analytics release"
+release-process:
+  artifact-location:
+    github-release:
+      repo: Kapiche/vue-segment-analytics
+  pipeline:
+    github-action:
+      repo: Kapiche/vue-segment-analytics
+      workflow: bump.yaml
+    branches: 
+      - master
