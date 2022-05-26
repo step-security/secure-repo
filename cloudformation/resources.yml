@@ -183,17 +183,17 @@ Resources:
             WriteCapacityUnits: 1
 
     GitHubWorkflowSecrets:
-    Type: "AWS::DynamoDB::Table"
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: "repo"
-          AttributeType: "S"
-        - AttributeName: "runId"
-          AttributeType: "S"
-      TableName: "GitHubWorkflowSecrets"
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: "repo"
-          KeyType: "HASH"
-        - AttributeName: "runId"
-          KeyType: "RANGE"
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: "repo"
+            AttributeType: "S"
+          - AttributeName: "runId"
+            AttributeType: "S"
+        TableName: "GitHubWorkflowSecrets"
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: "repo"
+            KeyType: "HASH"
+          - AttributeName: "runId"
+            KeyType: "RANGE"
