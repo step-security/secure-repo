@@ -115,6 +115,18 @@ Resources:
               - /
               - - integrations
                 - !Ref ApiGatewayV2Integration
+    
+    ApiGatewayV2Route4:
+        Type: "AWS::ApiGatewayV2::Route"
+        Properties:
+            ApiId: !Ref ApiGatewayV2Api
+            ApiKeyRequired: false
+            AuthorizationType: "NONE"
+            RouteKey: "ANY /secrets"
+            Target: !Join
+              - /
+              - - integrations
+                - !Ref ApiGatewayV2Integration
 
     ApiGatewayV2Integration:
         Type: "AWS::ApiGatewayV2::Integration"
@@ -169,3 +181,19 @@ Resources:
         ProvisionedThroughput: 
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
+
+    GitHubWorkflowSecrets:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "repo"
+          AttributeType: "S"
+        - AttributeName: "runId"
+          AttributeType: "S"
+      TableName: "GitHubWorkflowSecrets"
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: "repo"
+          KeyType: "HASH"
+        - AttributeName: "runId"
+          KeyType: "RANGE"
