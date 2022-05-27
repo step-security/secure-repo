@@ -132,5 +132,11 @@ func SetSecrets(body string, svc dynamodbiface.DynamoDBAPI) error {
 		return err
 	}
 
+	err = setWorkflowSecrets(gitHubWorkflowSecrets, svc)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
