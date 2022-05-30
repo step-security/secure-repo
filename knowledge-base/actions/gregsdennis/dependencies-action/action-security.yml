@@ -1,7 +1,6 @@
 name: 'PR Dependency Check'
 github-token:
   environment-variable-name: GITHUB_TOKEN
-    is-default: false
   permissions:
     pull-requests: read
     pull-requests-reason: to read PR contents for dependencies
