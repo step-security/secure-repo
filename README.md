@@ -6,21 +6,21 @@
 Secure-Workflows is an open-source API to secure GitHub Actions workflow files. It sets the minimum token permissions, pins Actions to a full length commit SHA, and adds a security agent to monitor the build process. Secure-Workflows will be demoed at Linux Foundation's Open Source Summit [SupplyChainSecurityCon](http://sched.co/11Pvu)! 
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows2.gif" alt="Secure workflow screenshot" >
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows3.gif" alt="Secure workflow screenshot" >
 </p>
 
-# What issues does Secure-Workflows fix?
+## What issues does Secure-Workflows fix?
 
 Secure-Workflows API takes in a GitHub Actions workflow file as an input and returns a transformed workflow YAML file with the following changes. You can select which of these changes you want to make. 
 
-## Minimum `GITHUB_TOKEN` permissions are set for each job
+### 1. Minimum `GITHUB_TOKEN` permissions are set for each job
 
-### Why is this needed?
+#### Why is this needed?
 The GITHUB_TOKEN is an automatically generated secret that lets you make authenticated calls to the GitHub API in your workflow runs. Actions generates a new token for each job and expires the token when a job completes. The token has write permissions to a number of API endpoints except in the case of pull requests from forks which are always read.
 
 If the token is compromised due to a malicious Action or step in the workflow, it can be misused to overwrite releases or source code in a branch. To limit the damage that can be done in such a scenario, [GitHub recommends setting minimum token permissions for the GITHUB_TOKEN](https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/). 
 
-### Before and After the fix
+#### Before and After the fix
 
 Before the fix, your workflow may look like this
 
@@ -63,19 +63,19 @@ jobs:
        comment: Auto-closing issue
 ```
 
-### How does Secure-Workflows fix this issue?
+#### How does Secure-Workflows fix this issue?
 Different GitHub Actions need different token permissions, so if you use multiple Actions in your workflow, you need to research the correct permissions needed for each Action. This can be time consuming and cumbersome. 
 
 Secure-Workflows stores the permissions needed by different GitHub Actions in a [knowledge base]((https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions)). When you try to set token permissions for your workflow, it looks up the permissions needed by each Action in your workflow and adds the permissions up to come up with a final recommendation.
 
 If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md). This will increase trust for your GitHub Action and more developers would be comfortable using it, and it will improve security for everyone's GitHub Actions workflows.
 
-## Actions are pinned to a full length commit SHA
+### 2. Actions are pinned to a full length commit SHA
 
-### Why is this needed?
+#### Why is this needed?
 GitHub Action tags and Docker tags are mutatble. This poses a security risk. If the tag changes you will not have a chance to review the change before it gets used. GitHub's Security Hardening for GitHub Actions guide [recommends pinning actions to full length commit for third party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions).  
 
-### Before and After the fix
+#### Before and After the fix
 Before the fix, your workflow may look like this
 
 ``` yaml
@@ -110,15 +110,15 @@ jobs:
       
 ```
 
-### How does Secure-Workflows fix this issue?
+#### How does Secure-Workflows fix this issue?
 Secure-Workflows automates the process of getting the commit SHA for each mutable Action version or Docker image tag. It does this by using GitHub and Docker registry APIs. 
 
-## Harden-Runner GitHub Action is added to each job
+### 3. Harden-Runner GitHub Action is added to each job
 
-### Why is this needed?
+#### Why is this needed?
 [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.
 
-### Before and After the fix
+#### Before and After the fix
 
 Before the fix, your workflow may look like this
 
@@ -163,11 +163,11 @@ jobs:
       
 ```
 
-### How does Secure-Workflows fix this issue?
+#### How does Secure-Workflows fix this issue?
 
 Secure-Workflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job. 
 
-## Integration with OpenSSF Scorecard
+### Integration with OpenSSF Scorecard
 
 Open Source Security Foundation (OpenSSF) Scorecards is an automated tool that assesses several important heuristics ("checks") associated with software security and assigns each check a score of 0-10. 
 
