@@ -6,7 +6,7 @@
 Secure-Workflows is an open-source API to secure GitHub Actions workflow files. It sets the minimum token permissions, pins Actions to a full length commit SHA, and adds a security agent to monitor the build process. Secure-Workflows will be demoed at Linux Foundation's Open Source Summit [SupplyChainSecurityCon](http://sched.co/11Pvu)! 
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows3.gif" alt="Secure workflow screenshot" >
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows4.gif" alt="Secure workflow screenshot" >
 </p>
 
 ## What issues does Secure-Workflows fix?
