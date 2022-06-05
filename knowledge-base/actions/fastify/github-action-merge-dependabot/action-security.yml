@@ -1,0 +1,11 @@
+name: 'Github Action Merge Dependabot'
+github-token:
+  action-input:
+    input: github-token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: to merge PRs
+    pull-requests: write
+    pull-requests-reason: to create reviews in PRs #Checkout: https://github.com/fastify/github-action-merge-dependabot/blob/2d4bd4eef9cd83988413214f9af48caf02282b4a/src/github-client.js#L35
+#FIX: #670
