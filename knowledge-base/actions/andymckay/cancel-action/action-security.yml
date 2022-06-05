@@ -1,0 +1,8 @@
+name: 'Cancel this build'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: write
+    actions-reason: to cancel running workflow

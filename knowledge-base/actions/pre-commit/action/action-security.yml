@@ -1,0 +1,9 @@
+name: 'pre-commit'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: to push back fixes to PR branch
+ #Reference: https://github.com/pre-commit/action/blob/c67424282e7cc932164c9966cf263f5840b7cc41/action.yml#L9

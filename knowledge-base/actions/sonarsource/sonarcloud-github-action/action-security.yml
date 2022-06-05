@@ -1,0 +1,7 @@
+name: 'SonarCloud Scan'
+github-token:
+   environment-variable-name: GITHUB_TOKEN
+   permissions:
+     pull-requests: read
+     pull-requests-reason: to determine which PR to decorate
+#Reference: https://community.sonarsource.com/t/what-permissions-does-sonarcloud-requires-from-github-token-secrets-github-token/37602/8
