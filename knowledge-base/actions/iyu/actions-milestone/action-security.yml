@@ -4,5 +4,5 @@ github-token:
     input: repo-token
     is-default: false
   permissions:
-    issues: write
-    issues-reason: to view and update milestones
+    pull-requests: write
+    pull-requests-reason: to add milestones to PRs
