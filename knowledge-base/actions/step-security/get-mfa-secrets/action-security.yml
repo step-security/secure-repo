@@ -1,0 +1,2 @@
+name: 'Get MFA Secrets' # step-security/get-mfa-secrets
+# GITHUB_TOKEN not used
