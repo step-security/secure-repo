@@ -5,5 +5,7 @@ github-token:
     is-default: true
   permissions:
     contents: write
-    contents-reason: to create release PR's and commit message
+    contents-reason: to create release commit
+    pull-requests: write
+    pull-requests-reason: to create release PR
     #Reference: https://github.com/google-github-actions/release-please-action/blob/f0145e31b50c56905571d69a63bbe997c0ce6dd1/index.js#L50
