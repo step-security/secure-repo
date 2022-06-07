@@ -3,6 +3,26 @@ release-process:
   artifact-location:
     github-release:
       repo: fleetdm/fleet
+  reproducible-build:
+    - artifact: fleet_v{{ .Version }}_linux.tar.gz
+      binary: fleet
+      build-command: make deps; make generate;  CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags=full,fts5,netgo -trimpath -ldflags="-extldflags "-static" -X github.com/kolide/kit/version.appName=fleet -X github.com/kolide/kit/version.version={{ .Version }} -X github.com/kolide/kit/version.branch={{ .Branch }} -X github.com/kolide/kit/version.revision={{ .FullCommit }} -X github.com/kolide/kit/version.buildDate={{ time "2006-01-02" }} -X github.com/kolide/kit/version.buildUser=runner" ./cmd/fleet/
+      go-version: 1.17.8
+
+    - artifact: fleetctl_v{{ .Version }}_linux.tar.gz
+      binary: fleetctl
+      build-command: make deps; make generate; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-X github.com/kolide/kit/version.appName=fleetctl -X github.com/kolide/kit/version.version={{ .Version }} -X github.com/kolide/kit/version.branch={{ .Branch }} -X github.com/kolide/kit/version.revision={{ .FullCommit }} -X github.com/kolide/kit/version.buildDate={{ time "2006-01-02"}} -X github.com/kolide/kit/version.buildUser=runner" ./cmd/fleetctl/
+      go-version: 1.17.8
+
+    - artifact: fleetctl_v{{ .Version }}_macos.tar.gz
+      binary: fleetctl
+      build-command: make deps; make generate; CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-X github.com/kolide/kit/version.appName=fleetctl -X github.com/kolide/kit/version.version={{ .Version }} -X github.com/kolide/kit/version.branch={{ .Branch }} -X github.com/kolide/kit/version.revision={{ .FullCommit }} -X github.com/kolide/kit/version.buildDate={{ time "2006-01-02"}} -X github.com/kolide/kit/version.buildUser=runner" ./cmd/fleetctl/
+      go-version: 1.17.8
+
+    - artifact: fleetctl_v{{ .Version }}_windows.tar.gz
+      binary: fleetctl
+      build-command: make deps; make generate; CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-X github.com/kolide/kit/version.appName=fleetctl.exe -X github.com/kolide/kit/version.version={{ .Version }} -X github.com/kolide/kit/version.branch={{ .Branch }} -X github.com/kolide/kit/version.revision={{ .FullCommit }} -X github.com/kolide/kit/version.buildDate={{ time "2006-01-02" }} -X github.com/kolide/kit/version.buildUser=runner" ./cmd/fleetctl/
+      go-version: 1.17.8
   pipeline:
     github-action:
       repo: fleetdm/fleet
