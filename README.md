@@ -4,17 +4,47 @@
 
 ---
 
-An open platform to update your CI/CD pipelines to comply with security requirements.
+An open platform to update your CI/CD pipelines to comply with security requirements. If you use GitHub Actions, use SecureWorkflows to:
 
-Secure-Workflows has been used to fix high-risk security issues in Top Critical Open Source projects, for which StepSecurity was rewarded a Secure Open Source (SOS) reward.
+- Automatically set minimum GITHUB_TOKEN permissions
+- Pin Actions to a full length commit SHA
+- Add Harden-Runner GitHub Action to each job
 
-Secure-Workflows will be demoed at Linux Foundation's Open Source Summit [SupplyChainSecurityCon](http://sched.co/11Pvu).
+Support for GitLab, CircleCI, and more CI/CD providers will be added in the future. Check the Roadmap for details.
+
+## In the News
+
+- SecureWorkflows used to secure critical open source projects
+- StepSecurity was rewarded a [Secure Open Source (SOS) reward](https://sos.dev) for this work
+- Secure-Workflows to be demoed at SupplyChainSecurityCon, Open Source Summit North America ([Link to Presentation](http://sched.co/11Pvu))
+
+## Quickstart
+
+### Using app.stepsecurity.io
+
+To secure your GitHub Actions workflow:
+
+- Copy and paste your GitHub Actions workflow YAML file at https://app.stepsecurity.io
+- Click `Secure Workflows` button
+- Paste the fixed workflow back in your codebase
+
+GitHub App to create pull requests will be released soon. Check the Roadmap for details.
 
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows4.gif" alt="Secure workflow screenshot" >
 </p>
 
-## What security issues does Secure-Workflows fix?
+### Integration with OpenSSF Scorecard
+
+- Add Open Source Security Foundation (OpenSSF) Scorecards starter workflow
+- View the Scorecard results in GitHub Code Scanning UI
+- Follow remediation tip that points to https://app.stepsecurity.io
+
+<p align="left">
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" >
+</p>
+
+## Functionality Overview
 
 Secure-Workflows API takes in a GitHub Actions workflow file as an input and returns a transformed workflow YAML file with the following changes. You can select which of these changes you want to make.
 
@@ -173,19 +203,3 @@ jobs:
 #### How does Secure-Workflows fix this issue?
 
 Secure-Workflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
-
-## Integration with OpenSSF Scorecard
-
-Open Source Security Foundation (OpenSSF) Scorecards is an automated tool that assesses several important heuristics ("checks") associated with software security and assigns each check a score of 0-10.
-
-Getting a higher scorecard score instills more confidence in those who plan to consume your software. It also eliminates several classes of software supply chain attacks. So, you should aim to get a high score.
-
-However, fixing some of the checks that Scorecard reports is hard and time-consuming. Secure-Workflows make it easier to fix two of the hardest Scorecard issues (Token-Permissions and Pinned-Dependencies).
-
-When you view the Scorecard results, you will notice a remediation tip that points to https://app.stepsecurity.io. This is a deep integration with SecureWorkflows.
-
-<p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" >
-</p>
-
-When you click the link, SecureWorkflows fetches the file to be fixed, fixes it, and shows the fixed file. You can then copy and paste the fixed file in your codebase.
