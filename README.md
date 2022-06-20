@@ -195,6 +195,6 @@ Secure-Workflows updates the YAML file and adds [Harden-Runner GitHub Action](ht
 
 ## Roadmap
 
-- GitHub App to create pull requests to fix issues
-- Support for GitLab CI YAML files
-- Support for CircleCI YAML files
+- [GitHub App to create pull requests to fix issues](https://github.com/step-security/secure-workflows/issues/47)
+- [Support for GitLab CI YAML files](https://github.com/step-security/secure-workflows/issues/797)
+- [Support for CircleCI YAML files](https://github.com/step-security/secure-workflows/issues/798)
