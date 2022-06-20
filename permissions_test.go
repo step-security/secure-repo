@@ -6,6 +6,8 @@ import (
 	"path"
 	"strings"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
 )
 
 func TestAddJobLevelPermissions(t *testing.T) {
@@ -180,4 +182,52 @@ func TestReusableWorkflow(t *testing.T) {
 
 		_ = output
 	}
+}
+
+func TestAddWorkflowLevelPermissionsForSetJobsPerms(t *testing.T) {
+
+	const inputDirectory = "./testfiles/jobworkflowperms/input"
+	const outputDirectory = "./testfiles/jobworkflowperms/output"
+	files, err := ioutil.ReadDir(inputDirectory)
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	for _, f := range files {
+		if !strings.HasSuffix(f.Name(), ".yml") {
+			return
+		}
+
+		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		queryParams := make(map[string]string)
+		queryParams["pinActions"] = "false"
+		queryParams["addHardenRunner"] = "false"
+		queryParams["addPermissions"] = "true"
+
+		output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+
+		if err != nil {
+			t.Errorf("Error not expected")
+		}
+
+		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, f.Name()))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		//ioutil.WriteFile("./op.yml", []byte(output.FinalOutput), 0644)
+
+		if output.FinalOutput != string(expectedOutput) {
+			t.Errorf("test failed %s did not match expected output\n%s", f.Name(), output.FinalOutput)
+		}
+	}
+
 }
