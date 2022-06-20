@@ -9,7 +9,7 @@ An open platform to update your CI/CD pipelines to comply with security requirem
 If you use GitHub Actions, use can use SecureWorkflows to:
 
 - [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
-- [Pin Actions to a full length commit SHA](2-pin-actions-to-a-full-length-commit-sha)
+- [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
 - [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
 
 Support for GitLab, CircleCI, and more CI/CD providers will be added in the future. Check the [Roadmap](#roadmap) for details.
@@ -67,9 +67,6 @@ Secure-Workflows API
 Before the fix, your workflow may look like this (no permissions set)
 
 ```yaml
-on:
-  push:
-
 jobs:
   closeissue:
     runs-on: ubuntu-latest
@@ -85,9 +82,6 @@ jobs:
 After the fix, the workflow will have minimum permissions added for the GITHUB token.
 
 ```yaml
-on:
-  push:
-
 permissions:
   contents: read
 
@@ -124,9 +118,6 @@ jobs:
 Before the fix, your workflow may look like this (use of `v1` and `latest` tags)
 
 ```yaml
-on:
-  pull_request:
-
 jobs:
   integration-test:
     runs-on: ubuntu-latest
@@ -140,9 +131,6 @@ jobs:
 After the fix, each Action and docker image will be pinned to an immutable checksum.
 
 ```yaml
-on:
-  pull_request:
-
 jobs:
   integration-test:
     runs-on: ubuntu-latest
@@ -169,9 +157,6 @@ jobs:
 Before the fix, your workflow may look like this
 
 ```yaml
-on:
-  push:
-
 jobs:
   closeissue:
     runs-on: ubuntu-latest
@@ -187,9 +172,6 @@ jobs:
 After the fix, each workflow has the harden-runner Action added as the first step.
 
 ```yaml
-on:
-  push:
-
 jobs:
   closeissue:
     runs-on: ubuntu-latest
