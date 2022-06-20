@@ -160,7 +160,7 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 
 		if alreadyHasJobPermissions(job) {
 			// We are not modifying permissions if already defined
-			fixWorkflowPermsReponse.HasErrors = true
+			//fixWorkflowPermsReponse.HasErrors = true
 			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
 			continue
 		}
