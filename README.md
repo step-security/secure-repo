@@ -4,19 +4,21 @@
 
 ---
 
-An open platform to update your CI/CD pipelines to comply with security requirements. If you use GitHub Actions, use SecureWorkflows to:
+An open platform to update your CI/CD pipelines to comply with security requirements.
 
-- Automatically set minimum GITHUB_TOKEN permissions
-- Pin Actions to a full length commit SHA
-- Add Harden-Runner GitHub Action to each job
+If you use GitHub Actions, use can use SecureWorkflows to:
 
-Support for GitLab, CircleCI, and more CI/CD providers will be added in the future. Check the Roadmap for details.
+- [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
+- [Pin Actions to a full length commit SHA](2-pin-actions-to-a-full-length-commit-sha)
+- [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
+
+Support for GitLab, CircleCI, and more CI/CD providers will be added in the future. Check the [Roadmap](#roadmap) for details.
 
 ## In the News
 
-- SecureWorkflows used to secure critical open source projects
+- SecureWorkflows was used to secure critical open source projects
 - StepSecurity was rewarded a [Secure Open Source (SOS) reward](https://sos.dev) for this work
-- Secure-Workflows to be demoed at SupplyChainSecurityCon, Open Source Summit North America ([Link to Presentation](http://sched.co/11Pvu))
+- Secure-Workflows to be demoed at SupplyChainSecurityCon, Open Source Summit ([Link to Presentation](http://sched.co/11Pvu))
 
 ## Quickstart
 
@@ -28,7 +30,7 @@ To secure your GitHub Actions workflow:
 - Click `Secure Workflows` button
 - Paste the fixed workflow back in your codebase
 
-GitHub App to create pull requests will be released soon. Check the Roadmap for details.
+GitHub App to create pull requests will be released soon. Check the [Roadmap](#roadmap) for details.
 
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows4.gif" alt="Secure workflow screenshot" >
@@ -36,7 +38,7 @@ GitHub App to create pull requests will be released soon. Check the Roadmap for 
 
 ### Integration with OpenSSF Scorecard
 
-- Add Open Source Security Foundation (OpenSSF) Scorecards starter workflow
+- Add [OpenSSF Scorecards](https://github.com/ossf/scorecard-action) starter workflow
 - View the Scorecard results in GitHub Code Scanning UI
 - Follow remediation tip that points to https://app.stepsecurity.io
 
@@ -56,9 +58,9 @@ Secure-Workflows API
 
 #### Why is this needed?
 
-- The GITHUB_TOKEN is an automatically generated secret that lets you make authenticated calls to the GitHub API
-- If the token is compromised due to a malicious Action or step in the workflow, it can be misused to overwrite releases or source code in a branch
-- To limit the damage that can be done in such a scenario, [GitHub recommends setting minimum token permissions for the GITHUB_TOKEN](https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/).
+- The GITHUB_TOKEN is an automatically generated secret to make authenticated calls to the GitHub API
+- If the token is compromised, it can be misused (e.g. to overwrite releases or source code)
+- To limit the damage, [GitHub recommends setting minimum token permissions for the GITHUB_TOKEN](https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/).
 
 #### Before and After the fix
 
@@ -106,7 +108,7 @@ jobs:
 #### How does Secure-Workflows fix this issue?
 
 - Secure-Workflows stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions)>)
-- It looks up the permissions needed by each Action in your workflow in the knowledge base, and sums the permissions up to come up with a final recommendation
+- It looks up the permissions needed by each Action in your workflow, and sums the permissions up to come up with a final recommendation
 - If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
 
 ### 2. Pin Actions to a full length commit SHA
@@ -196,7 +198,7 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@v1
         with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+          egress-policy: audit
 
       - name: Close Issue
         uses: peter-evans/close-issue@v1
