@@ -18,6 +18,7 @@ type Workflow struct {
 	Name        string      `yaml:"name"`
 	Permissions Permissions `yaml:"permissions"`
 	//On   string `yaml:"on"`
+	Env  Env  `yaml:"env"`
 	Jobs Jobs `yaml:"jobs"`
 }
 type Step struct {
