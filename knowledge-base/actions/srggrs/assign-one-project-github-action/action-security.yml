@@ -1,0 +1,6 @@
+name: "Assign to One Project"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    repository-projects: write
+    repository-projects-reason: to assign issues and PRs to repo project # https://github.com/srggrs/assign-one-project-github-action/blob/4fc2b23bdaaac08e64dcc590a6e138d2f9b8c86e/entrypoint.sh#L135
