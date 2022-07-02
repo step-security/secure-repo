@@ -165,6 +165,7 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 		}
 
 		jobState := &JobState{}
+		jobState.WorkflowEnv = workflow.Env
 		perms, err := jobState.getPermissions(job.Steps)
 
 		if err != nil {
@@ -321,6 +322,7 @@ type JobState struct {
 	CurrentNuGetSourceURL     string
 	CurrentNugetAuthToken     string
 
+	WorkflowEnv       map[string]string // map of workflow level environment variables
 	MissingActions    []string
 	Errors            []error
 	ActionPermissions *ActionPermissions
@@ -475,6 +477,18 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 	for _, step := range steps {
 
 		if step.Uses != "" { // it is an action
+
+			// Add workflow level env variables to each step
+			for k, v := range jobState.WorkflowEnv {
+				_, found := step.Env[k]
+				if !found {
+					if step.Env == nil {
+						step.Env = make(map[string]string)
+					}
+					step.Env[k] = v
+				}
+			}
+
 			permsForAction, err := jobState.getPermissionsForAction(step)
 
 			if err != nil {
