@@ -1,0 +1,2 @@
+name: 'Home Assistant helper: verify-version' # home-assistant/actions/helpers/verify-version
+# GITHUB_TOKEN not used
