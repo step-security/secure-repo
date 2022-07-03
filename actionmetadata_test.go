@@ -213,8 +213,14 @@ func doesActionRepoExist(filePath string) bool {
 		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 
 		if err != nil {
-			log.Println(fmt.Sprintf("error in doesActionRepoExist: %v", err))
-			return false
+			folder := strings.Join(splitOnSlash[4:len(splitOnSlash)-1], "/")
+			folder += "/action.yaml" // try out .yaml extension as well
+			_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
+
+			if err != nil {
+				log.Println(fmt.Sprintf("error in doesActionRepoExist: %v", err))
+				return false
+			}
 		}
 	}
 	return true
