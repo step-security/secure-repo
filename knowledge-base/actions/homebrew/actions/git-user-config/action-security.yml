@@ -1,0 +1,2 @@
+name: Configure git for a user
+# GITHUB_TOKEN not used. Fetches email for user, which needs metadata perms

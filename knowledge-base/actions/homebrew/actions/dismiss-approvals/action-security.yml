@@ -1,0 +1,8 @@
+name: Dismiss approvals
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to dismiss approvals on PRs
