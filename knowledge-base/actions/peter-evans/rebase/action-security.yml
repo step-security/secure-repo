@@ -1,0 +1,10 @@
+name: 'Rebase Pulls'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to push code to rebase # https://github.com/peter-evans/rebase/blob/7cd171d8b1687c5c4ac2e6679371326df95eb607/src/rebase-helper.ts#L54
+    pull-requests: read
+    pull-requests-reason: to get info about PRs # https://github.com/peter-evans/rebase/blob/7cd171d8b1687c5c4ac2e6679371326df95eb607/src/pulls-helper.ts#L34
