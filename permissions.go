@@ -517,7 +517,11 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 	}
 
 	if len(permissions) == 0 {
-		return []string{"contents: none"}, nil
+		// changing to contents: read as this is not added to job level
+		// if job needs no perm, it will not get anything adding at job level
+		// workflow level will add contents: read
+		// covered in test case job-level-none-perm.yml
+		return []string{"contents: read"}, nil 
 	}
 
 	permissions = removeRedundantPermisions(permissions)
