@@ -1,0 +1,10 @@
+name: Label pull requests
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to fetch files # https://github.com/Homebrew/actions/blob/5f4a8dac6fd92a5c39f47c8fae0149d97bbe534c/label-pull-requests/main.js#L56
+    pull-requests: write
+    pull-requests-reason: to label PRs # https://github.com/Homebrew/actions/blob/5f4a8dac6fd92a5c39f47c8fae0149d97bbe534c/label-pull-requests/main.js#L207

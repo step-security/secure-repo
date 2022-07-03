@@ -1,0 +1,12 @@
+name: "Slash Command Dispatch"
+github-token:
+  action-input:
+    input: reaction-token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create PR reaction
+    pull-requests-if: ${{ !contains(with, 'issue-type') || with['issue-type'] == 'pull-request' || with['issue-type'] == 'both'}}
+    issues: write
+    issues-reason: to create issue reaction
+    issues-if: ${{ !contains(with, 'issue-type') || with['issue-type'] == 'issue' || with['issue-type'] == 'both'}}
