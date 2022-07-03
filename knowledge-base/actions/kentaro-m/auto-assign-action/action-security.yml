@@ -1,0 +1,10 @@
+name: 'Auto Assign Action'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to fetch config file # https://github.com/kentaro-m/auto-assign-action/blob/446ab8d403baaa4f0a2fc3b73957b71d582719d9/src/run.ts#L15
+    pull-requests: write
+    pull-requests-reason: to assign PR reviewers # https://github.com/kentaro-m/auto-assign-action/blob/446ab8d403baaa4f0a2fc3b73957b71d582719d9/src/handler.ts#L105
