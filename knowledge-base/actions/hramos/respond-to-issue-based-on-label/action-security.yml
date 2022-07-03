@@ -1,0 +1,10 @@
+name: 'Respond To Issue Based on Label'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to update issues
+    contents: read
+    contents-reason: to fetch config file
