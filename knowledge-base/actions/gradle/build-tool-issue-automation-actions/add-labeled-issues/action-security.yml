@@ -1,0 +1,2 @@
+name: 'Add labeled issues to projects' # gradle/build-tool-issue-automation-actions/add-labeled-issues
+# GITHUB_TOKEN not used. Uses org project which does not support GITHUB token
