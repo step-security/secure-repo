@@ -13,12 +13,13 @@ import (
 
 var Tr http.RoundTripper = remote.DefaultTransport
 
-func PinDocker(inputYaml string) (string, error) {
+func PinDocker(inputYaml string) (string, bool, error) {
+	updated := false
 	workflow := Workflow{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
-		return inputYaml, fmt.Errorf("unable to parse yaml %v", err)
+		return inputYaml, updated, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
 	out := inputYaml
@@ -27,37 +28,41 @@ func PinDocker(inputYaml string) (string, error) {
 
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, "docker://") {
-				out = pinDocker(step.Uses, jobName, out)
+				localUpdated := false
+				out, localUpdated = pinDocker(step.Uses, jobName, out)
+				updated = updated || localUpdated
 			}
 		}
 	}
 
-	return out, nil
+	return out, updated, nil
 }
 
-func pinDocker(action, jobName, inputYaml string) string {
+func pinDocker(action, jobName, inputYaml string) (string, bool) {
+	updated := false
 	leftOfAt := strings.Split(action, ":")
 	tag := leftOfAt[2]
 	image := leftOfAt[1][2:]
 
 	ref, err := name.ParseReference(image, name.WithDefaultTag(tag))
 	if err != nil {
-		return inputYaml
+		return inputYaml, updated
 	}
 
 	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithTransport(Tr))
 	if err != nil {
 		//TODO: Log the error
-		return inputYaml
+		return inputYaml, updated
 	}
 
 	// Getting image digest
 	imghash, err := img.Digest()
 	if err != nil {
-		return inputYaml
+		return inputYaml, updated
 	}
 
 	pinnedAction := fmt.Sprintf("%s:%s@%s # %s", leftOfAt[0], leftOfAt[1], imghash.String(), tag)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
-	return inputYaml
+	updated = !strings.EqualFold(action, pinnedAction)
+	return inputYaml, updated
 }

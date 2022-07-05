@@ -11,12 +11,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func PinActions(inputYaml string) (string, error) {
+func PinActions(inputYaml string) (string, bool, error) {
 	workflow := Workflow{}
-
+	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
-		return inputYaml, fmt.Errorf("unable to parse yaml %v", err)
+		return inputYaml, updated, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
 	out := inputYaml
@@ -25,18 +25,21 @@ func PinActions(inputYaml string) (string, error) {
 
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
-				out = pinAction(step.Uses, jobName, out)
+				localUpdated := false
+				out, localUpdated = pinAction(step.Uses, jobName, out)
+				updated = updated || localUpdated
 			}
 		}
 	}
 
-	return out, nil
+	return out, updated, nil
 }
 
-func pinAction(action, jobName, inputYaml string) string {
+func pinAction(action, jobName, inputYaml string) (string, bool) {
 
+	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
-		return inputYaml // Cannot pin local actions and docker actions
+		return inputYaml, updated // Cannot pin local actions and docker actions
 	}
 
 	leftOfAt := strings.Split(action, "@")
@@ -63,12 +66,13 @@ func pinAction(action, jobName, inputYaml string) string {
 
 		if err != nil {
 			// TODO: Log the error
-			return inputYaml
+			return inputYaml, updated
 		}
 	}
 
 	commitSHA := ref.Object.SHA
 	pinnedAction := fmt.Sprintf("%s@%s", leftOfAt[0], *commitSHA)
+	updated = !strings.EqualFold(action, pinnedAction)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
-	return inputYaml
+	return inputYaml, updated
 }
