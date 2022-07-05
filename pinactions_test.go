@@ -12,10 +12,6 @@ import (
 func TestPinActions(t *testing.T) {
 	const inputDirectory = "./testfiles/pinactions/input"
 	const outputDirectory = "./testfiles/pinactions/output"
-	files, err := ioutil.ReadDir(inputDirectory)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -127,28 +123,41 @@ func TestPinActions(t *testing.T) {
 			  "url": "https://api.github.com/repos/brandedoutcast/publish-nuget/git/commits/c12b8546b67672ee38ac87bea491ac94a587f7cc"
 			}
 		  }`))
-
-	for _, f := range files {
-		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
+	tests := []struct {
+		fileName    string
+		wantUpdated bool
+	}{
+		{fileName: "alreadypinned.yml", wantUpdated: false},
+		{fileName: "branch.yml", wantUpdated: true},
+		{fileName: "localaction.yml", wantUpdated: true},
+		{fileName: "multiplejobs.yml", wantUpdated: true},
+		{fileName: "basic.yml", wantUpdated: true},
+		{fileName: "dockeraction.yml", wantUpdated: true},
+		{fileName: "multipleactions.yml", wantUpdated: true},
+	}
+	for _, tt := range tests {
+		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		output, err := PinActions(string(input))
-
+		output, gotUpdated, err := PinActions(string(input))
+		if tt.wantUpdated != gotUpdated {
+			t.Errorf("test failed wantUpdated %v did not match gotUpdated %v", tt.wantUpdated, gotUpdated)
+		}
 		if err != nil {
 			t.Errorf("Error not expected")
 		}
 
-		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, f.Name()))
+		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, tt.fileName))
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		if output != string(expectedOutput) {
-			t.Errorf("test failed %s did not match expected output\n%s", f.Name(), output)
+			t.Errorf("test failed %s did not match expected output\n%s", tt.fileName, output)
 		}
 	}
 }

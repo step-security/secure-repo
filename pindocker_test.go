@@ -67,7 +67,7 @@ func TestDockerActions(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, err := PinDocker(string(input))
+		output, _, err := PinDocker(string(input))
 
 		if err != nil {
 			t.Errorf("Error not expected")
