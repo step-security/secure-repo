@@ -36,11 +36,16 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			return nil, err
 		} else {
 			if !secureWorkflowReponse.HasErrors {
+
 				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput)
 			}
 			if len(secureWorkflowReponse.MissingActions) > 0 {
 				StoreMissingActions(secureWorkflowReponse.MissingActions, svc)
 			}
+			if secureWorkflowReponse.HasJobPermsSetWorkflowPerms {
+				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput)
+			}
+
 		}
 	}
 
