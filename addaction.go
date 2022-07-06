@@ -26,12 +26,11 @@ func AddAction(inputYaml, action string) (string, bool, error) {
 		}
 
 		if !alreadyPresent {
-			updated = true
 			out, err = addAction(out, jobName, action)
-		}
-
-		if err != nil {
-			return out, updated, err
+			if err != nil {
+				return out, updated, err
+			}
+			updated = true
 		}
 	}
 
