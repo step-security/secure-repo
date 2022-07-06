@@ -11,15 +11,16 @@ import (
 )
 
 type SecureWorkflowReponse struct {
-	OriginalInput         string
-	FinalOutput           string
-	IsChanged             bool
-	HasErrors             bool
-	AlreadyHasPermissions bool
-	IncorrectYaml         bool
-	WorkflowFetchError    bool
-	JobErrors             []JobError
-	MissingActions        []string
+	OriginalInput               string
+	FinalOutput                 string
+	IsChanged                   bool
+	HasErrors                   bool
+	AlreadyHasPermissions       bool
+	HasJobPermsSetWorkflowPerms bool
+	IncorrectYaml               bool
+	WorkflowFetchError          bool
+	JobErrors                   []JobError
+	MissingActions              []string
 }
 
 type JobError struct {
@@ -155,10 +156,13 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 
 	out := inputYaml
 
+	var hasJobPermsCount = 0
+
 	for jobName, job := range workflow.Jobs {
 
 		if alreadyHasJobPermissions(job) {
 			// We are not modifying permissions if already defined
+			hasJobPermsCount += 1
 			fixWorkflowPermsReponse.HasErrors = true
 			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
 			continue
@@ -197,6 +201,11 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 		}
 
 	}
+
+	if hasJobPermsCount == len(workflow.Jobs) {
+		fixWorkflowPermsReponse.HasJobPermsSetWorkflowPerms = true
+	}
+
 	fixWorkflowPermsReponse.FinalOutput = out
 
 	// Convert to array of JobError from map
@@ -521,7 +530,7 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 		// if job needs no perm, it will not get anything adding at job level
 		// workflow level will add contents: read
 		// covered in test case job-level-none-perm.yml
-		return []string{"contents: read"}, nil 
+		return []string{"contents: read"}, nil
 	}
 
 	permissions = removeRedundantPermisions(permissions)
