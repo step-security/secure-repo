@@ -409,11 +409,8 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 		}
 	}
 
-	// Git push/ apply. See content-write-run-step.yml
-	if strings.Contains(runStep, "git apply") {
-		permissions = append(permissions, Permission{permission: contents_write, action: "Git", reason: "to git apply"})
-		return permissions, nil
-	} else if strings.Contains(runStep, "git push") {
+	// Git push. See content-write-run-step.yml
+	if strings.Contains(runStep, "git push") {
 		permissions = append(permissions, Permission{permission: contents_write, action: "Git", reason: "to git push"})
 		return permissions, nil
 	}
@@ -521,7 +518,7 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 		// if job needs no perm, it will not get anything adding at job level
 		// workflow level will add contents: read
 		// covered in test case job-level-none-perm.yml
-		return []string{"contents: read"}, nil 
+		return []string{"contents: read"}, nil
 	}
 
 	permissions = removeRedundantPermisions(permissions)
