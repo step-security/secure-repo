@@ -7,11 +7,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func AddAction(inputYaml, action string) (string, error) {
+func AddAction(inputYaml, action string) (string, bool, error) {
 	workflow := Workflow{}
+	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse yaml %v", err)
+		return "", updated, fmt.Errorf("unable to parse yaml %v", err)
 	}
 	out := inputYaml
 
@@ -26,14 +27,14 @@ func AddAction(inputYaml, action string) (string, error) {
 
 		if !alreadyPresent {
 			out, err = addAction(out, jobName, action)
-		}
-
-		if err != nil {
-			return out, err
+			if err != nil {
+				return out, updated, err
+			}
+			updated = true
 		}
 	}
 
-	return out, nil
+	return out, updated, nil
 }
 
 func addAction(inputYaml, jobName, action string) (string, error) {

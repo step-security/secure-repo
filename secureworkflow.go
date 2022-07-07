@@ -11,9 +11,8 @@ const (
 )
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*SecureWorkflowReponse, error) {
-	pinActions := true
-	addHardenRunner := true
-	addPermissions := true
+	pinActions, addHardenRunner, addPermissions := true, true, true
+	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
 
 	if queryStringParams["pinActions"] == "false" {
 		pinActions = false
@@ -42,17 +41,24 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 				StoreMissingActions(secureWorkflowReponse.MissingActions, svc)
 			}
 		}
+
+		addedPermissions = !secureWorkflowReponse.AlreadyHasPermissions
 	}
 
 	if addHardenRunner {
-		secureWorkflowReponse.FinalOutput, _ = AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag)
+		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag)
 	}
 
 	if pinActions {
-		secureWorkflowReponse.FinalOutput, _ = PinActions(secureWorkflowReponse.FinalOutput)
-		secureWorkflowReponse.FinalOutput, _ = PinDocker(secureWorkflowReponse.FinalOutput)
+		pinnedAction, pinnedDocker := false, false
+		secureWorkflowReponse.FinalOutput, pinnedAction, _ = PinActions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = PinDocker(secureWorkflowReponse.FinalOutput)
+		pinnedActions = pinnedAction || pinnedDocker
 	}
 
+	// Setting appropriate flags
+	secureWorkflowReponse.PinnedActions = pinnedActions
+	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
+	secureWorkflowReponse.AddedPermissions = addedPermissions
 	return secureWorkflowReponse, nil
-
 }
