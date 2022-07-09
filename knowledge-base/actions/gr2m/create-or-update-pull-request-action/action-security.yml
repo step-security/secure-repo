@@ -1,0 +1,8 @@
+name: Create or Update Pull Request
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to push local changes
+    pull-requests: write
+    pull-requests-reason: to create a PR
