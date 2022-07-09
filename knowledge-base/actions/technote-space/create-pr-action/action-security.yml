@@ -1,0 +1,10 @@
+name: 'Create PR Action'
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    contents: write
+    contents-reason: to push code
+    pull-requests: write
+    pull-requests-reason: to create a PR
