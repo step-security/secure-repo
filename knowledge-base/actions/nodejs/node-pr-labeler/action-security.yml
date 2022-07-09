@@ -1,0 +1,10 @@
+name: 'Node.js PR labelling'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to fetch config file
+    pull-requests: write
+    pull-requests-reason: to label PRs
