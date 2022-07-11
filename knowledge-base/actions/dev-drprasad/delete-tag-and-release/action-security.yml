@@ -1,0 +1,6 @@
+name: Delete tag and release
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to delete tags or releases
