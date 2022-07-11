@@ -16,6 +16,9 @@ type SecureWorkflowReponse struct {
 	IsChanged             bool
 	HasErrors             bool
 	AlreadyHasPermissions bool
+	PinnedActions         bool
+	AddedHardenRunner     bool
+	AddedPermissions      bool
 	IncorrectYaml         bool
 	WorkflowFetchError    bool
 	JobErrors             []JobError

@@ -39,6 +39,39 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			return returnValue, nil
 		}
 
+		if strings.Contains(httpRequest.RawPath, "/secrets") {
+			if httpRequest.RequestContext.HTTP.Method == "GET" {
+				githubWorkflowSecrets, err := GetSecrets(httpRequest.QueryStringParameters, dynamoDbSvc)
+				if err != nil {
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusInternalServerError,
+						Body:       err.Error(),
+					}
+				} else {
+
+					output, _ := json.Marshal(githubWorkflowSecrets)
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       string(output),
+					}
+				}
+
+			} else if httpRequest.RequestContext.HTTP.Method == "POST" {
+				err := SetSecrets(httpRequest.Body, dynamoDbSvc)
+				if err != nil {
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusInternalServerError,
+						Body:       err.Error(),
+					}
+				} else {
+
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+					}
+				}
+			}
+		}
+
 		if strings.Contains(httpRequest.RawPath, "/secure-workflow") {
 
 			inputYaml := ""
