@@ -1,46 +1,65 @@
-name: Yarn Upgrade
+name: Translations
 
+# yamllint disable-line rule:truthy
 on:
+  workflow_dispatch:
   schedule:
-    # Every wednesday at 13:37 UTC
-    - cron: 37 13 * * 3
-  workflow_dispatch: {}
+    - cron: "0 0 * * *"
+  push:
+    branches:
+      - dev
+    paths:
+      - "**strings.json"
+
+env:
+  DEFAULT_PYTHON: 3.9
 
 jobs:
-  pr:
-    permissions:
-      contents: write  # for Git to git apply
-    name: Create Pull Request
-    needs: upgrade
+  upload:
+    name: Upload
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
-      - name: Check Out
-        uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@v3.0.2
 
-      - name: Download patch
-        uses: actions/download-artifact@v2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v4.0.0
         with:
-          name: upgrade.patch
-          path: ${{ runner.temp }}
+          python-version: ${{ env.DEFAULT_PYTHON }}
 
-      - name: Apply patch
-        run: '[ -s ${{ runner.temp }}/upgrade.patch ] && git apply ${{ runner.temp
-          }}/upgrade.patch || echo "Empty patch. Skipping."'
+      - name: Upload Translations
+        run: |
+          export LOKALISE_TOKEN="${{ secrets.LOKALISE_TOKEN }}"
+          python3 -m script.translations upload
+  download:
+    permissions:
+      contents: write  # for Git to git push
+    name: Download
+    needs: upload
+    if: github.repository_owner == 'home-assistant' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3.0.2
 
-      - name: Make Pull Request
-        uses: peter-evans/create-pull-request@v3
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v4.0.0
         with:
-          # Git commit details
-          branch: automation/yarn-upgrade
-          commit-message: |-
-            chore: npm-check-updates && yarn upgrade
-            Ran npm-check-updates and yarn upgrade to keep the `yarn.lock` file up-to-date.
-          # Pull Request details
-          title: 'chore: npm-check-updates && yarn upgrade'
-          body: |-
-            Ran npm-check-updates and yarn upgrade to keep the `yarn.lock` file up-to-date.
-          labels: contribution/core,dependencies,pr/auto-approve
-          team-reviewers: aws-cdk-team
-          # Github prevents further Github actions to be run if the default Github token is used.
-          # Instead use a privileged token here, so further GH actions can be triggered on this PR.
-          token: ${{ secrets.AUTOMATION_GITHUB_TOKEN }}
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Download Translations
+        run: |
+          export LOKALISE_TOKEN="${{ secrets.LOKALISE_TOKEN }}"
+          python3 -m script.translations download
+      - name: Initialize git
+        uses: home-assistant/actions/helpers/git-init@master
+        with:
+          name: GitHub Action
+          email: github-action@users.noreply.github.com
+
+      - name: Update translation
+        run: |
+          git add homeassistant
+          git commit -am "[ci skip] Translation update"
+          git push
