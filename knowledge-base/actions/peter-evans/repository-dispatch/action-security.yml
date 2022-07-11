@@ -1,0 +1,3 @@
+name: 'Repository Dispatch'
+# GITHUB Token not used. 
+# The default GITHUB_TOKEN does not have scopes to do this so a repo scoped PAT created on a user with write access to the target repository is required
