@@ -34,7 +34,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		if err != nil {
 			return nil, err
 		} else {
-			if !secureWorkflowReponse.HasErrors {
+			if !secureWorkflowReponse.HasErrors || shouldAddWorkflowLevelPermissions(secureWorkflowReponse.JobErrors) {
 				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput)
 			}
 			if len(secureWorkflowReponse.MissingActions) > 0 {
@@ -61,4 +61,19 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
 	return secureWorkflowReponse, nil
+}
+
+func shouldAddWorkflowLevelPermissions(jobErrors []JobError) bool {
+	for _, jobError := range jobErrors {
+		if len(jobError.Errors) == 1 {
+			if jobError.Errors[0] == errorAlreadyHasPermissions {
+				continue
+			} else {
+				return false
+			}
+		} else {
+			return false
+		}
+	}
+	return true
 }
