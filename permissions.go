@@ -16,9 +16,6 @@ type SecureWorkflowReponse struct {
 	IsChanged             bool
 	HasErrors             bool
 	AlreadyHasPermissions bool
-	PinnedActions         bool
-	AddedHardenRunner     bool
-	AddedPermissions      bool
 	IncorrectYaml         bool
 	WorkflowFetchError    bool
 	JobErrors             []JobError
@@ -36,6 +33,7 @@ const errorLocalAction = "KnownIssue-3: Action %s is a local action. Local actio
 const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base"
 const errorAlreadyHasPermissions = "KnownIssue-5: Permissions were not added to the job since it already had permissions defined"
 const errorDockerAction = "KnownIssue-6: Action %s is a docker action which uses Github token. Docker actions that uses token are not supported"
+const errorReusableWkflw = "KnownIssue-7: Action %s is a reusable workflow. Secure Workflows does not support reusable workflows"
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
 //To avoid a typo while adding the permissions
@@ -165,6 +163,14 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			fixWorkflowPermsReponse.HasErrors = true
 			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
 			continue
+		}
+
+		if len(job.Uses) > 0 {
+			jobStep := Step{}
+			jobStep.Uses = job.Uses
+			jobStep.With = job.With
+
+			job.Steps = append(job.Steps, jobStep)
 		}
 
 		jobState := &JobState{}
@@ -489,13 +495,20 @@ func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
 				}
 			}
 
-			permsForAction, err := jobState.getPermissionsForAction(step)
-
-			if err != nil {
-				jobState.Errors = append(jobState.Errors, err)
+			if strings.Contains(step.Uses, ".github/workflows") {
+				err := fmt.Errorf(errorReusableWkflw, step.Uses)
+				if err != nil {
+					jobState.Errors = append(jobState.Errors, err)
+				}
+				return nil, fmt.Errorf("Job has errors")
+			} else {
+				permsForAction, err := jobState.getPermissionsForAction(step)
+				if err != nil {
+					jobState.Errors = append(jobState.Errors, err)
+				}
+				permissions = append(permissions, permsForAction...)
 			}
 
-			permissions = append(permissions, permsForAction...)
 		} else if step.Run != "" { // if it is a run step
 			RunStepPerms, err := jobState.getPermissionsForRunStep(step)
 			if err != nil {
