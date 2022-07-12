@@ -1,0 +1,15 @@
+name: "close issue"
+
+on:
+  push:
+  
+
+jobs:
+  closeissue:
+    permissions:
+      issues: write  # for peter-evans/close-issue to close issues
+    name: build
+    uses: peter-evans/close-issue@v1
+    with:
+      issue-number: 1
+      comment: Auto-closing issue
