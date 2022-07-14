@@ -1,0 +1,10 @@
+name: Post comment
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to post comment on issues
+    pull-requests: write
+    pull-requests-reason: to post comment on PRs

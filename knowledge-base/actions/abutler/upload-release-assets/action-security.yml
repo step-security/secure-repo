@@ -1,0 +1,9 @@
+name: 'Upload assets to a Release'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: to delete existing and to upload updated assets
+#Reference: https://github.com/AButler/upload-release-assets/blob/e940f6342206c9655b12a28a79646d3982571ad9/src/main.ts#L59

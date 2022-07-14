@@ -1,0 +1,3 @@
+name: Bump formulae
+# GITHUB_TOKEN not used
+# One should use the Personal Access Token for token input to this Action, not the default GITHUB_TOKEN

@@ -1,0 +1,10 @@
+name: 'run-fuzzers'
+github-token:
+  action-input:
+    input: github-token #CHECKOUT: https://github.com/google/oss-fuzz/blob/de0466fb498c8fdf57be802b262faff5983c0dd3/infra/cifuzz/actions/run_fuzzers/action.yml#L31
+    is-default: false
+  permissions:
+    actions: read
+    actions-reason: to fetch the artifacts #CHECKOUT: https://github.com/google/oss-fuzz/blob/0bf87a10c4c1df2514dd82023e4da2d2d26b2e1c/infra/cifuzz/filestore/github_actions/github_api.py#L47
+    contents: read #CHECKOUT: https://github.com/google/oss-fuzz/blob/a458e3c8edc4191488bca4563bc1bcf92043226b/infra/cifuzz/continuous_integration.py#L122
+    contents-reason: to clone the repo

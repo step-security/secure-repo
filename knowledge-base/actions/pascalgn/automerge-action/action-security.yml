@@ -1,0 +1,10 @@
+name: "Merge pull requests (automerge-action)"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to remove PR labels #Checkout: https://github.com/pascalgn/automerge-action/blob/0e2da31c4fcc0753371149156f6740dfe4b604f5/lib/merge.js#L127 
+    contents: write
+    contents-reason: to merge PR #Checkout: https://github.com/pascalgn/automerge-action/blob/0e2da31c4fcc0753371149156f6740dfe4b604f5/lib/update.js#L89
+
+#Fix #696

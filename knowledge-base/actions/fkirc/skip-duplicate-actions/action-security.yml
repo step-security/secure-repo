@@ -1,0 +1,11 @@
+name: 'Skip Duplicate Actions'
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    actions: write
+    actions-reason: to skip or stop workflow runs
+    contents: read
+    contents-reason: to read and compare commits
+#Reference: https://github.com/fkirc/skip-duplicate-actions/blob/e52e4a1ead5652ebbde4f2d14c71b6d9b694e1ad/README.md?plain=1#L236

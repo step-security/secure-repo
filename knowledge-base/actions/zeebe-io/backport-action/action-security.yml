@@ -1,0 +1,10 @@
+name: "backport-action"
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: to create branch
+    pull-requests: write
+    pull-requests-reason: to create PR to backport

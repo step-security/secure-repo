@@ -1,0 +1,10 @@
+name: Commit Linter
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to get commits in PR #Checkout: https://github.com/wagoid/commitlint-github-action/blob/40f450564bf0e00be4860114a18d71365f3b9d8a/src/action.js#L50
+    
+#Fixes #669

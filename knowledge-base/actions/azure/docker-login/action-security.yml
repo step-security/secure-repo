@@ -1,0 +1,2 @@
+name: 'Azure Container Registry Login' # Azure/docker-login
+# GITHUB_TOKEN not used

@@ -1,0 +1,9 @@
+name: "Label Conflicting Pull Requests"
+github-token:
+  action-input:
+    input: repoToken
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to label PRs
+#Reference: https://github.com/eps1lon/actions-label-merge-conflict/blob/a2389f3d584f2f820277e63d9b7310622657a887/sources/main.ts#L333

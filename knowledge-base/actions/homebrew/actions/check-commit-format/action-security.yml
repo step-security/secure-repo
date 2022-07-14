@@ -1,0 +1,12 @@
+name: Check commit format
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to get commits # https://github.com/Homebrew/actions/blob/5f4a8dac6fd92a5c39f47c8fae0149d97bbe534c/check-commit-format/main.js#L30
+    pull-requests: write
+    pull-requests-reason: to add PR labels # https://github.com/Homebrew/actions/blob/5f4a8dac6fd92a5c39f47c8fae0149d97bbe534c/check-commit-format/main.js#L122
+    statuses: write
+    statuses-reason: to create commit status # https://github.com/Homebrew/actions/blob/5f4a8dac6fd92a5c39f47c8fae0149d97bbe534c/check-commit-format/main.js#L86

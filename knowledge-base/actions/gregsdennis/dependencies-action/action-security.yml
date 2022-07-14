@@ -1,0 +1,9 @@
+name: 'PR Dependency Check'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to check PRs for dependencies
+    issues: read
+    issues-reason: to check issues for dependencies 
+#Reference: https://github.com/gregsdennis/dependencies-action/blob/047fc2563e29739c28c31d007d3f8862d02dca57/index.js#L91
