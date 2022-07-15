@@ -18,7 +18,7 @@ Support for GitLab, CircleCI, and more CI/CD providers will be added in the futu
 
 - SecureWorkflows is being used to [secure critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
 - StepSecurity was rewarded a [Secure Open Source (SOS) reward](https://sos.dev) for this work
-- SecureWorkflows was demoed at `SupplyChainSecurityCon, Open Source Summit, North America, 2022` ([Link to Presentation](http://sched.co/11Pvu))
+- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu) 
 
 ## Quickstart
 
