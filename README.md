@@ -16,9 +16,9 @@ Support for GitLab, CircleCI, and more CI/CD providers will be added in the futu
 
 ## In the News
 
-- SecureWorkflows was used to secure critical open source projects
+- SecureWorkflows is being used to [secure critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
 - StepSecurity was rewarded a [Secure Open Source (SOS) reward](https://sos.dev) for this work
-- Secure-Workflows to be demoed at SupplyChainSecurityCon, Open Source Summit ([Link to Presentation](http://sched.co/11Pvu))
+- SecureWorkflows was demoed at `SupplyChainSecurityCon, Open Source Summit, North America, 2022` ([Link to Presentation](http://sched.co/11Pvu))
 
 ## Quickstart
 
@@ -48,7 +48,7 @@ GitHub App to create pull requests will be released soon. Check the [Roadmap](#r
 
 ## Functionality Overview
 
-Secure-Workflows API
+SecureWorkflows API
 
 - Takes in a GitHub Actions workflow YAML file as an input
 - Returns a transformed workflow file with fixes applied
@@ -99,9 +99,9 @@ jobs:
           comment: Auto-closing issue
 ```
 
-#### How does Secure-Workflows fix this issue?
+#### How does SecureWorkflows fix this issue?
 
-- Secure-Workflows stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions)>)
+- SecureWorkflows stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions)>)
 - It looks up the permissions needed by each Action in your workflow, and sums the permissions up to come up with a final recommendation
 - If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
 
@@ -141,9 +141,9 @@ jobs:
         uses: docker://ghcr.io/step-security/integration-test/int@sha256:1efef3bbdd297d1b321b9b4559092d3131961913bc68b7c92b681b4783d563f0
 ```
 
-#### How does Secure-Workflows fix this issue?
+#### How does SecureWorkflows fix this issue?
 
-- Secure-Workflows automates the process of getting the commit SHA for each mutable Action version or Docker image tag
+- SecureWorkflows automates the process of getting the commit SHA for each mutable Action version or Docker image tag
 - It does this by using GitHub and Docker registry APIs
 
 ### 3. Add Harden-Runner GitHub Action to each job
@@ -189,9 +189,9 @@ jobs:
           comment: Auto-closing issue
 ```
 
-#### How does Secure-Workflows fix this issue?
+#### How does SecureWorkflows fix this issue?
 
-Secure-Workflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
+SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
 
 ## Roadmap
 
