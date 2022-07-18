@@ -65,14 +65,22 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 func shouldAddWorkflowLevelPermissions(jobErrors []JobError) bool {
 	if len(jobErrors) == 0 {
-		return false
+		// if there are no job errors, there must have been workflow level errors, 
+		// else this method would not have been called
+		// so we do not add workflow level permissions
+		return false  
 	}
 	for _, jobError := range jobErrors {
 		for _, eachJobError := range jobError.Errors {
 			if eachJobError != errorAlreadyHasPermissions {
+				// if any of the errors is not errorAlreadyHasPermissions
+				// we do not add workflow level permissions
 				return false
 			}
 		}
 	}
+	
+	// if there were job errors and all of them were errorAlreadyHasPermissions
+	// we can add workflow level permissions
 	return true
 }
