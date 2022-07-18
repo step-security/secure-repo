@@ -63,6 +63,8 @@ func TestSecureWorkflow(t *testing.T) {
 		{fileName: "nohardenrunner.yml", wantPinnedActions: true, wantAddedHardenRunner: false, wantAddedPermissions: true},
 		{fileName: "noperms.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false},
 		{fileName: "nopin.yml", wantPinnedActions: false, wantAddedHardenRunner: true, wantAddedPermissions: true},
+		{fileName: "allperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true},
+		{fileName: "multiplejobperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true},
 	}
 	for _, test := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, test.fileName))
@@ -79,6 +81,12 @@ func TestSecureWorkflow(t *testing.T) {
 			queryParams["addHardenRunner"] = "false"
 		case "noperms.yml":
 			queryParams["addPermissions"] = "false"
+		case "allperms.yml":
+			queryParams["addHardenRunner"] = "false"
+			queryParams["pinActions"] = "false"
+		case "multiplejobperms.yml":
+			queryParams["addHardenRunner"] = "false"
+			queryParams["pinActions"] = "false"
 		}
 
 		output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
