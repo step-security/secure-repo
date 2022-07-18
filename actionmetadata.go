@@ -29,6 +29,7 @@ type Step struct {
 }
 type Job struct {
 	Permissions Permissions `yaml:"permissions"`
+	Uses        string      `yaml:"uses"`
 	// RunsOn      []string    `yaml:"runs-on"`
 	Steps []Step `yaml:"steps"`
 }

@@ -1,0 +1,21 @@
+name: platform_close
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/platform_close_workflow.yaml
+      - flutter_nps/packages/platform_close/**
+
+jobs:
+  job-with-error:
+    name: build
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/flutter_package.yml@v1
+    with:
+      working_directory: "flutter_nps/packages/platform_close"
+      coverage_excludes: "*.g.dart lib/gen/*.gen.dart"
+      flutter_channel: stable
+      flutter_version: 2.10.0
