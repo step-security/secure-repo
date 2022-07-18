@@ -36,7 +36,7 @@ const errorLocalAction = "KnownIssue-3: Action %s is a local action. Local actio
 const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base"
 const errorAlreadyHasPermissions = "KnownIssue-5: Permissions were not added to the job since it already had permissions defined"
 const errorDockerAction = "KnownIssue-6: Action %s is a docker action which uses Github token. Docker actions that uses token are not supported"
-const errorReusableWkflw = "KnownIssue-7: Action %s is a reusable workflow. Secure Workflows does not support reusable workflows"
+const errorReusableWorkflow = "KnownIssue-7: Action %s is a reusable workflow. Reusable workflows are not supported as of now."
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
 //To avoid a typo while adding the permissions
@@ -170,7 +170,7 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 
 		if len(job.Uses) > 0 {
 			fixWorkflowPermsReponse.HasErrors = true
-			errors[jobName] = append(errors[jobName], fmt.Sprintf(errorReusableWkflw, job.Uses))
+			errors[jobName] = append(errors[jobName], fmt.Sprintf(errorReusableWorkflow, job.Uses))
 			continue
 		}
 
