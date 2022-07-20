@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/asottile/dockerfile"
@@ -65,7 +66,7 @@ func SecureDockerFile(inputDockerFile string) (*SecureDockerfileResponse, error)
 				if err != nil {
 					return nil, err
 				}
-				new_cmd := strings.ReplaceAll(c.Original, c.Value[0], image+"@"+sha)
+				new_cmd := strings.ReplaceAll(c.Original, c.Value[0], fmt.Sprintf("%s:%s@%s", image, tag, sha))
 				response.FinalOutput = strings.ReplaceAll(response.FinalOutput, c.Original, new_cmd)
 				response.IsChanged = true
 
