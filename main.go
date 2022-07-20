@@ -113,6 +113,46 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 
 		}
 
+		if strings.Contains(httpRequest.RawPath, "/secure-dockerfile") {
+
+			dockerFile := ""
+			queryStringParams := httpRequest.QueryStringParameters
+			// if owner is set, assuming that repo, path are also set
+			// get the dockerfile using API
+			if _, ok := queryStringParams["owner"]; ok {
+				dockerFile, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
+				if err != nil {
+					fixResponse := &SecureDockerfileResponse{DockerfileFetchError: true}
+					output, _ := json.Marshal(fixResponse)
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       string(output),
+					}
+					returnValue, _ := json.Marshal(&response)
+					return returnValue, nil
+				}
+			} else {
+				// if owner is not set, then dockerfile should be sent in the body
+				dockerFile = httpRequest.Body
+			}
+
+			fixResponse, err := SecureDockerFile(dockerFile)
+			if err != nil {
+				response = events.APIGatewayProxyResponse{
+					StatusCode: http.StatusInternalServerError,
+					Body:       err.Error(),
+				}
+			} else {
+
+				output, _ := json.Marshal(fixResponse)
+				response = events.APIGatewayProxyResponse{
+					StatusCode: http.StatusOK,
+					Body:       string(output),
+				}
+			}
+
+		}
+
 		returnValue, _ := json.Marshal(&response)
 		return returnValue, nil
 
