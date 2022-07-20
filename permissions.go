@@ -77,7 +77,7 @@ func alreadyHasWorkflowPermissions(workflow Workflow) bool {
 	return workflow.Permissions.IsSet
 }
 
-func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
+func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (string, error) {
 	workflow := Workflow{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -123,7 +123,12 @@ func AddWorkflowLevelPermissions(inputYaml string) (string, error) {
 		spaces += " "
 	}
 
-	output = append(output, spaces+"permissions:")
+	if addProjectComment {
+		output = append(output, spaces+"permissions: # added using https://github.com/step-security/secure-workflows")
+	} else {
+		output = append(output, spaces+"permissions:")
+	}
+
 	output = append(output, spaces+"  contents: read")
 	output = append(output, "")
 
