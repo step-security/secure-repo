@@ -115,7 +115,14 @@ func TestAddWorkflowLevelPermissions(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, err := AddWorkflowLevelPermissions(string(input))
+		addProjectComment := false
+
+		switch f.Name() {
+		case "addprojectcomment.yml":
+			addProjectComment = true
+		}
+
+		output, err := AddWorkflowLevelPermissions(string(input), addProjectComment)
 
 		if err != nil {
 			t.Errorf("Error not expected")
