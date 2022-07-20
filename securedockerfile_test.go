@@ -13,7 +13,8 @@ func TestSecureDockerFile(t *testing.T) {
 
 	const inputDirectory = "./testfiles/dockerfiles/input"
 	const outputDirectory = "./testfiles/dockerfiles/output"
-
+	// NOTE: http mocking is not working,
+	// need to investigate this issue
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
