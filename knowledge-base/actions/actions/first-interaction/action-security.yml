@@ -1,0 +1,8 @@
+name: 'First interaction'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to comment on first issues and pull requests #Reference: https://github.com/actions/first-interaction/blob/dafa9ae191faeec3f6b68445495727a43143b42a/src/main.ts#L81
