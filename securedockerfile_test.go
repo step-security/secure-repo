@@ -9,6 +9,8 @@ import (
 	"github.com/jarcoal/httpmock"
 )
 
+var resp = httpmock.File("./testfiles/dockerfiles/response.json").String()
+
 func TestSecureDockerFile(t *testing.T) {
 
 	const inputDirectory = "./testfiles/dockerfiles/input"
@@ -18,20 +20,24 @@ func TestSecureDockerFile(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	//Ping Docker Image
+	// NOTE: below hack is required to capture docker api calls
+	saveTr := Tr
+	defer func() { Tr = saveTr }()
+	Tr = httpmock.DefaultTransport
+
 	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
 		httpmock.NewStringResponder(200, `{
-		}`))
+	}`))
 
 	httpmock.RegisterResponder("GET", "https://gcr.io/v2/",
 		httpmock.NewStringResponder(200, `{
-		}`))
+	}`))
 
 	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/",
 		httpmock.NewStringResponder(200, `{
-		}`))
+	}`))
 
-	httpmock.RegisterNoResponder(httpmock.NewStringResponder(500, `af`))
+	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/library/python/manifests/3.7", httpmock.NewStringResponder(200, resp))
 
 	tests := []struct {
 		fileName  string
@@ -70,4 +76,54 @@ func TestSecureDockerFile(t *testing.T) {
 
 	}
 
+}
+
+func Test_getSHA(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	saveTr := Tr
+	defer func() { Tr = saveTr }()
+	Tr = httpmock.DefaultTransport
+
+	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
+		httpmock.NewStringResponder(200, `{
+	}`))
+
+	httpmock.RegisterResponder("GET", "https://gcr.io/v2/",
+		httpmock.NewStringResponder(200, `{
+	}`))
+
+	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/",
+		httpmock.NewStringResponder(200, `{
+	}`))
+
+	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/library/python/manifests/3.7", httpmock.NewStringResponder(200, resp))
+
+	type args struct {
+		image string
+		tag   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{name: "test1", args: args{image: "python", tag: "3.7"}, want: "sha256:5fb6f4b9d73ddeb0e431c938bee25c69157a1e3c880a81ff72c43a8055628de5", wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getSHA(tt.args.image, tt.args.tag)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getSHA() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("getSHA() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

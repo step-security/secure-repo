@@ -13,7 +13,7 @@
 # limitations under the License.
 FROM python:3.7@sha256:45b23dee08af5e43a7fea6c4cf9c25ccf269ee113168c19722f87876677c5cb2 as base
 
-FROM python:3.7@sha256:69dc5cee1bc06bdd21c63a0dacd5e9e5704504e443d9cc3bee145b91c2dbe2eb as build
+FROM python:3.7@sha256:5fb6f4b9d73ddeb0e431c938bee25c69157a1e3c880a81ff72c43a8055628de5 as build
 ARG TARGETOS
 ARG TARGETARCH
 RUN CGO_ENABLED=0 make build-scorecard
