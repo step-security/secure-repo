@@ -1,0 +1,10 @@
+name: 'Create Reminder'
+github-token:
+  action-input:
+    input: repoToken
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to set reminders on issues
+    pull-requests: write
+    pull-requests-reason: to set reminders on PRs
