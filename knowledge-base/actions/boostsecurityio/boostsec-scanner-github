@@ -1,0 +1,21 @@
+name: 'Boost Security Scanner'
+#No reference to github token
+outbound-endpoints:
+  - fqdn: api.boostsecurity.net
+    port: 443
+    reason: to upload scan results to boostsecurity.io platform
+  - fqdn: assets.build.boostsecurity.io
+    port: 443
+    reason: to fetch the CLI that runs the scanner
+  - fqdn: public.ecr.aws
+    port: 443
+    reason: to fetch Docker image containing scanning tools
+  - fqdn: d2glxqk2uabbnd.cloudfront.net
+    port: 443
+    reason: to fetch Docker image from AWS ECR Pull Through Cache
+  - fqdn: pypi.org
+    port: 443
+    reason: to fetch updates to scanner dependencies
+  - fqdn: github.com
+    port: 443
+    reason: to fetch code from GitHub
