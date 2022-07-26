@@ -128,6 +128,18 @@ Resources:
               - - integrations
                 - !Ref ApiGatewayV2Integration
 
+    ApiGatewayV2Route5:
+        Type: "AWS::ApiGatewayV2::Route"
+        Properties:
+            ApiId: !Ref ApiGatewayV2Api
+            ApiKeyRequired: false
+            AuthorizationType: "NONE"
+            RouteKey: "ANY /secure-dockerfile"
+            Target: !Join
+              - /
+              - - integrations
+                - !Ref ApiGatewayV2Integration
+
     ApiGatewayV2Integration:
         Type: "AWS::ApiGatewayV2::Integration"
         Properties:
