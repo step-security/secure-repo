@@ -124,7 +124,7 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 	}
 
 	if addProjectComment {
-		output = append(output, spaces+"permissions: # added using https://github.com/step-security/secure-workflows")
+		output = append(output, spaces+"permissions:  # added using https://github.com/step-security/secure-workflows")
 	} else {
 		output = append(output, spaces+"permissions:")
 	}
