@@ -4,6 +4,8 @@ on:
     branches:
       - main
   push:
+    branches:
+      - main  # to update code coverage
 
 jobs:
   test:
