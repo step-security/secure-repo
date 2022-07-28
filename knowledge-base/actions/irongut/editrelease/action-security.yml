@@ -6,4 +6,4 @@ github-token:
     is-default: false
   permissions:
     contents: write
-    issues-reason: to edit release details
+    contents-reason: to edit release details
