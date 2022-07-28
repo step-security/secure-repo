@@ -1,0 +1,9 @@
+name: 'Edit Release'
+# irongut/EditRelease
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: write
+    issues-reason: to edit release details
