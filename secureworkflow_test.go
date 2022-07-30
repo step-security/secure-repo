@@ -88,6 +88,7 @@ func TestSecureWorkflow(t *testing.T) {
 			queryParams["addHardenRunner"] = "false"
 			queryParams["pinActions"] = "false"
 		}
+		queryParams["addProjectComment"] = "false"
 
 		output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
 

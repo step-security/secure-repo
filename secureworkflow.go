@@ -11,7 +11,7 @@ const (
 )
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*SecureWorkflowReponse, error) {
-	pinActions, addHardenRunner, addPermissions := true, true, true
+	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
 	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
 	ignoreMissingKBs := false
 
@@ -27,8 +27,13 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addPermissions = false
 	}
 
+
 	if queryStringParams["ignoreMissingKBs"] == "true" {
 		ignoreMissingKBs = true
+  }
+  
+	if queryStringParams["addProjectComment"] == "false" {
+		addProjectComment = false
 	}
 
 	secureWorkflowReponse := &SecureWorkflowReponse{FinalOutput: inputYaml, OriginalInput: inputYaml}
@@ -40,7 +45,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			return nil, err
 		} else {
 			if !secureWorkflowReponse.HasErrors || shouldAddWorkflowLevelPermissions(secureWorkflowReponse.JobErrors) {
-				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput)
+				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput, addProjectComment)
 			}
 			if len(secureWorkflowReponse.MissingActions) > 0 && !ignoreMissingKBs {
 				StoreMissingActions(secureWorkflowReponse.MissingActions, svc)
