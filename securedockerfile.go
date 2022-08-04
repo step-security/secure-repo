@@ -78,19 +78,15 @@ func SecureDockerFile(inputDockerFile string) (*SecureDockerfileResponse, error)
 	return response, nil
 }
 func getSHA(image string, tag string) (string, error) {
+
 	ref, err := name.ParseReference(image, name.WithDefaultTag(tag))
 	if err != nil {
 		return "", err
 	}
-	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithTransport(Tr))
-	if err != nil {
-		//TODO: Log the error
-		return "", err
-	}
-	// Getting image digest
-	imghash, err := img.Digest()
+	desc, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithTransport(Tr))
+
 	if err != nil {
 		return "", err
 	}
-	return imghash.String(), nil
+	return desc.Digest.String(), nil
 }
