@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/golang-jwt/jwt"
+	"github.com/lestrrat-go/jwx/jwk"
 )
 
 type GitHubWorkflowSecrets struct {
@@ -30,12 +34,8 @@ const (
 	GitHubRepo                     = "repo"
 )
 
-func getWorkflowSecrets(queryStringParams map[string]string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
+func getWorkflowSecrets(owner, repo, runId string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
 	tableName := GitHubWorkflowSecretsTableName
-
-	owner := queryStringParams["owner"]
-	repo := queryStringParams["repo"]
-	runId := queryStringParams["runId"]
 
 	result, err := svc.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
@@ -89,9 +89,81 @@ func setWorkflowSecrets(gitHubWorkflowSecrets GitHubWorkflowSecrets, dynamoDbSvc
 	return nil
 }
 
-func GetSecrets(queryStringParams map[string]string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
+const jwksURL = `https://token.actions.githubusercontent.com/.well-known/jwks`
+
+func getKey(token *jwt.Token) (interface{}, error) {
+
+	// TODO: cache response so we don't have to make a request every time
+	// we want to verify a JWT
+	set, err := jwk.Fetch(context.Background(), jwksURL)
+	if err != nil {
+		return nil, err
+	}
+
+	keyID, ok := token.Header["kid"].(string)
+	if !ok {
+		return nil, errors.New("expecting JWT header to have string kid")
+	}
+
+	key, match := set.LookupKeyID(keyID)
+	if match {
+
+		var rawkey interface{} // This is the raw key, like *rsa.PrivateKey or *ecdsa.PrivateKey
+		if err := key.Raw(&rawkey); err != nil {
+			return nil, fmt.Errorf("failed to create public key")
+		}
+		return rawkey, nil
+	}
+
+	return nil, fmt.Errorf("no key found in jwksURL")
+}
+
+func getClaimsFromAuthToken(authHeader string, skipClaimValidation bool) (string, string, string, error) {
+	owner := ""
+	repo := ""
+	runId := ""
+	tokenParts := strings.Split(authHeader, "Bearer ")
+	if len(tokenParts) < 2 {
+		return "", "", "", fmt.Errorf("token not set with Bearer keyword")
+	}
+	parser := new(jwt.Parser)
+	parser.SkipClaimsValidation = skipClaimValidation
+	token, err := parser.Parse(tokenParts[1], getKey)
+	if err != nil {
+		return "", "", "", err
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	repository := claims["repository"].(string)
+	repositoryParts := strings.Split(repository, "/")
+	if len(repositoryParts) == 2 {
+		owner = repositoryParts[0]
+		repo = repositoryParts[1]
+	}
+	runId = claims["run_id"].(string)
+
+	return owner, repo, runId, nil
+}
+
+func GetSecrets(queryStringParams map[string]string, authHeader string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
+	owner := ""
+	repo := ""
+	runId := ""
+	var err error
+	// this is a call from the GitHub Action
+	if len(authHeader) > 0 {
+		// verify OIDC token
+		owner, repo, runId, err = getClaimsFromAuthToken(authHeader, svc == nil) // skip validation for unit tests
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		owner = queryStringParams["owner"]
+		repo = queryStringParams["repo"]
+		runId = queryStringParams["runId"]
+	}
+
 	// Get the record for repo and run id
-	gitHubWorkflowSecrets, err := getWorkflowSecrets(queryStringParams, svc)
+	gitHubWorkflowSecrets, err := getWorkflowSecrets(owner, repo, runId, svc)
 	if err != nil {
 		return nil, err
 	}
@@ -103,11 +175,9 @@ func GetSecrets(queryStringParams map[string]string, svc dynamodbiface.DynamoDBA
 
 	// If record does not exist, insert record
 	gitHubWorkflowSecrets = &GitHubWorkflowSecrets{}
-	owner := queryStringParams["owner"]
-	repo := queryStringParams["repo"]
 
 	gitHubWorkflowSecrets.Repo = fmt.Sprintf("%s/%s", owner, repo)
-	gitHubWorkflowSecrets.RunId = queryStringParams["runId"]
+	gitHubWorkflowSecrets.RunId = runId
 	gitHubWorkflowSecrets.AreSecretsSet = false
 	secrets := strings.Split(queryStringParams["secrets"], ",")
 	for _, secret := range secrets {
