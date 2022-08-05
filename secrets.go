@@ -149,6 +149,7 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 	repo := ""
 	runId := ""
 	var err error
+	authHeaderVerified := false
 	// this is a call from the GitHub Action
 	if len(authHeader) > 0 {
 		// verify OIDC token
@@ -156,6 +157,7 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 		if err != nil {
 			return nil, err
 		}
+		authHeaderVerified = true
 	} else {
 		owner = queryStringParams["owner"]
 		repo = queryStringParams["repo"]
@@ -170,6 +172,9 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 
 	// If record exists, check if secrets are set
 	if gitHubWorkflowSecrets != nil {
+		if !authHeaderVerified && gitHubWorkflowSecrets.AreSecretsSet {
+			return nil, fmt.Errorf("once secrets are set, they can only be returned to GitHub workflow")
+		}
 		return gitHubWorkflowSecrets, nil
 	}
 
