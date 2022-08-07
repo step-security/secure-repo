@@ -10,6 +10,7 @@ jobs:
   publish-test:
     permissions:
       contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -24,17 +25,26 @@ jobs:
         uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
         with:
           go-version: 1.17
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
       
       - run: go test
         env: 
           PAT: ${{ secrets.PAT }} 
       
+      - uses: step-security/get-mfa-secrets@main
+        id: get-aws-secret
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          secrets: |
+            AWS_ACCESS_KEY_ID
+            AWS_SECRET_ACCESS_KEY
+            
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
+        with:
+          aws-access-key-id: ${{ steps.get-aws-secret.outputs.AWS_ACCESS_KEY_ID }}  
+          aws-secret-access-key: ${{ steps.get-aws-secret.outputs.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          
       - name: Deploy to AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4
         with:
