@@ -41,7 +41,8 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 
 		if strings.Contains(httpRequest.RawPath, "/secrets") {
 			if httpRequest.RequestContext.HTTP.Method == "GET" {
-				githubWorkflowSecrets, err := GetSecrets(httpRequest.QueryStringParameters, dynamoDbSvc)
+				authHeader := httpRequest.Headers["authorization"]
+				githubWorkflowSecrets, err := GetSecrets(httpRequest.QueryStringParameters, authHeader, dynamoDbSvc)
 				if err != nil {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusInternalServerError,

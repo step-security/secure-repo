@@ -27,11 +27,10 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addPermissions = false
 	}
 
-
 	if queryStringParams["ignoreMissingKBs"] == "true" {
 		ignoreMissingKBs = true
-  }
-  
+	}
+
 	if queryStringParams["addProjectComment"] == "false" {
 		addProjectComment = false
 	}
@@ -45,14 +44,23 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			return nil, err
 		} else {
 			if !secureWorkflowReponse.HasErrors || shouldAddWorkflowLevelPermissions(secureWorkflowReponse.JobErrors) {
-				secureWorkflowReponse.FinalOutput, _ = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput, addProjectComment)
+				secureWorkflowReponse.FinalOutput, err = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput, addProjectComment)
+				if err != nil {
+					secureWorkflowReponse.HasErrors = true
+				} else {
+					// reset the error
+					// this is done because workflow perms have been added
+					// only job errors were that perms already existed
+					secureWorkflowReponse.HasErrors = false
+				}
 			}
 			if len(secureWorkflowReponse.MissingActions) > 0 && !ignoreMissingKBs {
 				StoreMissingActions(secureWorkflowReponse.MissingActions, svc)
 			}
 		}
-
-		addedPermissions = !secureWorkflowReponse.AlreadyHasPermissions
+		// if there are no errors, then we must have added perms
+		// if there are already perms at workflow level, that is treated as an error condition
+		addedPermissions = !secureWorkflowReponse.HasErrors
 	}
 
 	if addHardenRunner {
