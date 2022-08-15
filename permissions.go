@@ -430,6 +430,11 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 		return permissions, nil
 	}
 
+	if strings.Contains(runStep, "mkdocs gh-deploy") {
+		permissions = append(permissions, Permission{permission: contents_write, action: "mkdocs gh-deploy", reason: "to publish docs"})
+		return permissions, nil
+	}
+
 	// Java. See action-setup-java.yml
 	if strings.Contains(runStep, "gradle publish") || strings.Contains(runStep, "mvn deploy") {
 
