@@ -9,6 +9,8 @@ on:
       - 'tools/**'
 jobs:
   deploy:
+    permissions:
+      contents: write  # for mkdocs gh-deploy to publish docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
