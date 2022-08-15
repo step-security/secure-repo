@@ -17,18 +17,23 @@ jobs:
       pull-requests: write
     
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - uses: actions/checkout@d0651293c4a5a52e711f25b41b05b2212f385d28
         with:
           repository: step-security/secure-workflows
     
       - name: KBAnalysis
-        uses: step-security/secure-workflows/kbanalysis@main
+        uses: step-security/secure-workflows/kbanalysis@271e465ba8ae63db24252f69b0b10ff8bcdd1b45
         with:
           github-token: ${{secrets.PAT }}
           issue-id: ${{ github.event.issue.number}}
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672
         with:
           token: ${{secrets.PAT}} #  need to use PAT since GITHUB_TOKEN does not initiate workflows
           body: "Fixes #${{github.event.issue.number}}"

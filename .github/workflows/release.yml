@@ -6,6 +6,9 @@ on:
     branches:    
      - main
     
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
   publish-test:
     permissions:
@@ -14,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
         with:
           egress-policy: audit
       - name: Checkout
@@ -30,7 +33,7 @@ jobs:
         env: 
           PAT: ${{ secrets.PAT }} 
       
-      - uses: step-security/get-mfa-secrets@main
+      - uses: step-security/get-mfa-secrets@e2046cd87197fdf4341ad14c0345071a32615ce8
         id: get-aws-secret
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
