@@ -39,7 +39,7 @@ To secure GitHub Actions workflows using a pull request:
 
 - Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
 - Login using your GitHub Account (no need to install any App or grant `write` access)
-- View recommendations and click `Create pull request`. Here is a [sample pull request]().
+- View recommendations and click `Create pull request`. Here is a [sample pull request](https://github.com/step-security/secure-workflows/pull/1067).
 
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
