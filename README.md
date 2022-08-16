@@ -10,14 +10,12 @@
 <h3>
   <a href="#quickstart">Quickstart</a>
   <span> • </span>
-  <a href="#functionality-overview">Functionality Overview</a>
-  <span> • </span>
-  <a href="#roadmap">Roadmap</a>  
+  <a href="#functionality-overview">Functionality Overview</a>  
 </h3>
 
 ---
 
-An open platform to update your CI/CD pipelines to comply with security requirements.
+Automated security fixes that get you a higher OpenSSF Scorecard score.
 
 If you use GitHub Actions, use can use SecureWorkflows to:
 
@@ -25,15 +23,25 @@ If you use GitHub Actions, use can use SecureWorkflows to:
 - [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
 - [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
 
-Support for GitLab, CircleCI, and more CI/CD providers will be added in the future. Check the [Roadmap](#roadmap) for details.
+## Used to secure critical open-source projects
 
-## In the News
-
-- SecureWorkflows is being used to [secure critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
+- SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
 - StepSecurity was rewarded a [Secure Open Source (SOS) reward](https://sos.dev) for this work
-- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu) 
+- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu)
 
 ## Quickstart
+
+### Using app.stepsecurity.io/securerepo
+
+To secure GitHub Actions workflows using a pull request:
+
+- Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
+- Login using your GitHub Account (no need to install any App or grant `write` access)
+- View recommendations and click `Create pull request`. Here is a [sample pull request]().
+
+<p align="left">
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
+</p>
 
 ### Using app.stepsecurity.io
 
@@ -42,8 +50,6 @@ To secure your GitHub Actions workflow:
 - Copy and paste your GitHub Actions workflow YAML file at https://app.stepsecurity.io
 - Click `Secure Workflows` button
 - Paste the fixed workflow back in your codebase
-
-GitHub App to create pull requests will be released soon. Check the [Roadmap](#roadmap) for details.
 
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows4.gif" alt="Secure workflow screenshot" >
@@ -205,9 +211,3 @@ jobs:
 #### How does SecureWorkflows fix this issue?
 
 SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
-
-## Roadmap
-
-- [GitHub App to create pull requests to fix issues](https://github.com/step-security/secure-workflows/issues/47)
-- [Support for GitLab CI YAML files](https://github.com/step-security/secure-workflows/issues/797)
-- [Support for CircleCI YAML files](https://github.com/step-security/secure-workflows/issues/798)
