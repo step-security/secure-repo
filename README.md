@@ -10,7 +10,9 @@
 <h3>
   <a href="#quickstart">Quickstart</a>
   <span> • </span>
-  <a href="#functionality-overview">Functionality Overview</a>  
+  <a href="#functionality-overview">Functionality Overview</a> 
+   <span> • </span>
+  <a href="#contributing">Contributing</a>  
 </h3>
 
 ---
@@ -211,3 +213,9 @@ jobs:
 #### How does SecureWorkflows fix this issue?
 
 SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
+
+## Contributing
+
+Contributions are welcome! 
+
+If you are the owner of a GitHub Action, please contribute information about the use of GITHUB_TOKEN for your Action. This will enable the community to automatically calculate minimum token permissions for the GITHUB_TOKEN for their workflows. Check out the [Contributing Guide](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
