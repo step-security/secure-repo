@@ -17,8 +17,6 @@
 
 ---
 
-Automated security fixes that get you a higher OpenSSF Scorecard score.
-
 If you use GitHub Actions, use can use SecureWorkflows to:
 
 - [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
@@ -28,7 +26,6 @@ If you use GitHub Actions, use can use SecureWorkflows to:
 ## Used to secure critical open-source projects
 
 - SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
-- StepSecurity was rewarded a [Secure Open Source (SOS) reward](https://sos.dev) for this work
 - SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu)
 
 ## Quickstart
@@ -39,7 +36,7 @@ To secure GitHub Actions workflows using a pull request:
 
 - Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
 - Login using your GitHub Account (no need to install any App or grant `write` access)
-- View recommendations and click `Create pull request`. Here is a [sample pull request](https://github.com/step-security/secure-workflows/pull/1067).
+- View recommendations and click `Create pull request`. Here is a [sample pull request](https://github.com/Kapiche/cobertura-action/pull/60).
 
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
@@ -64,7 +61,7 @@ To secure your GitHub Actions workflow:
 - Follow remediation tip that points to https://app.stepsecurity.io
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" >
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="60%">
 </p>
 
 ## Functionality Overview
