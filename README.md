@@ -1,3 +1,4 @@
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
   <img src="images/banner.png" width="400">
@@ -6,9 +7,10 @@
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-workflows)
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/step-security/secure-workflows/main/LICENSE)
+</p>
 
-<p align="left">
-From analysis to remediation, Secure Workflows automates CI/CD security for GitHub actions workflows. You can scan your CI/CD workflows using Secure Workflows to discover security vulnerabilities and use auto-generated remediations to fix them.
+<p align="center">
+You can scan your CI/CD workflows using Secure Workflows to discover security vulnerabilities and use auto-generated remediations to fix them.
 </p>
 
 <p align="center">
@@ -26,11 +28,7 @@ From analysis to remediation, Secure Workflows automates CI/CD security for GitH
 </h3>
 
 ## Quickstart
-### Self Hosted
-
-To create an instance of Secure Workflows, deploy *cloudformation/ecr.yml* and *cloudformation/resources.yml* CloudFormation templates in your AWS account. You can take a look at *.github/workflows/release.yml* for reference.
-
-### Hosted instace: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
+### Hosted Instance: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
 
 To secure GitHub Actions workflows using a pull request:
 
@@ -48,6 +46,9 @@ To secure GitHub Actions workflows using a pull request:
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="60%">
 </p>
 
+### Self Hosted
+
+To create an instance of Secure Workflows, deploy *cloudformation/ecr.yml* and *cloudformation/resources.yml* CloudFormation templates in your AWS account. You can take a look at *.github/workflows/release.yml* for reference.
 ## Impact
 
 - SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
@@ -66,7 +67,7 @@ SecureWorkflows API
 #### Why is this needed?
 
 - The GITHUB_TOKEN is an automatically generated secret to make authenticated calls to the GitHub API
-- If the token is compromised, it can be abuse to compromise your environment (e.g. to overwrite releases or source code). This will also impact everyone who use your software in their software supply chain.
+- If the token is compromised, it can be abused to compromise your environment (e.g. to overwrite releases or source code). This will also impact everyone who use your software in their software supply chain.
 - To limit the damage, [GitHub recommends setting minimum token permissions for the GITHUB_TOKEN](https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/).
 
 #### Before and After the fix
