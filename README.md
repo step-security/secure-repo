@@ -7,52 +7,36 @@
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/step-security/secure-workflows/main/LICENSE)
 
+<p align="left">
+From analysis to remediation, Secure Workflows automates CI/CD security for GitHub actions workflows. You can scan your CI/CD workflows using Secure Workflows to discover security vulnerabilities and use auto-generated remediations to fix them.
+</p>
+
+<p align="center">
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
+</p>
+
 <h3>
   <a href="#quickstart">Quickstart</a>
+  <span> • </span>
+   <a href="#impact">Impact</a>
   <span> • </span>
   <a href="#functionality-overview">Functionality Overview</a> 
    <span> • </span>
   <a href="#contributing">Contributing</a>  
 </h3>
 
----
-
-If you use GitHub Actions, use can use SecureWorkflows to:
-
-- [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
-- [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
-- [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
-
-## Used to secure critical open-source projects
-
-- SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
-- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu)
-
 ## Quickstart
+### Self Hosted
 
-### Using app.stepsecurity.io/securerepo
+To create an instance of Secure Workflows, deploy *cloudformation/ecr.yml* and *cloudformation/resources.yml* CloudFormation templates in your AWS account. You can take a look at *.github/workflows/release.yml* for reference.
+
+### Hosted instace: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
 
 To secure GitHub Actions workflows using a pull request:
 
 - Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
 - Login using your GitHub Account (no need to install any App or grant `write` access)
 - View recommendations and click `Create pull request`. Here is a [sample pull request](https://github.com/Kapiche/cobertura-action/pull/60).
-
-<p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
-</p>
-
-### Using app.stepsecurity.io
-
-To secure your GitHub Actions workflow:
-
-- Copy and paste your GitHub Actions workflow YAML file at https://app.stepsecurity.io
-- Click `Secure Workflows` button
-- Paste the fixed workflow back in your codebase
-
-<p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows4.gif" alt="Secure workflow screenshot" >
-</p>
 
 ### Integration with OpenSSF Scorecard
 
@@ -63,6 +47,11 @@ To secure your GitHub Actions workflow:
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="60%">
 </p>
+
+## Impact
+
+- SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
+- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu)
 
 ## Functionality Overview
 
@@ -77,7 +66,7 @@ SecureWorkflows API
 #### Why is this needed?
 
 - The GITHUB_TOKEN is an automatically generated secret to make authenticated calls to the GitHub API
-- If the token is compromised, it can be misused (e.g. to overwrite releases or source code)
+- If the token is compromised, it can be abuse to compromise your environment (e.g. to overwrite releases or source code). This will also impact everyone who use your software in their software supply chain.
 - To limit the damage, [GitHub recommends setting minimum token permissions for the GITHUB_TOKEN](https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/).
 
 #### Before and After the fix
