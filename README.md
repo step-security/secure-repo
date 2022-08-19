@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-You can scan your CI/CD workflows using Secure Workflows to discover security vulnerabilities and use auto-generated remediations to fix them.
+Secure GitHub Actions CI/CD workflows via automated remediations
 </p>
 
 <p align="center">
