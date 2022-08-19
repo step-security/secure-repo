@@ -3,11 +3,13 @@
   <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
   <img src="images/banner.png" width="400">
 </picture>
+</p>
 
+<div align="center">
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-workflows)
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/step-security/secure-workflows/main/LICENSE)
-</p>
+</div>
 
 <p align="center">
 Secure GitHub Actions CI/CD workflows via automated remediations
