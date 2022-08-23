@@ -1,53 +1,44 @@
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
   <img src="images/banner.png" width="400">
 </picture>
+</p>
+
+<div align="center">
 
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-workflows)
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/step-security/secure-workflows/main/LICENSE)
 
+</div>
+
+<p align="center">
+Secure GitHub Actions CI/CD workflows via automated remediations
+</p>
+
+<p align="center">
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
+</p>
+
 <h3>
   <a href="#quickstart">Quickstart</a>
   <span> • </span>
-  <a href="#functionality-overview">Functionality Overview</a>
+   <a href="#impact">Impact</a>
   <span> • </span>
-  <a href="#roadmap">Roadmap</a>  
+  <a href="#functionality-overview">Functionality Overview</a> 
+   <span> • </span>
+  <a href="#contributing">Contributing</a>  
 </h3>
 
----
-
-An open platform to update your CI/CD pipelines to comply with security requirements.
-
-If you use GitHub Actions, use can use SecureWorkflows to:
-
-- [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
-- [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
-- [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
-
-Support for GitLab, CircleCI, and more CI/CD providers will be added in the future. Check the [Roadmap](#roadmap) for details.
-
-## In the News
-
-- SecureWorkflows is being used to [secure critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
-- StepSecurity was rewarded a [Secure Open Source (SOS) reward](https://sos.dev) for this work
-- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu) 
-
 ## Quickstart
+### Hosted Instance: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
 
-### Using app.stepsecurity.io
+To secure GitHub Actions workflows using a pull request:
 
-To secure your GitHub Actions workflow:
-
-- Copy and paste your GitHub Actions workflow YAML file at https://app.stepsecurity.io
-- Click `Secure Workflows` button
-- Paste the fixed workflow back in your codebase
-
-GitHub App to create pull requests will be released soon. Check the [Roadmap](#roadmap) for details.
-
-<p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflows4.gif" alt="Secure workflow screenshot" >
-</p>
+- Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
+- Login using your GitHub Account (no need to install any App or grant `write` access)
+- View recommendations and click `Create pull request`. Here is a [sample pull request](https://github.com/Kapiche/cobertura-action/pull/60).
 
 ### Integration with OpenSSF Scorecard
 
@@ -56,8 +47,16 @@ GitHub App to create pull requests will be released soon. Check the [Roadmap](#r
 - Follow remediation tip that points to https://app.stepsecurity.io
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" >
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-workflows/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="60%">
 </p>
+
+### Self Hosted
+
+To create an instance of Secure Workflows, deploy *cloudformation/ecr.yml* and *cloudformation/resources.yml* CloudFormation templates in your AWS account. You can take a look at *.github/workflows/release.yml* for reference.
+## Impact
+
+- SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
+- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu)
 
 ## Functionality Overview
 
@@ -72,7 +71,7 @@ SecureWorkflows API
 #### Why is this needed?
 
 - The GITHUB_TOKEN is an automatically generated secret to make authenticated calls to the GitHub API
-- If the token is compromised, it can be misused (e.g. to overwrite releases or source code)
+- If the token is compromised, it can be abused to compromise your environment (e.g. to overwrite releases or source code). This will also impact everyone who use your software in their software supply chain.
 - To limit the damage, [GitHub recommends setting minimum token permissions for the GITHUB_TOKEN](https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/).
 
 #### Before and After the fix
@@ -206,8 +205,8 @@ jobs:
 
 SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
 
-## Roadmap
+## Contributing
 
-- [GitHub App to create pull requests to fix issues](https://github.com/step-security/secure-workflows/issues/47)
-- [Support for GitLab CI YAML files](https://github.com/step-security/secure-workflows/issues/797)
-- [Support for CircleCI YAML files](https://github.com/step-security/secure-workflows/issues/798)
+Contributions are welcome! 
+
+If you are the owner of a GitHub Action, please contribute information about the use of GITHUB_TOKEN for your Action. This will enable the community to automatically calculate minimum token permissions for the GITHUB_TOKEN for their workflows. Check out the [Contributing Guide](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
