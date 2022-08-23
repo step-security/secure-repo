@@ -274,7 +274,7 @@ func SetSecrets(body string, svc dynamodbiface.DynamoDBAPI) error {
 	}
 	gitHubWorkflowSecretsFromDB.Secrets = gitHubWorkflowSecrets.Secrets
 	gitHubWorkflowSecretsFromDB.AreSecretsSet = true
-	err = setWorkflowSecrets(gitHubWorkflowSecrets, svc)
+	err = setWorkflowSecrets(*gitHubWorkflowSecretsFromDB, svc)
 
 	if err != nil {
 		return err
