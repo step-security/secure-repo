@@ -42,6 +42,10 @@ func pinAction(action, jobName, inputYaml string) (string, bool) {
 		return inputYaml, updated // Cannot pin local actions and docker actions
 	}
 
+	// TODO: add check if the action is already pinned
+	if isAbsolute(action) {
+		return inputYaml, updated
+	}
 	leftOfAt := strings.Split(action, "@")
 	tagOrBranch := leftOfAt[1]
 
@@ -59,20 +63,40 @@ func pinAction(action, jobName, inputYaml string) (string, bool) {
 
 	client := github.NewClient(tc)
 
-	ref, _, err := client.Git.GetRef(context.Background(), owner, repo, fmt.Sprintf("tags/%s", tagOrBranch))
-
+	commitSHA, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
 	if err != nil {
-		ref, _, err = client.Git.GetRef(context.Background(), owner, repo, fmt.Sprintf("heads/%s", tagOrBranch))
-
-		if err != nil {
-			// TODO: Log the error
-			return inputYaml, updated
-		}
+		return inputYaml, updated
 	}
 
-	commitSHA := ref.Object.SHA
-	pinnedAction := fmt.Sprintf("%s@%s", leftOfAt[0], *commitSHA)
+	pinnedAction := fmt.Sprintf("%s@%s", leftOfAt[0], commitSHA)
 	updated = !strings.EqualFold(action, pinnedAction)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
 	return inputYaml, updated
+}
+
+// https://github.com/sethvargo/ratchet/blob/3524c5cfde0439099b3a37274e683af4c779b0d1/parser/refs.go#L56
+func isAbsolute(ref string) bool {
+	parts := strings.Split(ref, "@")
+	last := parts[len(parts)-1]
+
+	if len(last) == 40 && isAllHex(last) {
+		return true
+	}
+
+	if len(last) == 71 && last[:6] == "sha256" && isAllHex(last[7:]) {
+		return true
+	}
+
+	return false
+}
+
+// isAllHex returns true if the given string is all hex characters, false
+// otherwise.
+func isAllHex(s string) bool {
+	for _, ch := range s {
+		if (ch < '0' || ch > '9') && (ch < 'a' || ch > 'f') && (ch < 'A' || ch > 'F') {
+			return false
+		}
+	}
+	return true
 }
