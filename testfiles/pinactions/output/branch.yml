@@ -6,7 +6,7 @@ jobs:
     steps:
     - uses: actions/checkout@61b9e3751b92087fd0b06925ba6dd6314e06f089
     - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@49d9c2e46838527972659f80f5488d08971fdc2d
+      uses: elgohr/Publish-Docker-Github-Action@8217e91c0369a5342a4ef2d612de87492410a666
       with:
         name: docker.pkg.github.com/elgohr/publish-docker-github-action/publish-docker-github-action
         username: ${{ github.actor }}
