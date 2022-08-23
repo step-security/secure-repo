@@ -236,9 +236,12 @@ func DeleteSecrets(authHeader string, svc dynamodbiface.DynamoDBAPI) error {
 	if gitHubWorkflowSecrets != nil {
 		if gitHubWorkflowSecrets.AreSecretsSet {
 
+			var clearedSecrets []Secret
 			for _, secret := range gitHubWorkflowSecrets.Secrets {
-				secret.Value = ""
+				clearedSecrets = append(clearedSecrets, Secret{Name: secret.Name, Value: ""})
 			}
+
+			gitHubWorkflowSecrets.Secrets = clearedSecrets
 
 			err = setWorkflowSecrets(*gitHubWorkflowSecrets, svc)
 
@@ -253,13 +256,24 @@ func DeleteSecrets(authHeader string, svc dynamodbiface.DynamoDBAPI) error {
 
 func SetSecrets(body string, svc dynamodbiface.DynamoDBAPI) error {
 	var gitHubWorkflowSecrets GitHubWorkflowSecrets
-
+	owner := ""
+	repo := ""
 	err := json.Unmarshal([]byte(body), &gitHubWorkflowSecrets)
 
 	if err != nil {
 		return err
 	}
-
+	repositoryParts := strings.Split(gitHubWorkflowSecrets.Repo, "/")
+	if len(repositoryParts) == 2 {
+		owner = repositoryParts[0]
+		repo = repositoryParts[1]
+	}
+	gitHubWorkflowSecretsFromDB, err := getWorkflowSecrets(owner, repo, gitHubWorkflowSecrets.RunId, svc)
+	if err != nil {
+		return err
+	}
+	gitHubWorkflowSecretsFromDB.Secrets = gitHubWorkflowSecrets.Secrets
+	gitHubWorkflowSecretsFromDB.AreSecretsSet = true
 	err = setWorkflowSecrets(gitHubWorkflowSecrets, svc)
 
 	if err != nil {
