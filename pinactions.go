@@ -42,7 +42,6 @@ func pinAction(action, jobName, inputYaml string) (string, bool) {
 		return inputYaml, updated // Cannot pin local actions and docker actions
 	}
 
-	// TODO: add check if the action is already pinned
 	if isAbsolute(action) {
 		return inputYaml, updated
 	}
