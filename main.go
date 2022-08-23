@@ -49,7 +49,6 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 						Body:       err.Error(),
 					}
 				} else {
-
 					output, _ := json.Marshal(githubWorkflowSecrets)
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,
@@ -65,7 +64,19 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 						Body:       err.Error(),
 					}
 				} else {
-
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+					}
+				}
+			} else if httpRequest.RequestContext.HTTP.Method == "DELETE" {
+				authHeader := httpRequest.Headers["authorization"]
+				err := DeleteSecrets(authHeader, dynamoDbSvc)
+				if err != nil {
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusInternalServerError,
+						Body:       err.Error(),
+					}
+				} else {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,
 					}
