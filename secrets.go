@@ -166,7 +166,7 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 			owner = repositoryParts[0]
 			repo = repositoryParts[1]
 		}
-
+		runId = gitHubWorkflowSecrets.RunId
 		authHeaderVerified = true
 	} else {
 		owner = queryStringParams["owner"]
@@ -175,17 +175,17 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 	}
 
 	// Get the record for repo and run id
-	gitHubWorkflowSecrets, err = getWorkflowSecrets(owner, repo, runId, svc)
+	gitHubWorkflowSecretsFromDB, err := getWorkflowSecrets(owner, repo, runId, svc)
 	if err != nil {
 		return nil, err
 	}
 
 	// If record exists, check if secrets are set
-	if gitHubWorkflowSecrets != nil {
-		if !authHeaderVerified && gitHubWorkflowSecrets.AreSecretsSet {
+	if gitHubWorkflowSecretsFromDB != nil {
+		if !authHeaderVerified && gitHubWorkflowSecretsFromDB.AreSecretsSet {
 			return nil, fmt.Errorf("once secrets are set, they can only be returned to GitHub workflow")
 		}
-		return gitHubWorkflowSecrets, nil
+		return gitHubWorkflowSecretsFromDB, nil
 	}
 
 	// If record does not exist, insert record
