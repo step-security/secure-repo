@@ -33,7 +33,7 @@ jobs:
         env: 
           PAT: ${{ secrets.PAT }} 
       
-      - uses: step-security/get-mfa-secrets@e2046cd87197fdf4341ad14c0345071a32615ce8
+      - uses: step-security/get-mfa-secrets@main
         id: get-aws-secret
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
