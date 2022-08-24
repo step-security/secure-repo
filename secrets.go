@@ -16,10 +16,15 @@ import (
 )
 
 type GitHubWorkflowSecrets struct {
-	Repo          string   `json:"repo"`
-	RunId         string   `json:"runId"`
-	AreSecretsSet bool     `json:"areSecretsSet"`
-	Secrets       []Secret `json:"secrets"`
+	Repo           string   `json:"repo"`
+	RunId          string   `json:"runId"`
+	AreSecretsSet  bool     `json:"areSecretsSet"`
+	Secrets        []Secret `json:"secrets"`
+	Ref            string   `json:"ref"`
+	RefType        string   `json:"ref_type"`
+	Workflow       string   `json:"workflow"`
+	EventName      string   `json:"event_name"`
+	JobWorkflowRef string   `json:"job_workflow_ref"`
 }
 
 type Secret struct {
@@ -118,30 +123,27 @@ func getKey(token *jwt.Token) (interface{}, error) {
 	return nil, fmt.Errorf("no key found in jwksURL")
 }
 
-func getClaimsFromAuthToken(authHeader string, skipClaimValidation bool) (string, string, string, error) {
-	owner := ""
-	repo := ""
-	runId := ""
+func getClaimsFromAuthToken(authHeader string, skipClaimValidation bool) (*GitHubWorkflowSecrets, error) {
+	gitHubWorkflowSecrets := GitHubWorkflowSecrets{}
 	tokenParts := strings.Split(authHeader, "Bearer ")
 	if len(tokenParts) < 2 {
-		return "", "", "", fmt.Errorf("token not set with Bearer keyword")
+		return nil, fmt.Errorf("token not set with Bearer keyword")
 	}
 	parser := new(jwt.Parser)
 	parser.SkipClaimsValidation = skipClaimValidation
 	token, err := parser.Parse(tokenParts[1], getKey)
 	if err != nil {
-		return "", "", "", err
+		return nil, err
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	repository := claims["repository"].(string)
-	repositoryParts := strings.Split(repository, "/")
-	if len(repositoryParts) == 2 {
-		owner = repositoryParts[0]
-		repo = repositoryParts[1]
-	}
-	runId = claims["run_id"].(string)
-
-	return owner, repo, runId, nil
+	gitHubWorkflowSecrets.Repo = claims["repository"].(string)
+	gitHubWorkflowSecrets.RunId = claims["run_id"].(string)
+	gitHubWorkflowSecrets.Workflow = claims["workflow"].(string)
+	gitHubWorkflowSecrets.EventName = claims["event_name"].(string)
+	gitHubWorkflowSecrets.Ref = claims["ref"].(string)
+	gitHubWorkflowSecrets.RefType = claims["ref_type"].(string)
+	gitHubWorkflowSecrets.JobWorkflowRef = claims["job_workflow_ref"].(string)
+	return &gitHubWorkflowSecrets, nil
 }
 
 func GetSecrets(queryStringParams map[string]string, authHeader string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
@@ -150,13 +152,21 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 	runId := ""
 	var err error
 	authHeaderVerified := false
+	var gitHubWorkflowSecrets *GitHubWorkflowSecrets
 	// this is a call from the GitHub Action
 	if len(authHeader) > 0 {
 		// verify OIDC token
-		owner, repo, runId, err = getClaimsFromAuthToken(authHeader, svc == nil) // skip validation for unit tests
+		gitHubWorkflowSecrets, err = getClaimsFromAuthToken(authHeader, svc == nil) // skip validation for unit tests
 		if err != nil {
 			return nil, err
 		}
+
+		repositoryParts := strings.Split(gitHubWorkflowSecrets.Repo, "/")
+		if len(repositoryParts) == 2 {
+			owner = repositoryParts[0]
+			repo = repositoryParts[1]
+		}
+		runId = gitHubWorkflowSecrets.RunId
 		authHeaderVerified = true
 	} else {
 		owner = queryStringParams["owner"]
@@ -165,24 +175,20 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 	}
 
 	// Get the record for repo and run id
-	gitHubWorkflowSecrets, err := getWorkflowSecrets(owner, repo, runId, svc)
+	gitHubWorkflowSecretsFromDB, err := getWorkflowSecrets(owner, repo, runId, svc)
 	if err != nil {
 		return nil, err
 	}
 
 	// If record exists, check if secrets are set
-	if gitHubWorkflowSecrets != nil {
-		if !authHeaderVerified && gitHubWorkflowSecrets.AreSecretsSet {
+	if gitHubWorkflowSecretsFromDB != nil {
+		if !authHeaderVerified && gitHubWorkflowSecretsFromDB.AreSecretsSet {
 			return nil, fmt.Errorf("once secrets are set, they can only be returned to GitHub workflow")
 		}
-		return gitHubWorkflowSecrets, nil
+		return gitHubWorkflowSecretsFromDB, nil
 	}
 
 	// If record does not exist, insert record
-	gitHubWorkflowSecrets = &GitHubWorkflowSecrets{}
-
-	gitHubWorkflowSecrets.Repo = fmt.Sprintf("%s/%s", owner, repo)
-	gitHubWorkflowSecrets.RunId = runId
 	gitHubWorkflowSecrets.AreSecretsSet = false
 	secrets := strings.Split(queryStringParams["secrets"], ",")
 	for _, secret := range secrets {
@@ -198,16 +204,77 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 	return gitHubWorkflowSecrets, nil
 }
 
+func DeleteSecrets(authHeader string, svc dynamodbiface.DynamoDBAPI) error {
+	owner := ""
+	repo := ""
+	var err error
+	var gitHubWorkflowSecrets *GitHubWorkflowSecrets
+	// this is a call from the GitHub Action
+	if len(authHeader) > 0 {
+		// verify OIDC token
+		gitHubWorkflowSecrets, err = getClaimsFromAuthToken(authHeader, svc == nil) // skip validation for unit tests
+		if err != nil {
+			return err
+		}
+
+	} else {
+		return fmt.Errorf("only GitHub workflow can delete the secrets")
+	}
+	repositoryParts := strings.Split(gitHubWorkflowSecrets.Repo, "/")
+	if len(repositoryParts) == 2 {
+		owner = repositoryParts[0]
+		repo = repositoryParts[1]
+	}
+
+	// Get the record for repo and run id
+	gitHubWorkflowSecrets, err = getWorkflowSecrets(owner, repo, gitHubWorkflowSecrets.RunId, svc)
+	if err != nil {
+		return err
+	}
+
+	// If record exists, check if secrets are set
+	if gitHubWorkflowSecrets != nil {
+		if gitHubWorkflowSecrets.AreSecretsSet {
+
+			var clearedSecrets []Secret
+			for _, secret := range gitHubWorkflowSecrets.Secrets {
+				clearedSecrets = append(clearedSecrets, Secret{Name: secret.Name, Value: ""})
+			}
+
+			gitHubWorkflowSecrets.Secrets = clearedSecrets
+
+			err = setWorkflowSecrets(*gitHubWorkflowSecrets, svc)
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func SetSecrets(body string, svc dynamodbiface.DynamoDBAPI) error {
 	var gitHubWorkflowSecrets GitHubWorkflowSecrets
-
+	owner := ""
+	repo := ""
 	err := json.Unmarshal([]byte(body), &gitHubWorkflowSecrets)
 
 	if err != nil {
 		return err
 	}
-
-	err = setWorkflowSecrets(gitHubWorkflowSecrets, svc)
+	repositoryParts := strings.Split(gitHubWorkflowSecrets.Repo, "/")
+	if len(repositoryParts) == 2 {
+		owner = repositoryParts[0]
+		repo = repositoryParts[1]
+	}
+	gitHubWorkflowSecretsFromDB, err := getWorkflowSecrets(owner, repo, gitHubWorkflowSecrets.RunId, svc)
+	if err != nil {
+		return err
+	}
+	gitHubWorkflowSecretsFromDB.Secrets = gitHubWorkflowSecrets.Secrets
+	gitHubWorkflowSecretsFromDB.AreSecretsSet = true
+	err = setWorkflowSecrets(*gitHubWorkflowSecretsFromDB, svc)
 
 	if err != nil {
 		return err
