@@ -33,8 +33,8 @@ jobs:
         env: 
           PAT: ${{ secrets.PAT }} 
       
-      - uses: step-security/get-mfa-secrets@main
-        id: get-aws-secret
+      - uses: step-security/wait-for-secrets@v1
+        id: wait-for-secrets
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           secrets: |
@@ -44,8 +44,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
         with:
-          aws-access-key-id: ${{ steps.get-aws-secret.outputs.AWS_ACCESS_KEY_ID }}  
-          aws-secret-access-key: ${{ steps.get-aws-secret.outputs.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ steps.wait-for-secrets.outputs.AWS_ACCESS_KEY_ID }}  
+          aws-secret-access-key: ${{ steps.wait-for-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
           
       - name: Deploy to AWS CloudFormation
