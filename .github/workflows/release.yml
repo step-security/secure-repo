@@ -33,7 +33,7 @@ jobs:
         env: 
           PAT: ${{ secrets.PAT }} 
       
-      - uses: step-security/wait-for-secrets@v1
+      - uses: step-security/wait-for-secrets@b6a07feee267121213ddfd0a6880a57f96d94a1e
         id: wait-for-secrets
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
