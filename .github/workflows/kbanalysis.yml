@@ -36,8 +36,8 @@ jobs:
         uses: actions/github-script@0.9.0
         with:
           script: |
-            const id = ${{github.event.issue.title}}
-            id = id.split(' ')[4]
+            var id = ${{github.event.issue.title}}
+            id = id.split(' ')[6]
             core.setOutput('id', id)
 
       - name: Create Pull Request

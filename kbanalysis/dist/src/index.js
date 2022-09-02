@@ -9279,7 +9279,7 @@ async function searchEndpoints(content) {
 
 
 function isKBIssue(title) {
-    const prefix = "[KB] Add KB for"; // pattern to check, for KB issue
+    const prefix = "[KB] Add GitHub token permissions for"; // pattern to check, for KB issue
     const index = title.indexOf(prefix);
     return index === 0; // for valid KB issue; index of prefix is always 0
 }
