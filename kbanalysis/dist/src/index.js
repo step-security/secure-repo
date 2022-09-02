@@ -9285,6 +9285,7 @@ function isKBIssue(title) {
 }
 function getAction(title) {
     const splits = title.split(" ");
+    splits.pop();
     const name = splits.pop();
     return name !== undefined ? name !== "" ? name : "not_present" : "not_present";
 }
