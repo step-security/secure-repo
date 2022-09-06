@@ -4,5 +4,5 @@ github-token:
     input: GITHUB_TOKEN
     is-default: false
   permissions:
-    issues: write
-    issues-reason: to add comments to PRs and Issues #Reference: https://github.com/thollander/actions-comment-pull-request/blob/cbe607a2c00d145d16f3e9aad8acec4d04a3d3b2/src/main.ts#L70
+    pull-requests: write
+    pull-requests-reason: to comment on PRs #Reference: https://github.com/thollander/actions-comment-pull-request/blob/cbe607a2c00d145d16f3e9aad8acec4d04a3d3b2/src/main.ts#L70
