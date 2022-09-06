@@ -5,4 +5,4 @@ github-token:
     is-default: false
   permissions:
     contents: read
-    contents-reason: to post repo on open collective
+    contents-reason: to get release info
