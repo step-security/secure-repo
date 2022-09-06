@@ -174,7 +174,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			if _, ok := queryStringParams["owner"]; ok {
 				configFile, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
 				if err != nil {
-					fixResponse := &SecureDockerfileResponse{DockerfileFetchError: true}
+					fixResponse := &configDependabotResponse{configfileFetchError: true}
 					output, _ := json.Marshal(fixResponse)
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,

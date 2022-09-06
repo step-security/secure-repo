@@ -23,7 +23,6 @@ func configDependabot(configDependabotFile string) (*configDependabotResponse, e
 	response.FinalOutput = configDependabotFile
 	response.OriginalInput = configDependabotFile
 	response.IsChanged = false
-	response.configfileFetchError = false
 
 	if !configMetadata.HasPackageEcosystem("github-actions") {
 		item := dependabot.Update{}
