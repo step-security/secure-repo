@@ -1,0 +1,8 @@
+name:"Handling CLAs and DCOs via GitHub Action"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: read
+    contents-reason: to get GITHUB_TOKEN as string input
+#Reference: https://github.com/contributor-assistant/github-action/blob/b3bbab0a75fa27270069933cec6f369c0b373b4e/src/octokit.ts#L3
+#Issue-763

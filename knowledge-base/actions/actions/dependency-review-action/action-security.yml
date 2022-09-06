@@ -1,0 +1,10 @@
+name: 'dependency-review-action'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    pull_request: write
+
+#Reference: https://github.com/actions/dependency-review-action/blob/0e686847c07129d741636f8826e19766b940064b/src/dependency-graph.ts#L8
+#Issue-769
