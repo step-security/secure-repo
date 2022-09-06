@@ -4,5 +4,7 @@ github-token:
     input: repo-token
     is-default: false
   permissions:
+    issues: write
+    issues-reason: to comment on first issue
     pull-requests: write
-    pull-requests-reason: to comment on first issues and pull requests #Reference: https://github.com/actions/first-interaction/blob/dafa9ae191faeec3f6b68445495727a43143b42a/src/main.ts#L81
+    pull-requests-reason: to comment on first PR #Reference: https://github.com/actions/first-interaction/blob/dafa9ae191faeec3f6b68445495727a43143b42a/src/main.ts#L81
