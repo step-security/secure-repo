@@ -1,0 +1,8 @@
+name: 'Delete Deployment Environment'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    deployments: write
+    deployments-reason: to delete deployments #Reference: https://github.com/strumwolf/delete-deployment-environment/blob/1bab57423aff3667394edaea69e62ad18c1c83d6/src/execute.ts#L66

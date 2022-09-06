@@ -1,0 +1,8 @@
+name: 'Proxy Release to The OpenCollective'
+github-token:
+  action-input:
+    input: Token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to get release info
