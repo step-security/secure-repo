@@ -3,6 +3,8 @@ github-token:
   environment-variable-name: GITHUB_TOKEN
     is-default: false
   permissions:
-    contents: write
-    contents reason: 
-    #Reference:   
+    contents: write 
+    contents-reason: To upload release assets
+    
+
+    #Reference: https://github.com/dwenegar/upload-release-assets/blob/fc5bc557b51cf4fc168f11bebc1e20a17949f0d2/src/upload-release-assets.ts#L50  
