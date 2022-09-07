@@ -174,7 +174,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			if _, ok := queryStringParams["owner"]; ok {
 				configFile, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
 				if err != nil {
-					fixResponse := &configDependabotResponse{configfileFetchError: true}
+					fixResponse := &configDependabotResponse{ConfigfileFetchError: true}
 					output, _ := json.Marshal(fixResponse)
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,
@@ -188,7 +188,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				configFile = httpRequest.Body
 			}
 
-			fixResponse, err := configDependabot(configFile)
+			fixResponse, err := UpdateDependabotConfig(configFile)
 			if err != nil {
 				response = events.APIGatewayProxyResponse{
 					StatusCode: http.StatusInternalServerError,

@@ -12,10 +12,10 @@ type configDependabotResponse struct {
 	OriginalInput        string
 	FinalOutput          string
 	IsChanged            bool
-	configfileFetchError bool
+	ConfigfileFetchError bool
 }
 
-func configDependabot(configDependabotFile string) (*configDependabotResponse, error) {
+func UpdateDependabotConfig(configDependabotFile string) (*configDependabotResponse, error) {
 	inputConfigFile := []byte(configDependabotFile)
 	configMetadata := dependabot.New()
 	err := configMetadata.Unmarshal(inputConfigFile)
@@ -41,9 +41,8 @@ func configDependabot(configDependabotFile string) (*configDependabotResponse, e
 		items = append(items, item)
 		addedItem, err := yaml.Marshal(items)
 		data := string(addedItem)
-		comment := "Workflow files stored in the \ndefault location of `.github/workflows`"
 
-		data = addIndentAndComment(data, comment)
+		data = addIndentation(data)
 		if err != nil {
 			return nil, err
 		}
@@ -55,19 +54,11 @@ func configDependabot(configDependabotFile string) (*configDependabotResponse, e
 	return response, nil
 }
 
-func addIndentAndComment(data string, comment string) string {
+func addIndentation(data string) string {
 	scanner := bufio.NewScanner(strings.NewReader(data))
-	cnt := 0
 	finalData := "\n"
 	for scanner.Scan() {
-		if cnt == 1 {
-			scanner2 := bufio.NewScanner(strings.NewReader(comment))
-			for scanner2.Scan() {
-				finalData += "    # " + scanner2.Text() + "\n"
-			}
-		}
 		finalData += "  " + scanner.Text() + "\n"
-		cnt++
 	}
 	return finalData
 }

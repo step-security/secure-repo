@@ -27,7 +27,7 @@ func TestConfigDependabotFile(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, err := configDependabot(string(input))
+		output, err := UpdateDependabotConfig(string(input))
 		if err != nil {
 			t.Fatalf("Error not expected: %s", err)
 		}
