@@ -1,0 +1,6 @@
+name: Checkstyle for Java GitHub Action""
+github-token:
+  action-input: 
+    input: github_token
+    is-default: true
+    #Reference: https://github.com/dbelyaev/action-checkstyle/blob/956b3848022aa1a3d74861d81f9d0b6853c17d36/README.md
