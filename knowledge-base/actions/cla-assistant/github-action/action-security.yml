@@ -1,8 +1,17 @@
-name:"Handling CLAs and DCOs via GitHub Action"
+name: "Handling CLAs and DCOs via GitHub Action"
 github-token:
   environment-variable-name: GITHUB_TOKEN
   permissions:
-    contents: read
-    contents-reason: to get GITHUB_TOKEN as string input
+    contents: write #https://github.com/contributor-assistant/github-action/blob/c9eef324b5b8749015256dc7f6a1059e7d0eabd9/src/persistence/persistence.ts#L16
+    contents-reason: to 
+    pull-requests: write #https://github.com/contributor-assistant/github-action/blob/c9eef324b5b8749015256dc7f6a1059e7d0eabd9/src/addEmptyCommit.ts#L20
+    pull-requests-reason: to get specific PR
+    actions: write #https://github.com/contributor-assistant/github-action/blob/c9eef324b5b8749015256dc7f6a1059e7d0eabd9/src/pullRerunRunner.ts#L41
+    actions-reason: 
+    issues: write #https://github.com/contributor-assistant/github-action/blob/c9eef324b5b8749015256dc7f6a1059e7d0eabd9/src/pullrequest/pullRequestLock.ts#L9
+    issues-reason: to create issue comment
+    repository-projects: write #https://github.com/contributor-assistant/github-action/blob/c9eef324b5b8749015256dc7f6a1059e7d0eabd9/src/persistence/persistence.ts#L26
+
 #Reference: https://github.com/contributor-assistant/github-action/blob/b3bbab0a75fa27270069933cec6f369c0b373b4e/src/octokit.ts#L3
 #Issue-763
+https://github.com/contributor-assistant/github-action/blob/c9eef324b5b8749015256dc7f6a1059e7d0eabd9/src/persistence/persistence.ts#L26

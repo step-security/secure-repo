@@ -2,7 +2,7 @@ name: "Jekyll Deploy Action"
 github-token : 
     action-input:
       input: token
-      required: false
+      required: true
       is-default: true
 
 #Reference - https://github.com/jeffreytse/jekyll-deploy-action/blob/7ca462647387e928a2af6e3fc48ed683b2719beb/README.md
