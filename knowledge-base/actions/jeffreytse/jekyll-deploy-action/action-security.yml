@@ -8,4 +8,3 @@ github-token :
       contents-reason: to make authenticated API calls
 
 #Reference - https://github.com/jeffreytse/jekyll-deploy-action/blob/7ca462647387e928a2af6e3fc48ed683b2719beb/README.md
-#Issue-770
