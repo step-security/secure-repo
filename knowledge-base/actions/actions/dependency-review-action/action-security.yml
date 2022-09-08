@@ -1,10 +1,2 @@
 name: 'Dependency Review'
-github-token:
-  action-input:
-    input: repo-token
-    is-default: true
-  permissions:
-    pull-requests: write
-    pull-requests-reason: To make Pull Requests
-
-#Reference - https://github.com/actions/dependency-review-action/blob/0e686847c07129d741636f8826e19766b940064b/src/dependency-graph.ts#L8
+#No Permissions Required
