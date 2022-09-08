@@ -1,0 +1,11 @@
+name: Add & Commit
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to fetch code
+
+#Reference : https://github.com/EndBug/add-and-commit/blob/0e4f5f64171dcc332288834e2928909b389a9a8c/src/io.ts
+
