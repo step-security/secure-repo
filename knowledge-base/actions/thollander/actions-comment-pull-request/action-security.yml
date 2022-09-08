@@ -1,0 +1,8 @@
+name: 'Comment Pull Request'
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to comment on PRs #Reference: https://github.com/thollander/actions-comment-pull-request/blob/cbe607a2c00d145d16f3e9aad8acec4d04a3d3b2/src/main.ts#L70

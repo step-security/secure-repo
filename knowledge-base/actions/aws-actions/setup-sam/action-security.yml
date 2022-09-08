@@ -1,0 +1,2 @@
+name: "Setup AWS SAM CLI" # aws-actions/setup-sam
+# GITHUB_TOKEN not used
