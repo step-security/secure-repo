@@ -1,9 +1,7 @@
 name: "MegaLinter, by OX Security"
 github-token:
-  action-input:
-    input: GITHUB_TOKEN
-    is-default: true
+  environment-variable-name: GITHUB_TOKEN
   permissions:
-    pull-requests: write
+    pull-requests: read
     pull-requests-reason: to skip duplicate actions
     #Reference: https://github.com/oxsecurity/megalinter/blob/09bd8a3aab852fd55f80b3c66dab3cc360c0b5b0/mega-linter-runner/lib/upgrade.js
