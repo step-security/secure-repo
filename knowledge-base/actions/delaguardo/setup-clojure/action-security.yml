@@ -1,0 +1,2 @@
+name: 'Setup Clojure'
+#GitHub token only used for fixing rate limiting related problems
