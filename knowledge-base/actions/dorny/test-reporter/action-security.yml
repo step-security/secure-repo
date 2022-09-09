@@ -7,7 +7,7 @@ github-token:
     checks: write
     checks-reason: to create and update response
     actions: read
-    actions-reason: to share data between jobs and store data once a workflow is complete
+    actions-reason: to share data between jobs
     contents: read
     contents-reason: to read contents
 
