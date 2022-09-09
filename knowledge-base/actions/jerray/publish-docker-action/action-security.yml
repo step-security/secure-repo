@@ -1,0 +1,2 @@
+name: 'Publish Docker Action' # jerray/publish-docker-action
+# GITHUB_TOKEN not used

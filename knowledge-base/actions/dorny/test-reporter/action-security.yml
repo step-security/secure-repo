@@ -1,0 +1,12 @@
+name: Test Reporter
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to create and update response
+    actions: read
+    actions-reason: 
+    contents: read
+    contents-reason: 
