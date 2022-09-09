@@ -7,6 +7,8 @@ github-token:
     checks: write
     checks-reason: to create and update response
     actions: read
-    actions-reason: 
+    actions-reason: to share data between jobs and store data once a workflow is complete
     contents: read
-    contents-reason: 
+    contents-reason: to read contents
+
+#Reference - https://github.com/dorny/test-reporter/blob/0d9714ddc7ff86918ec725a527a3a069419d301a/src/main.ts#L50
