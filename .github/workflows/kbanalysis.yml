@@ -27,16 +27,23 @@ jobs:
           repository: step-security/secure-workflows
     
       - name: KBAnalysis
-        uses: step-security/secure-workflows/kbanalysis@271e465ba8ae63db24252f69b0b10ff8bcdd1b45
+        uses: step-security/secure-workflows/kbanalysis@03a07b65449688ebe9e517e4446b9f323bb194a0
         with:
           github-token: ${{secrets.PAT }}
           issue-id: ${{ github.event.issue.number}}
+
+      - id: get-action
+        uses: actions/github-script@5d03ada4b0a753e9460b312e61cc4f8fdeacf163
+        with:
+          script: |
+            var id = "${{github.event.issue.title}}".split(' ')[6]
+            core.setOutput('id', id)
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672
         with:
           token: ${{secrets.PAT}} #  need to use PAT since GITHUB_TOKEN does not initiate workflows
-          body: "Fixes #${{github.event.issue.number}}"
+          body: "This PR adds a YAML file to describe token permissions needed for Action: ${{steps.get-action.outputs.id}}.\n Fixes #${{github.event.issue.number}}"
           commit-message: "added KB for issue#${{github.event.issue.number}}"
-          title: "Add KB for issue${{github.event.issue.number}}"
+          title: "[KB] Add GitHub token permissions for ${{steps.get-action.outputs.id}} Action"
           branch: "issue#${{github.event.issue.number}}"

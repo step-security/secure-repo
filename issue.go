@@ -59,7 +59,7 @@ func createIssue(Action string) (*github.Issue, error) {
 		return nil, fmt.Errorf("[createIssue] PAT not set in env variable")
 	}
 	client := getClient(PAT)
-	title := fmt.Sprintf("[KB] Add KB for %s", Action)
+	title := fmt.Sprintf("[KB] Add GitHub token permissions for %s Action", Action)
 	labels := []string{kblabel}
 	bodyLines := []string{}
 	bodyLines = append(bodyLines, fmt.Sprintf("Knowledge Base is missing for %s.", Action))
