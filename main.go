@@ -165,7 +165,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 
 		}
 
-		if strings.Contains(httpRequest.RawPath, "/config-dependabot") {
+		if strings.Contains(httpRequest.RawPath, "/update-dependabot-config") {
 
 			configFile := ""
 			queryStringParams := httpRequest.QueryStringParameters
@@ -174,7 +174,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			if _, ok := queryStringParams["owner"]; ok {
 				configFile, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
 				if err != nil {
-					fixResponse := &configDependabotResponse{ConfigfileFetchError: true}
+					fixResponse := &UpdateDependabotConfigResponse{ConfigfileFetchError: true}
 					output, _ := json.Marshal(fixResponse)
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,

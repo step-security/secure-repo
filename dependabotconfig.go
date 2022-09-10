@@ -8,24 +8,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type configDependabotResponse struct {
+type UpdateDependabotConfigResponse struct {
 	OriginalInput        string
 	FinalOutput          string
 	IsChanged            bool
 	ConfigfileFetchError bool
 }
 
-func UpdateDependabotConfig(configDependabotFile string) (*configDependabotResponse, error) {
-	inputConfigFile := []byte(configDependabotFile)
+func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigResponse, error) {
+	inputConfigFile := []byte(dependabotConfig)
 	configMetadata := dependabot.New()
 	err := configMetadata.Unmarshal(inputConfigFile)
 	if err != nil {
 		return nil, err
 	}
 
-	response := new(configDependabotResponse)
-	response.FinalOutput = configDependabotFile
-	response.OriginalInput = configDependabotFile
+	response := new(UpdateDependabotConfigResponse)
+	response.FinalOutput = dependabotConfig
+	response.OriginalInput = dependabotConfig
 	response.IsChanged = false
 
 	if !configMetadata.HasPackageEcosystem("github-actions") {
