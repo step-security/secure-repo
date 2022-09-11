@@ -38,6 +38,24 @@ type Jobs map[string]Job
 type With map[string]string
 type Env map[string]string
 
+// Check for matrix include in environment
+func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	mstr := make(map[string]string)
+	err := unmarshal(&mstr)
+	if err != nil {
+		var mstr2 string
+		if err2 := unmarshal(&mstr2); err2 != nil {
+			return ErrInvalidValue
+		}
+		if isMatrix := strings.Contains(mstr2, "matrix.env"); isMatrix {
+			return nil
+		}
+		return ErrInvalidValue
+	}
+	*e = Env(mstr)
+	return nil
+}
+
 // For action-permissions.yml
 
 type Permissions struct {
