@@ -5,8 +5,11 @@ github-token:
     is-default: false
   permissions:
     pull-requests: write
-    pull-requests-reason: to create review
+    pull-requests-reason: to create PR review of analyzed code
     issues: write
-    issues-reason: to create comments
+    issues-reason: to comment errors found from code analysis
+    checks: write
+    checks-reason: to check ts errors
+    checks-if: ${{ contains(with, 'use-check') && with['use-check'] == 'true'}}
 
 #reference-https://github.com/Arhia/action-check-typescript/blob/d1a7bbe877766c64f1703a48cd707b13488fdae3/src/main.ts#L46
