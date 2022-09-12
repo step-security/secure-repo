@@ -5,10 +5,10 @@ github-token:
     is-default: true
   permissions:
     checks: write
-    checks-reason: to create and update response
+    checks-reason: to create check run
     actions: read
-    actions-reason: to share data between jobs
+    actions-reason: to download artifact
     contents: read
-    contents-reason: to read contents
+    contents-reason: to get commit for testing
 
 #Reference - https://github.com/dorny/test-reporter/blob/0d9714ddc7ff86918ec725a527a3a069419d301a/src/main.ts#L50
