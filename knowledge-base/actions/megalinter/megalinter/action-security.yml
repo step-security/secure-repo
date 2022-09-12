@@ -3,5 +3,7 @@ github-token:
   environment-variable-name: GITHUB_TOKEN
   permissions:
     pull-requests: read
-    pull-requests-reason: to skip duplicate actions
+    pull-requests-reason: to analyse code consistency in pr
+    issues: write
+    issues-reasons: to comment report summary
     #Reference: https://github.com/step-security/secure-workflows/pull/1133/files/d4fcb60aea817162cd93d6b6fd6ff928a284f747#r968159151
