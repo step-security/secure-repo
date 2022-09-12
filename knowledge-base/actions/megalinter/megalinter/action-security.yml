@@ -4,4 +4,4 @@ github-token:
   permissions:
     pull-requests: read
     pull-requests-reason: to skip duplicate actions
-    #Reference: https://github.com/oxsecurity/megalinter/blob/09bd8a3aab852fd55f80b3c66dab3cc360c0b5b0/mega-linter-runner/lib/upgrade.js
+    #Reference: https://github.com/step-security/secure-workflows/pull/1133/files/d4fcb60aea817162cd93d6b6fd6ff928a284f747#r968159151
