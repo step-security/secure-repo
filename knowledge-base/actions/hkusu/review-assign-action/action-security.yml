@@ -1,0 +1,12 @@
+name: "Review Assign Action"
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+  actions: write
+  actions-reasons: to set assignees and reviewers in pull request
+  pull-requests: read
+  pull-requests-reason: to review pull requests
+  #Reference: https://github.com/hkusu/review-assign-action/blob/master/action.yml
+  #https://github.com/hkusu/review-assign-action/blob/e7863d32a4c6fa2cbad35c5b44e62c34a151b59f/dist/index.js

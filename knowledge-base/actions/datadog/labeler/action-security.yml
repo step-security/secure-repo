@@ -1,0 +1,11 @@
+name: "Pull Request Labeler"
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to label pull requests
+    actions: write
+    actions-reason: to triage PRs based on the paths that are modified in the PR
+    #Reference: triages PRs based on the paths that are modified in the PR.

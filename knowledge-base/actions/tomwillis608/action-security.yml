@@ -7,6 +7,6 @@ github-token:
     checks: read
     checks-reason: to check test coverage results
     actions: write
-    actions-reasons: to comment on pull request
+    actions-reason: to comment on pull request
     #Reference: https://github.com/tomwillis608/comment-test-coverage/blob/master/dist/index.js
     #Reference: https://github.com/tomwillis608/comment-test-coverage#readme

@@ -7,5 +7,5 @@ github-token:
     actions: read
     actions-reasons: to run yarn audit command
     issues: write
-    issues-reasons: to create Github issues
+    issues-reason: to create Github issues
     #Reference: https://github.com/pragatheeswarans/yarn-audit-action/blob/f3ab4c055f4b8f1db1b1ae0e32bab690c9050603/index.js

@@ -1,0 +1,10 @@
+name: "Jira Login"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    actions: write
+    actions-reason: to login in to Jira cloud instance and create issues for TODO event
+    issues: write
+    issues-reason: to create a Jira issue for each TODO comment
+#Reference: https://github.com/atlassian/gajira-todo/blob/b8fab37af0a6a5c86c7f1c27ab6c39d347a5aaaa/README.md
+#https://github.com/atlassian/gajira-todo/blob/b8fab37af0a6a5c86c7f1c27ab6c39d347a5aaaa/index.js
