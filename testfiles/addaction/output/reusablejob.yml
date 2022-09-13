@@ -1,0 +1,13 @@
+name: "Fuzz"
+
+on:
+  push:
+  
+
+jobs:  
+  fuzz:
+    name: Fuzz
+    needs: [e2e]
+    uses: ericcornelissen/shescape/.github/workflows/reusable-fuzz.yml@main
+    with:
+      duration: 5m
