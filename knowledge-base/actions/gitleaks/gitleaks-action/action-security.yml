@@ -1,7 +1,6 @@
-name: gitleaks
+name: Gitleaks
 github-token:
   environment-variable-name: GITHUB_TOKEN
-    is-default: false
   permissions:
     pull-requests: write
     pull-requests-reason: to scan pull requests
