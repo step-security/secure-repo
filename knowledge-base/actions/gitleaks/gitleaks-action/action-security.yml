@@ -1,4 +1,4 @@
-name: Gitleaks
+name: gitleaks
 github-token:
   environment-variable-name: GITHUB_TOKEN
     is-default: false
@@ -9,5 +9,3 @@ github-token:
     contents-reason: to read comments
 
 #Reference: https://github.com/gitleaks/gitleaks-action/blob/d858f0e53c0be207bc6f2c5d5218913c1862b881/src/gitleaks.js#L154
-
-
