@@ -5,7 +5,7 @@ github-token:
     is-default: false
   permissions:
     actions: read
-    actions-reasons: to run yarn audit command
+    actions-reason: to run yarn audit command
     issues: write
     issues-reason: to create Github issues
     #Reference: https://github.com/pragatheeswarans/yarn-audit-action/blob/f3ab4c055f4b8f1db1b1ae0e32bab690c9050603/index.js
