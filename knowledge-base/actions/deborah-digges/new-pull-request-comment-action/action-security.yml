@@ -1,0 +1,8 @@
+name: 'Welcome bot on new pull requests'
+github-token:
+  action-input:
+    input: access-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to Comment on the pull request made by a new contributor
