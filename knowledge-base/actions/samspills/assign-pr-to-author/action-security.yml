@@ -6,7 +6,7 @@ github-token:
   permissions:
     issues: write
     issues-reason: to update issues
-    pull-requests: read
-    pull-requests-reason: to assign PRs
+    pull-requests: write
+    pull-requests-reason: to assign author to pr
 
 #References-https://github.com/samspills/assign-pr-to-author/blob/223a87a821f7e7447cfb5221bc53ceeb633341c2/src/main.ts#L7
