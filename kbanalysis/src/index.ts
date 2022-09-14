@@ -174,7 +174,7 @@ try{
 
                 let action_security_yaml = ""
                 const valid_input = getTokenInput(action_data, matches)
-                let token_input = valid_input !== "env_var" ? `action-input:\n    input: ${valid_input}` : `environment-variable-name: <FigureOutYourself>`
+                let token_input = valid_input !== "env_var" ? `action-input:\n    input: ${valid_input}\n    is-default: ${is_default_token}` : `environment-variable-name: <FigureOutYourself>`
 
                 if(is_used_github_api){
                     if(src_files.length !== 0){
@@ -184,7 +184,7 @@ try{
                             let str_perms = permsToString(perms)
                             body += str_perms
                             core.info(`${str_perms}`)
-                            action_security_yaml += actionSecurity({name:action_yaml_name, token_input: token_input, perms:normalizePerms(perms), default_token: is_default_token})
+                            action_security_yaml += actionSecurity({name:action_yaml_name, token_input: token_input, perms:normalizePerms(perms)})
 
 
                         }
