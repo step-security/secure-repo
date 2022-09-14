@@ -1,0 +1,14 @@
+name: SVGO action
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    contents: read
+    contents-reason: to determine what SVGs to optimize
+    pull-requests: read
+    pull-requests-reason: to determine what SVGs to optimize
+outbound-endpoints:
+  - fqdn: api.github.com
+    port: 443
+    reason: to call GitHub Issues or Pull
