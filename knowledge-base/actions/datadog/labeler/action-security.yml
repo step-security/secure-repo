@@ -7,5 +7,5 @@ github-token:
     pull-requests: read
     pull-requests-reason: to label pull requests
     actions: write
-    actions-reason: to triage PRs based on the paths that are modified in the PR
+    actions-reason: to triage PRs
     #Reference: triages PRs based on the paths that are modified in the PR.
