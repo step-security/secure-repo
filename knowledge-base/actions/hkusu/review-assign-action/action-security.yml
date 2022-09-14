@@ -5,7 +5,7 @@ github-token:
     is-default: true
   permissions:
   actions: write
-  actions-reasons: to set assignees and reviewers in pull request
+  actions-reasons: to set assignees and reviewers in PRs
   pull-requests: read
   pull-requests-reason: to review pull requests
   #Reference: https://github.com/hkusu/review-assign-action/blob/master/action.yml
