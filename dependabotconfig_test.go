@@ -16,8 +16,8 @@ func TestConfigDependabotFile(t *testing.T) {
 		fileName  string
 		isChanged bool
 	}{
-		{fileName: "DependabotFile-without-github-action", isChanged: true},
-		{fileName: "DependabotFile-with-github-action", isChanged: false},
+		{fileName: "DependabotFile-without-github-action.yml", isChanged: true},
+		{fileName: "DependabotFile-with-github-action.yml", isChanged: false},
 	}
 
 	for _, test := range tests {
