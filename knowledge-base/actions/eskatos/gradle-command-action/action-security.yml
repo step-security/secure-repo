@@ -1,0 +1,9 @@
+name: "Gradle Build Action"
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to create Github issues
+    #Reference: https://github.com/gradle/gradle-build-action/blob/1761dcff1325d8cb9775a28df9cfb73fa093c3c9/README.md
