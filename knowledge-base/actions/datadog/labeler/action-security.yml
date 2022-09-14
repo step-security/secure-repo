@@ -5,7 +5,7 @@ github-token:
     is-default: true
   permissions:
     pull-requests: read
-    pull-requests-reason: to label pull requests
+    pull-requests-reason: to label PRs
     actions: write
-    actions-reason: to triage PRs based on the paths that are modified in the PR
+    actions-reason: to triage PRs
     #Reference: triages PRs based on the paths that are modified in the PR.
