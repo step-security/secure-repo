@@ -5,7 +5,7 @@ github-token:
     is-default: true
   permissions:
     actions: write
-    actions-reson: to comment PRs with code coverage report
+    actions-reason: to comment PRs with code coverage report
     pull_requests: write
     pull-requests-reason: to commit the comment
     #Reference: https://github.com/eberlitz/lcov-reporter-action
