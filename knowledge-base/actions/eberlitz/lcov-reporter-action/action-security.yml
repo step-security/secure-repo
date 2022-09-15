@@ -7,6 +7,6 @@ github-token:
     actions: write
     actions-reson: to comment PRs with code coverage report
     pull_requests: write
-    pull-requests-reasons: to commit the comment
+    pull-requests-reason: to commit the comment
     #Reference: https://github.com/eberlitz/lcov-reporter-action
     #https://github.com/romeovs/lcov-reporter-action
