@@ -7,4 +7,3 @@ github-token:
     contents: write
     contents-reason: to update status of Deployments
     #Reference: https://github.com/chrnorm/deployment-status/blob/8a81fd4d7b467e95818f2c6a1b5b228de211e90c/src/main.ts
-    #
