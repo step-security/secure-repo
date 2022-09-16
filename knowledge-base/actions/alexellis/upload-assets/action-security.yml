@@ -1,7 +1,6 @@
 name: 'Upload Release Assets'
 github-token:
-    environment-variable-name: GITHUB_TOKEN
-    is-default: false
+  environment-variable-name: GITHUB_TOKEN
   permissions:
     contents: write
     contents-reason: Upload release assets
