@@ -178,3 +178,7 @@ func GetActionKnowledgeBase(action string) (*ActionMetadata, error) {
 
 	return &actionMetadata, nil
 }
+
+func IsCallingReusableWorkflow(job Job) bool {
+	return len(job.Uses) > 0
+}

@@ -1,0 +1,19 @@
+name: "Fuzz"
+
+on:
+  push:
+  
+
+jobs:  
+  fuzz:
+    name: Fuzz
+    needs: [e2e]
+    uses: ericcornelissen/shescape/.github/workflows/reusable-fuzz.yml@main
+    with:
+      duration: 5m
+  
+  list-directory:
+    runs-on: ubuntu-latest
+    steps:
+     - uses: step-security/harden-runner@7206db2ec98c5538323a6d70e51f965d55c11c87
+     - run: ls -R
