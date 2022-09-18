@@ -1,0 +1,9 @@
+name: "Crowdin Integration Tools"
+github-token:
+  environment-variable-name: GH_TOKEN
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create pull requests
+
+#Checkout: https://github.com/freeCodeCamp/crowdin-action/blob/ac67ff778fd3f52f232b5da6850cc4d329c15bcd/src/index.ts#L85
+#1122
