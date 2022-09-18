@@ -5,7 +5,6 @@ github-token:
     is-default: true
   permissions:
     pull-requests: read
-    pull-request-reason: to Get the last successful commit
+    pull-request-reason: to get the last successful commit
 
 #Checkout: https://github.com/tj-actions/changed-files/blob/086ffa020e34021d007625f8e08a82488e51852d/README.md
-#1098
