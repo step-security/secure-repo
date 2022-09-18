@@ -3,7 +3,7 @@ github-token:
   action-input:
     input: PAT_TOKEN
     is-default: true
-  permsissions:
+  permissions:
     pull-requests: read
     pull-request-reason: to Get the last successful commit
 
