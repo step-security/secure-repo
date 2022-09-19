@@ -1,4 +1,5 @@
 name: "Remove artifacts"
+github-token:
   environment-variable: GITHUB_TOKEN
   permissions:
     contents: write
