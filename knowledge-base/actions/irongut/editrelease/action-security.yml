@@ -1,6 +1,7 @@
 name: "Edit Release"
 github-token:
-  action-input: token
+  action-input:
+  input: token
   is-default: false
   permissions:
     contents: write
