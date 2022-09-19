@@ -3,7 +3,7 @@ github-token:
   environment-variable-name: GITHUB_TOKEN
   permissions:
     pull-requests: write
-    pull-requests-reason: to scan pull requests
+    pull-requests-reason: to comment on PR with leaked secrets
     contents: read
     contents-reason: to read comments
 
