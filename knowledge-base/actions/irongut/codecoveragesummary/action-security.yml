@@ -1,2 +1,4 @@
-name: 'Code Coverage Summary' # irongut/CodeCoverageSummary
+name:
+  "Code Coverage Summary"
+  # irongut/CodeCoverageSummary
 # GITHUB_TOKEN not used
