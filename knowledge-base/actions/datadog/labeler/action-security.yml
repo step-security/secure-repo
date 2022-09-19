@@ -1,11 +1,11 @@
 name: "Pull Request Labeler"
 github-token:
   action-input:
-    input: GITHUB_TOKEN
+    input: repo-token
     is-default: true
   permissions:
     pull-requests: read
-    pull-requests-reason: to label PRs
+    pull-requests-reason: to get changed files from PR
     actions: write
-    actions-reason: to triage PRs
-    #Reference: triages PRs based on the paths that are modified in the PR.
+    actions-reason: to add label to PR
+    #Reference: https://github.com/DataDog/labeler/blob/1a043751b2faccb4f9078d542928e4c0d3f0e2e5/src/main.ts#L8
