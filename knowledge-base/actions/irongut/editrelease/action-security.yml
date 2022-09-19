@@ -1,6 +1,7 @@
 name: "Edit Release"
 github-token:
-  environment-variable-name: GITHUB_TOKEN
+  action-input: token
+  is-default: false
   permissions:
     contents: write
     contents-reason: to edit release details
