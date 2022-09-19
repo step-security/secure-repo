@@ -1,10 +1,2 @@
 name: 'Fetch Github Release Asset'
-github-token:
-  action-input:
-    input: token
-    is-default: true
-  permissions:
-    contents: read
-    contents-reason: to get latest releases by tag
-  
-#Reference: https://github.com/dsaltares/fetch-gh-release-asset/blob/d9376dacd30fd38f49238586cd2e9295a8307f4c/index.ts
+#No Permissions Needed
