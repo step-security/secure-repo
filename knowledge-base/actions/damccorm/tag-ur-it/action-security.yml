@@ -1,7 +1,7 @@
 name: "tag-ur-it"
 github-token:
   action-input:
-    input: GITHUB_TOKEN
+    input: repo-token
     is-default: false
   permissions:
     issues: write
