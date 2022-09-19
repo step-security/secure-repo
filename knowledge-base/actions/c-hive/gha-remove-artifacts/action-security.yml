@@ -1,0 +1,9 @@
+name: "Remove artifacts"
+  environment-variable: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to 
+    actions: write
+    actions-reason: to delete github action artifacts
+    #Reference: https://github.com/c-hive/gha-remove-artifacts/blob/a90e7c756ec7fd07fd143c1f36b5e0c20a0fd66b/index.js
+    # https://github.com/c-hive/gha-remove-artifacts/blob/60b02b0352e5558dc40c89233c8a011cb4f5fcf1/README.md

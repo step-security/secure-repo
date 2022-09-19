@@ -1,0 +1,10 @@
+name: "Hugo setup"
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: to build and deploy Hugo
+    #Reference: https://github.com/peaceiris/actions-hugo/blob/bd5a5edf1b6a534bee1c70bd49f0ba3ff435e597/README.md
+    # https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-first-deployment-with-github_token

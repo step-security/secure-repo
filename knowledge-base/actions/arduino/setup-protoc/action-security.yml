@@ -1,0 +1,10 @@
+name: "Setup protoc"
+github-token:
+  environment-variable: repo-token
+  permissions:
+    contents: write
+    contents-reason: to fetch release data
+    actions: write
+    actions-reason: to download protoc compiler
+    #Reference: #https://github.com/arduino/setup-protoc/blob/659a0032e18ce6fd967034e162fe41efa10018d3/lib/installer.js
+    # https://github.com/arduino/setup-protoc/blob/f993c5c56ded78e6b9a2a4ea3470e56bd5e427ce/README.md
