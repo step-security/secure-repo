@@ -1,4 +1,2 @@
 name: "Jira Login"
-github-token:
-  environment-variable-name: GITHUB_TOKEN
-# No permissions required
+# No github token used
