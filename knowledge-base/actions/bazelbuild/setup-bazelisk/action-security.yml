@@ -1,10 +1,2 @@
 name: 'Setup Bazelisk'
-github-token:
-  action-input:
-    input: token
-    is-default: true
-  permissions:
-    contents: read
-    contents-reason: to query bazelisk releases
-
-#Reference - https://github.com/bazelbuild/setup-bazelisk/blob/9003b5f36bc0e70b0adba68b81d7fe872f7a328e/src/installer.ts#L110
+#No Permissions Needed
