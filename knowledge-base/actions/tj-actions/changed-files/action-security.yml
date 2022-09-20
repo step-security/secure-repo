@@ -1,10 +1,2 @@
 name: Changed Files
-github-token:
-  action-input:
-    input: PAT_TOKEN
-    is-default: true
-  permissions:
-    pull-requests: read
-    pull-requests-reason: to get the last successful commit
-
-#Checkout: https://github.com/tj-actions/changed-files/blob/086ffa020e34021d007625f8e08a82488e51852d/README.md
+#No Permissions Needed
