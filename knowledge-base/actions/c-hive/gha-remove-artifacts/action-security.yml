@@ -1,6 +1,6 @@
 name: "Remove artifacts"
 github-token:
-  environment-variable: GITHUB_TOKEN
+  environment-variable-name: GITHUB_TOKEN
   permissions: 
     actions: write
     actions-reason: to delete github action artifacts
