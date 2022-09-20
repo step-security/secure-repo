@@ -1,6 +1,6 @@
 name: "Setup protoc"
 github-token:
-  environment-variable: repo-token
+  environment-variable-name: repo-token
   permissions:
     contents: write
     contents-reason: to fetch release data
