@@ -2,11 +2,10 @@ name: "Code Coverage Report"
 github-token:
   action-input:
     input: github_token
-    is-default: true
+    is-default: false
   permissions:
-    actions: write
-    actions-reason: to comment PRs with code coverage report
-    pull_requests: write
-    pull-requests-reason: to commit the comment
+    contents: write
+    contents-reason: to create commit comment with code coverage
+    issues: write 
+    issues-reason: to comment code coverage on pr
     #Reference: https://github.com/eberlitz/lcov-reporter-action
-    #https://github.com/romeovs/lcov-reporter-action
