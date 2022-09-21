@@ -2,7 +2,7 @@ name: "OWASP ZAP Full Scan"
 github-token:
   action-input:
     input: token
-    is-default: true
+    is-default: false
   permissions:
     issues: write
     issues-reason: to create issues in the repository
