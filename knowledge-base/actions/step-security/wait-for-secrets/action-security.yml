@@ -1,3 +1,9 @@
 name: "Get MFA Secrets"
-#GITHUB_TOKEN Not Used
-#1115
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    id-token: write 
+    id-token-reason: to authenticate to the StepSecurity
+    
