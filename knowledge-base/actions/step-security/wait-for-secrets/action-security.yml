@@ -1,0 +1,9 @@
+name: "Get MFA Secrets"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    id-token: write 
+    id-token-reason: to authenticate to the StepSecurity
+    

@@ -1,0 +1,11 @@
+name: 'crowdin-action'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to download translation into new branch
+    contents-if: ${{ contains(with, 'download_translations') && with['download_translations'] == 'true'}}
+
+    pull-requests: write
+    pull-requests-reason: to create pr with downloaded translations 
+    pull-requests-if: ${{ contains(with, 'create_pull_request') && with['create_pull_request'] == 'true'}}
