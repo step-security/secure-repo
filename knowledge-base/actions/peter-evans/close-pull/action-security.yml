@@ -5,7 +5,7 @@ github-token:
     is-default: false
   permissions:
     pull-requests: write
-    pull-requests-reasons: to close a pull request
+    pull-requests-reason: to close a pull request
     contents: write
     contents-reason: to delete a branch of the PR
     issues: write
