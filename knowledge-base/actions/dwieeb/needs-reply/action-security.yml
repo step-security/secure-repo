@@ -1,6 +1,7 @@
 name: "Close issues after no reply"
 github-token:
-    action-input: repo-token
+    action-input: 
+      input: repo-token
       is-default: false
     permissions:
       issues: write
