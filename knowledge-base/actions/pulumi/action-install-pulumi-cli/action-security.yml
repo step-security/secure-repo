@@ -1,0 +1,4 @@
+name: "Setup Pulumi CLI"
+github-token:
+  environmental-variable-name: GITHUB_TOKEN
+  #Note: no permissions required
