@@ -4,6 +4,6 @@ github-token:
     input: token
     is-default: false
   permissions:
-  checks: read
-  checks: to read json files
+    checks: read
+    checks: to read json files
   #Reference: https://github.com/EndBug/version-check/blob/3869e89568a7cb5a60140516b289988531eb6c2c/src/main.ts#L90
