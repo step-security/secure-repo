@@ -24,6 +24,7 @@ func TestAddAction(t *testing.T) {
 		{name: "two jobs", args: args{inputYaml: "2jobs.yml", action: "step-security/harden-runner@v1"}, want: "2jobs.yml", wantErr: false, wantUpdated: true},
 		{name: "already present", args: args{inputYaml: "alreadypresent.yml", action: "step-security/harden-runner@v1"}, want: "alreadypresent.yml", wantErr: false, wantUpdated: true},
 		{name: "already present 2", args: args{inputYaml: "alreadypresent_2.yml", action: "step-security/harden-runner@v1"}, want: "alreadypresent_2.yml", wantErr: false, wantUpdated: false},
+		{name: "reusable job", args: args{inputYaml: "reusablejob.yml", action: "step-security/harden-runner@v1"}, want: "reusablejob.yml", wantErr: false, wantUpdated: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
