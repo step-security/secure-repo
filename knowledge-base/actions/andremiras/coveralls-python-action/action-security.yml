@@ -1,2 +1,8 @@
 name: 'Coveralls Python'
-#No Permissions Needed
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to create new checks
