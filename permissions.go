@@ -173,7 +173,7 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			continue
 		}
 
-		if len(job.Uses) > 0 {
+		if IsCallingReusableWorkflow(job) {
 			fixWorkflowPermsReponse.HasErrors = true
 			errors[jobName] = append(errors[jobName], fmt.Sprintf(errorReusableWorkflow, job.Uses))
 			continue
