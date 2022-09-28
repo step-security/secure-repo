@@ -8456,7 +8456,7 @@ try {
                 let body = `### Analysis\n\`\`\`yml\nAction Name: ${action_name}\nAction Type: ${action_type}\nGITHUB_TOKEN Matches: ${matches}\nTop language: ${lang}\nStars: ${repo_info.data.stargazers_count}\nPrivate: ${repo_info.data.private}\nForks: ${repo_info.data.forks_count}\n\`\`\``;
                 let action_security_yaml = "";
                 const valid_input = (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .getTokenInput */ .Ih)(action_data, matches);
-                let token_input = valid_input !== "env_var" ? `action-input:\n    input: ${valid_input}` : `environment-variable-name: <FigureOutYourself>`;
+                let token_input = valid_input !== "env_var" ? `action-input:\n    input: ${valid_input}\n    is-default: ${is_default_token}` : `environment-variable-name: <FigureOutYourself>`;
                 if (is_used_github_api) {
                     if (src_files.length !== 0) {
                         body += "\n### Endpoints Found\n";
@@ -8465,7 +8465,7 @@ try {
                             let str_perms = (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .permsToString */ .W5)(perms);
                             body += str_perms;
                             _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`${str_perms}`);
-                            action_security_yaml += (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .actionSecurity */ .LU)({ name: action_yaml_name, token_input: token_input, perms: (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .normalizePerms */ .So)(perms), default_token: is_default_token });
+                            action_security_yaml += (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .actionSecurity */ .LU)({ name: action_yaml_name, token_input: token_input, perms: (0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .normalizePerms */ .So)(perms)});
                         }
                     }
                 }
@@ -9432,7 +9432,6 @@ function actionSecurity(data) {
     template.push(`${data.name}`);
     template.push("github-token:");
     template.push(`  ${data.token_input}`);
-    template.push(`    is-default: ${data.default_token}`);
     template.push("  permissions:");
     for (let perm_key of Object.keys(data.perms)) {
         template.push(`    ${perm_key}: ${data.perms[perm_key]}`);

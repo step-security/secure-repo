@@ -140,6 +140,18 @@ Resources:
               - - integrations
                 - !Ref ApiGatewayV2Integration
 
+    ApiGatewayV2Route6:
+        Type: "AWS::ApiGatewayV2::Route"
+        Properties:
+            ApiId: !Ref ApiGatewayV2Api
+            ApiKeyRequired: false
+            AuthorizationType: "NONE"
+            RouteKey: "ANY /update-dependabot-config"
+            Target: !Join
+              - /
+              - - integrations
+                - !Ref ApiGatewayV2Integration
+
     ApiGatewayV2Integration:
         Type: "AWS::ApiGatewayV2::Integration"
         Properties:

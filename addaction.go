@@ -17,6 +17,10 @@ func AddAction(inputYaml, action string) (string, bool, error) {
 	out := inputYaml
 
 	for jobName, job := range workflow.Jobs {
+		// Skip adding action for reusable jobs
+		if IsCallingReusableWorkflow(job) {
+			continue
+		}
 		alreadyPresent := false
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, HardenRunnerActionPath) {
