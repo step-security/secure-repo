@@ -28,8 +28,10 @@ type GitHubWorkflowSecrets struct {
 }
 
 type Secret struct {
-	Name  string
-	Value string
+	Name        string
+	SecretName  string
+	Description string
+	Value       string
 }
 
 const (
@@ -199,6 +201,78 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 
 	if err != nil {
 		return nil, err
+	}
+
+	return gitHubWorkflowSecrets, nil
+}
+
+func getSecretsFromString(body string) ([]Secret, error) {
+	var secretStrings []string
+	var secrets []*Secret
+	err := json.Unmarshal([]byte(body), &secretStrings)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var secret *Secret
+	for _, value := range secretStrings {
+		trimmedValue := strings.TrimSpace(value)
+		name := ""
+		description := ""
+		if strings.HasPrefix(trimmedValue, "name:") {
+			name = strings.Split(trimmedValue, "name:")[1]
+			name = strings.TrimSpace(name)
+			secret.SecretName = name
+		} else if strings.HasPrefix(trimmedValue, "description:") {
+			description = strings.Split(trimmedValue, "description:")[1]
+			description = strings.TrimSpace(description)
+			secret.Description = description
+		} else {
+			secret = &Secret{}
+			secret.Name = trimmedValue
+			secret.Name = strings.TrimSpace(secret.Name)
+			secret.Name = strings.Trim(secret.Name, ":")
+			secrets = append(secrets, secret)
+		}
+	}
+
+	var secretsToReturn []Secret
+	for _, s := range secrets {
+		secretsToReturn = append(secretsToReturn, Secret{SecretName: s.SecretName, Name: s.Name, Description: s.Description})
+	}
+	return secretsToReturn, nil
+}
+
+func InitSecrets(body string, authHeader string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
+	var err error
+	var gitHubWorkflowSecrets *GitHubWorkflowSecrets
+	// this is a call from the GitHub Action
+	if len(authHeader) > 0 {
+		// verify OIDC token
+		gitHubWorkflowSecrets, err = getClaimsFromAuthToken(authHeader, svc == nil) // skip validation for unit tests
+		if err != nil {
+			return nil, fmt.Errorf("error in validating token: %w", err)
+		}
+
+	} else {
+		return nil, fmt.Errorf("init secrets can only be called from an Action")
+	}
+
+	gitHubWorkflowSecrets.AreSecretsSet = false
+
+	secrets, err := getSecretsFromString(body)
+
+	if err != nil {
+		return nil, fmt.Errorf("error in parsing secrets: %w", err)
+	}
+
+	gitHubWorkflowSecrets.Secrets = secrets
+
+	err = setWorkflowSecrets(*gitHubWorkflowSecrets, svc)
+
+	if err != nil {
+		return nil, fmt.Errorf("error in storing secret metadata: %w", err)
 	}
 
 	return gitHubWorkflowSecrets, nil
