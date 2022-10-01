@@ -56,6 +56,22 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 					}
 				}
 
+			} else if httpRequest.RequestContext.HTTP.Method == "PUT" {
+				authHeader := httpRequest.Headers["authorization"]
+				githubWorkflowSecrets, err := InitSecrets(httpRequest.Body, authHeader, dynamoDbSvc)
+				if err != nil {
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusInternalServerError,
+						Body:       err.Error(),
+					}
+				} else {
+					output, _ := json.Marshal(githubWorkflowSecrets)
+					response = events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       string(output),
+					}
+				}
+
 			} else if httpRequest.RequestContext.HTTP.Method == "POST" {
 				err := SetSecrets(httpRequest.Body, dynamoDbSvc)
 				if err != nil {
