@@ -217,19 +217,20 @@ func getSecretsFromString(body string) ([]Secret, error) {
 
 	var secret *Secret
 	for _, value := range secretStrings {
+		trimmedValue := strings.TrimSpace(value)
 		name := ""
 		description := ""
-		if strings.HasPrefix(value, "name:") {
-			name = strings.Split(value, "name:")[1]
+		if strings.HasPrefix(trimmedValue, "name:") {
+			name = strings.Split(trimmedValue, "name:")[1]
 			name = strings.TrimSpace(name)
 			secret.SecretName = name
-		} else if strings.HasPrefix(value, "description:") {
-			description = strings.Split(value, "description:")[1]
+		} else if strings.HasPrefix(trimmedValue, "description:") {
+			description = strings.Split(trimmedValue, "description:")[1]
 			description = strings.TrimSpace(description)
 			secret.Description = description
 		} else {
 			secret = &Secret{}
-			secret.Name = value
+			secret.Name = trimmedValue
 			secret.Name = strings.TrimSpace(secret.Name)
 			secret.Name = strings.Trim(secret.Name, ":")
 			secrets = append(secrets, secret)
@@ -251,7 +252,7 @@ func InitSecrets(body string, authHeader string, svc dynamodbiface.DynamoDBAPI) 
 		// verify OIDC token
 		gitHubWorkflowSecrets, err = getClaimsFromAuthToken(authHeader, svc == nil) // skip validation for unit tests
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error in validating token: %w", err)
 		}
 
 	} else {
@@ -263,7 +264,7 @@ func InitSecrets(body string, authHeader string, svc dynamodbiface.DynamoDBAPI) 
 	secrets, err := getSecretsFromString(body)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error in parsing secrets: %w", err)
 	}
 
 	gitHubWorkflowSecrets.Secrets = secrets
@@ -271,7 +272,7 @@ func InitSecrets(body string, authHeader string, svc dynamodbiface.DynamoDBAPI) 
 	err = setWorkflowSecrets(*gitHubWorkflowSecrets, svc)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error in storing secret metadata: %w", err)
 	}
 
 	return gitHubWorkflowSecrets, nil
