@@ -59,6 +59,9 @@ func Test_getSecretsFromString(t *testing.T) {
 		{name: "multi secret name description", args: args{body: `["AWS_ACCESS_KEY_ID:", "name: aws access key id", "description: aws access key id for prod", "AWS_SECRET_ACCESS_KEY:", "name: AWS secret access key", "description: this is the secret"]`},
 			want: []Secret{{Name: "AWS_ACCESS_KEY_ID", SecretName: "aws access key id", Description: "aws access key id for prod"},
 				{Name: "AWS_SECRET_ACCESS_KEY", SecretName: "AWS secret access key", Description: "this is the secret"}}, wantErr: false},
+		{name: "multi secret with space name description", args: args{body: `["AWS_ACCESS_KEY_ID: ","  name: 'AWS access key'","  description: 'this is the access key'","AWS_SECRET_ACCESS_KEY:","  name: 'AWS secret access key'","  description: 'this is the secret'"]`},
+			want: []Secret{{Name: "AWS_ACCESS_KEY_ID", SecretName: "'AWS access key'", Description: "'this is the access key'"},
+				{Name: "AWS_SECRET_ACCESS_KEY", SecretName: "'AWS secret access key'", Description: "'this is the secret'"}}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
