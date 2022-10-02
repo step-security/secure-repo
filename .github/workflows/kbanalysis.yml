@@ -33,7 +33,7 @@ jobs:
           issue-id: ${{ github.event.issue.number}}
 
       - id: get-action
-        uses: actions/github-script@5d03ada4b0a753e9460b312e61cc4f8fdeacf163
+        uses: actions/github-script@7dff1a87643417cf3b95bb10b29f4c4bc60d8ebd
         with:
           script: |
             var id = "${{github.event.issue.title}}".split(' ')[6]
