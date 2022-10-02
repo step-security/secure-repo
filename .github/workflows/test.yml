@@ -16,7 +16,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@14dc64f30986eaa2ad2dddcec073f5aab18e5a24 # v1
+      - uses: step-security/harden-runner@2e205a28d0e1da00c5f53b161f4067b052c61f34 # v1
         with:
           allowed-endpoints: >
             api.github.com:443
