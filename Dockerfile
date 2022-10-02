@@ -13,7 +13,7 @@ RUN go build -o /main
 COPY knowledge-base /knowledge-base
 
 # copy artifacts to a clean image
-FROM public.ecr.aws/lambda/provided:al2@sha256:474828b1e530e5a34b2c093cddc3919fac9a9cee47ac6fb9453604da54d470e8
+FROM public.ecr.aws/lambda/provided:al2@sha256:d1a684c6effdc97b155ff28b9c779263ef45f25e167a103946d29ab1129f210d
 COPY --from=build /main /main
 COPY --from=build /knowledge-base /knowledge-base
 ENTRYPOINT [ "/main" ]     
