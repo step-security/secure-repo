@@ -1,3 +1,8 @@
 name: 'Upstream Sync'
-#NO PERMISSIONS NEEDED
-#522
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to check for any new commits
