@@ -1,3 +1,6 @@
 name: 'wemake-python-styleguide' 
-#GITHUB_TOKEN NOT USED 
-#338
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to leave inline PR comments 
