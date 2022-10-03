@@ -42,3 +42,37 @@ func Test_getClaimsFromAuthToken(t *testing.T) {
 		})
 	}
 }
+
+func Test_getSecretsFromString(t *testing.T) {
+	type args struct {
+		body string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []Secret
+		wantErr bool
+	}{
+		{name: "single secret no name no description", args: args{body: `["AWS_ACCESS_KEY_ID:"]`}, want: []Secret{{Name: "AWS_ACCESS_KEY_ID"}}, wantErr: false},
+		{name: "single secret name no description", args: args{body: `["AWS_ACCESS_KEY_ID:", "name: aws access key id"]`}, want: []Secret{{Name: "AWS_ACCESS_KEY_ID", SecretName: "aws access key id"}}, wantErr: false},
+		{name: "single secret name description", args: args{body: `["AWS_ACCESS_KEY_ID:", "name: aws access key id", "description: aws access key id for prod"]`}, want: []Secret{{Name: "AWS_ACCESS_KEY_ID", SecretName: "aws access key id", Description: "aws access key id for prod"}}, wantErr: false},
+		{name: "multi secret name description", args: args{body: `["AWS_ACCESS_KEY_ID:", "name: aws access key id", "description: aws access key id for prod", "AWS_SECRET_ACCESS_KEY:", "name: AWS secret access key", "description: this is the secret"]`},
+			want: []Secret{{Name: "AWS_ACCESS_KEY_ID", SecretName: "aws access key id", Description: "aws access key id for prod"},
+				{Name: "AWS_SECRET_ACCESS_KEY", SecretName: "AWS secret access key", Description: "this is the secret"}}, wantErr: false},
+		{name: "multi secret with space name description", args: args{body: `["AWS_ACCESS_KEY_ID: ","  name: 'AWS access key'","  description: 'this is the access key'","AWS_SECRET_ACCESS_KEY:","  name: 'AWS secret access key'","  description: 'this is the secret'"]`},
+			want: []Secret{{Name: "AWS_ACCESS_KEY_ID", SecretName: "'AWS access key'", Description: "'this is the access key'"},
+				{Name: "AWS_SECRET_ACCESS_KEY", SecretName: "'AWS secret access key'", Description: "'this is the secret'"}}, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getSecretsFromString(tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getSecretsFromString() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getSecretsFromString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
