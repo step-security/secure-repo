@@ -9,6 +9,7 @@
 
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-workflows)
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/step-security/secure-workflows/main/LICENSE)
 
 </div>
@@ -32,6 +33,7 @@ Secure GitHub Actions CI/CD workflows via automated remediations
 </h3>
 
 ## Quickstart
+
 ### Hosted Instance: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
 
 To secure GitHub Actions workflows using a pull request:
@@ -52,7 +54,8 @@ To secure GitHub Actions workflows using a pull request:
 
 ### Self Hosted
 
-To create an instance of Secure Workflows, deploy *cloudformation/ecr.yml* and *cloudformation/resources.yml* CloudFormation templates in your AWS account. You can take a look at *.github/workflows/release.yml* for reference.
+To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _cloudformation/resources.yml_ CloudFormation templates in your AWS account. You can take a look at _.github/workflows/release.yml_ for reference.
+
 ## Impact
 
 - SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
@@ -207,6 +210,6 @@ SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](htt
 
 ## Contributing
 
-Contributions are welcome! 
+Contributions are welcome!
 
 If you are the owner of a GitHub Action, please contribute information about the use of GITHUB_TOKEN for your Action. This will enable the community to automatically calculate minimum token permissions for the GITHUB_TOKEN for their workflows. Check out the [Contributing Guide](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
