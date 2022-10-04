@@ -1,15 +1,16 @@
 name: Test
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
   push:
     branches:
-      - main  # to update code coverage
+      - main # to update code coverage
 
-permissions:  # added using https://github.com/step-security/secure-workflows
+permissions: # added using https://github.com/step-security/secure-workflows
   contents: read
-
+concurrency:
+  group: ${{ github.workflow }}
 jobs:
   test:
     permissions:
@@ -39,5 +40,5 @@ jobs:
       - name: Run coverage
         run: go test -race -coverprofile=coverage.txt -covermode=atomic
         env:
-          PAT: ${{ secrets.PAT_READ_ONLY }}
+          PAT: ${{ secrets.GITHUB_TOKEN }}
       - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # v2
