@@ -44,12 +44,16 @@ jobs:
             AWS_SECRET_ACCESS_KEY:
               name: 'AWS secret access key'
               description: 'Secret access key for secure-workflows prod'
+            AWS_SESSION_TOKEN:
+              name: 'AWS session token'
+              description: 'Session token for secure-workflows prod'
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
         with:
           aws-access-key-id: ${{ steps.wait-for-secrets.outputs.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ steps.wait-for-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ steps.wait-for-secrets.outputs.AWS_SESSION_TOKEN }}
           aws-region: us-west-2
 
       - name: Deploy to AWS CloudFormation
