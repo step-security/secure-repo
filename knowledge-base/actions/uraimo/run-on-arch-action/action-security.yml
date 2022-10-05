@@ -1,0 +1,9 @@
+name: 'Run on architecture'
+github-token:
+  action-input:
+    input: githubToken
+    is-default: true
+  permissions:
+    packages: write
+    packages-reason: to cache docker image in package registry
+    

@@ -1,0 +1,14 @@
+name: "JaCoCo Report"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to list and add comments
+    contents: read
+    contents-reason: to compare commits
+
+#Reference: https://github.com/Madrapps/jacoco-report/blob/bb381256784cb1bc10e1c401176754dfe89ea720/src/action.js#L47
+
+
