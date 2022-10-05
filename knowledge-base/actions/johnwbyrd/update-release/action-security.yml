@@ -1,0 +1,11 @@
+name: 'Update Release'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: to get user input and update
+
+    #Reference: https://github.com/johnwbyrd/update-release/blob/1d5ec4791e40507e5eca3b4dbf90f0b27e7e4979/src/main.ts
+    #fixes 1265
