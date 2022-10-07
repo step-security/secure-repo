@@ -1,0 +1,9 @@
+name: "Setup Arduino CLI"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+     actions: write
+     actions-reason: to get the input #Checkout:https://github.com/arduino/arduino-lint-action#configuration
+
