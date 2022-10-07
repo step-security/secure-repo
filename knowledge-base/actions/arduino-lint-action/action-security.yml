@@ -1,0 +1,9 @@
+name: "arduino/arduino-lint-action"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: write
+    actions-reason: to get the input #Reference:https://github.com/step-security/secure-workflows/issues
+    
