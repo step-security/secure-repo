@@ -1,7 +1,6 @@
 name: "repo2docker Action"
 github-token:
   environment-variable-name: TOKEN
-    is-default: false
   permissions:
     deployment: write
     deployment-reason: to create new deployment
