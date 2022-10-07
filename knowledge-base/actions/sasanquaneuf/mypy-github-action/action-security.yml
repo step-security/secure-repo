@@ -1,0 +1,8 @@
+name: 'Mypy action'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    checks: write
+    checks-reasons: to create and update checks
+    #Reference:https://github.com/sasanquaneuf/mypy-github-action/blob/8908b8f82282257ad047399601892ba0f91afd9a/src/main.ts#L67
+ 
