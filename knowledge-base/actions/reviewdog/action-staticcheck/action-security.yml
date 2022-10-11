@@ -1,0 +1,9 @@
+name: "Run staticcheck with reviewdog"
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+  contents:read
+  contents-reason: to Download and release
+#Reference: https://github.com/reviewdog/action-staticcheck/blob/3f6974df1d174fcbea96773076621e29b8c57ada/script.sh#L15
