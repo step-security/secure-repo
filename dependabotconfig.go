@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"strings"
 
 	dependabot "github.com/paulvollmer/dependabot-config-go"
@@ -15,8 +16,21 @@ type UpdateDependabotConfigResponse struct {
 	ConfigfileFetchError bool
 }
 
+type Ecosystem struct {
+	PackageEcosystem string
+	Directory        string
+	Interval         string
+}
+
+type UpdateDependabotConfigRequest struct {
+	Ecosystems []Ecosystem
+	Content    string
+}
+
 func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigResponse, error) {
-	inputConfigFile := []byte(dependabotConfig)
+	var updateDependabotConfigRequest UpdateDependabotConfigRequest
+	json.Unmarshal([]byte(dependabotConfig), &updateDependabotConfigRequest)
+	inputConfigFile := []byte(updateDependabotConfigRequest.Content)
 	configMetadata := dependabot.New()
 	err := configMetadata.Unmarshal(inputConfigFile)
 	if err != nil {
@@ -24,31 +38,47 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	}
 
 	response := new(UpdateDependabotConfigResponse)
-	response.FinalOutput = dependabotConfig
-	response.OriginalInput = dependabotConfig
+	response.FinalOutput = updateDependabotConfigRequest.Content
+	response.OriginalInput = updateDependabotConfigRequest.Content
 	response.IsChanged = false
 
-	if !configMetadata.HasPackageEcosystem("github-actions") {
-		item := dependabot.Update{}
-		item.PackageEcosystem = "github-actions"
-		item.Directory = "/"
-
-		schedule := dependabot.Schedule{}
-		schedule.Interval = "daily"
-
-		item.Schedule = schedule
-		items := []dependabot.Update{}
-		items = append(items, item)
-		addedItem, err := yaml.Marshal(items)
-		data := string(addedItem)
-
-		data = addIndentation(data)
-		if err != nil {
-			return nil, err
+	if updateDependabotConfigRequest.Content == "" {
+		if len(updateDependabotConfigRequest.Ecosystems) == 0 {
+			return response, nil
 		}
+		response.FinalOutput = "version: 2\nupdates:"
+	} else {
+		response.FinalOutput += "\n"
+	}
+	for _, Update := range updateDependabotConfigRequest.Ecosystems {
+		updateAlreadyExist := false
+		for _, update := range configMetadata.Updates {
+			if update.PackageEcosystem == Update.PackageEcosystem && update.Directory == Update.Directory {
+				updateAlreadyExist = true
+				break
+			}
+		}
+		if !updateAlreadyExist {
+			item := dependabot.Update{}
+			item.PackageEcosystem = Update.PackageEcosystem
+			item.Directory = Update.Directory
 
-		response.FinalOutput = response.FinalOutput + "\n" + data
-		response.IsChanged = true
+			schedule := dependabot.Schedule{}
+			schedule.Interval = Update.Interval
+
+			item.Schedule = schedule
+			items := []dependabot.Update{}
+			items = append(items, item)
+			addedItem, err := yaml.Marshal(items)
+			data := string(addedItem)
+
+			data = addIndentation(data)
+			if err != nil {
+				return nil, err
+			}
+			response.FinalOutput = response.FinalOutput + data
+			response.IsChanged = true
+		}
 	}
 
 	return response, nil
