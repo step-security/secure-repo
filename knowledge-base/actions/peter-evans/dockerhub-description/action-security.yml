@@ -1,0 +1,10 @@
+name: 'Docker Hub Description'
+github-token:
+  action-input:
+      input: token
+      is-default: True
+  permissions:
+    contents: write
+    contents-reason: to modify,read and get tags 
+    #Refrences: https://github.com/peter-evans/dockerhub-description/blob/da890086d39c735e41d8823c8a95bde4302c3d64/src/main.ts#L27
+    #Refrences: https://github.com/peter-evans/dockerhub-description/blob/ae9aa33b7a26f2bbc30fac934af4b054be232f92/src/dockerhub-helper.ts#L25
