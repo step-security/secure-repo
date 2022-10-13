@@ -5,5 +5,6 @@ github-token:
     is-default: true
   permissions:
   pull-requests: read
+  pull-requests-if: ${{ !contains(with, 'process-only') || with['process-only'] == 'prs' }}
   pull-requests-reason: to run staticcheck with reviewdog on pull requests
 #Reference: https://github.com/reviewdog/action-staticcheck/blob/3f6974df1d174fcbea96773076621e29b8c57ada/script.sh#L15
