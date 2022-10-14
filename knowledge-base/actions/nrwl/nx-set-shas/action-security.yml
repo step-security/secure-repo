@@ -7,3 +7,4 @@ github-token:
     actions: read
     actions-reason:  to fetch successful wrokflow runs
   #References:https://github.com/nrwl/nx-set-shas/blob/8b116da380aced2121ab9ee569d2927a6661b3e9/find-successful-workflow.js#L97
+  #Reference:https://github.com/nrwl/nx-set-shas#permissions-in-v2
