@@ -1,0 +1,9 @@
+name: Fossa Action
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to run the fossa scans
+#Reference: https://github.com/fossa-contrib/fossa-action/blob/784fe13702de8f8ebc27d23d8ec865e6afb6be01/src/installer.ts#L14
