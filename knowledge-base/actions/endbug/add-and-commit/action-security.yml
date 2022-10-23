@@ -5,7 +5,8 @@ github-token:
     is-default: true
   permissions:
     contents: write
-    contents-reason: to fetch code
-    contents-if: ${{ with['use-check'] == 'true'}}
+    contents-reason: to push changes to repo
+    contents-if: ${{ with['push'] != 'false'}}
+    
 
 #Reference : https://github.com/EndBug/add-and-commit/blob/0e4f5f64171dcc332288834e2928909b389a9a8c/src/io.ts
