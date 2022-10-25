@@ -1,4 +1,4 @@
-package main
+package pin
 
 import (
 	"io/ioutil"
@@ -10,8 +10,8 @@ import (
 )
 
 func TestPinActions(t *testing.T) {
-	const inputDirectory = "./testfiles/pinactions/input"
-	const outputDirectory = "./testfiles/pinactions/output"
+	const inputDirectory = "../../../testfiles/pinactions/input"
+	const outputDirectory = "../../../testfiles/pinactions/output"
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

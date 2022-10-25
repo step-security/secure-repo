@@ -11,6 +11,11 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/step-security/secure-workflows/remediation/dependabot"
+	"github.com/step-security/secure-workflows/remediation/docker"
+	"github.com/step-security/secure-workflows/remediation/secrets"
+	"github.com/step-security/secure-workflows/remediation/workflow"
+	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
 )
 
 type Handler struct {
@@ -42,7 +47,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 		if strings.Contains(httpRequest.RawPath, "/secrets") {
 			if httpRequest.RequestContext.HTTP.Method == "GET" {
 				authHeader := httpRequest.Headers["authorization"]
-				githubWorkflowSecrets, err := GetSecrets(httpRequest.QueryStringParameters, authHeader, dynamoDbSvc)
+				githubWorkflowSecrets, err := secrets.GetSecrets(httpRequest.QueryStringParameters, authHeader, dynamoDbSvc)
 				if err != nil {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusInternalServerError,
@@ -58,7 +63,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 
 			} else if httpRequest.RequestContext.HTTP.Method == "PUT" {
 				authHeader := httpRequest.Headers["authorization"]
-				githubWorkflowSecrets, err := InitSecrets(httpRequest.Body, authHeader, dynamoDbSvc)
+				githubWorkflowSecrets, err := secrets.InitSecrets(httpRequest.Body, authHeader, dynamoDbSvc)
 				if err != nil {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusInternalServerError,
@@ -73,7 +78,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				}
 
 			} else if httpRequest.RequestContext.HTTP.Method == "POST" {
-				err := SetSecrets(httpRequest.Body, dynamoDbSvc)
+				err := secrets.SetSecrets(httpRequest.Body, dynamoDbSvc)
 				if err != nil {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusInternalServerError,
@@ -86,7 +91,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				}
 			} else if httpRequest.RequestContext.HTTP.Method == "DELETE" {
 				authHeader := httpRequest.Headers["authorization"]
-				err := DeleteSecrets(authHeader, dynamoDbSvc)
+				err := secrets.DeleteSecrets(authHeader, dynamoDbSvc)
 				if err != nil {
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusInternalServerError,
@@ -107,9 +112,9 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			// if owner is set, assuming that repo, path are also set
 			// get the workflow using API
 			if _, ok := queryStringParams["owner"]; ok {
-				inputYaml, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
+				inputYaml, err = workflow.GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
 				if err != nil {
-					fixResponse := &SecureWorkflowReponse{WorkflowFetchError: true, HasErrors: true}
+					fixResponse := &permissions.SecureWorkflowReponse{WorkflowFetchError: true, HasErrors: true}
 					output, _ := json.Marshal(fixResponse)
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,
@@ -123,7 +128,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				inputYaml = httpRequest.Body
 			}
 
-			fixResponse, err := SecureWorkflow(httpRequest.QueryStringParameters, inputYaml, dynamoDbSvc)
+			fixResponse, err := workflow.SecureWorkflow(httpRequest.QueryStringParameters, inputYaml, dynamoDbSvc)
 
 			if err != nil {
 				response = events.APIGatewayProxyResponse{
@@ -148,9 +153,9 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			// if owner is set, assuming that repo, path are also set
 			// get the dockerfile using API
 			if _, ok := queryStringParams["owner"]; ok {
-				dockerFile, err = GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
+				dockerFile, err = workflow.GetGitHubWorkflowContents(httpRequest.QueryStringParameters)
 				if err != nil {
-					fixResponse := &SecureDockerfileResponse{DockerfileFetchError: true}
+					fixResponse := &docker.SecureDockerfileResponse{DockerfileFetchError: true}
 					output, _ := json.Marshal(fixResponse)
 					response = events.APIGatewayProxyResponse{
 						StatusCode: http.StatusOK,
@@ -164,7 +169,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				dockerFile = httpRequest.Body
 			}
 
-			fixResponse, err := SecureDockerFile(dockerFile)
+			fixResponse, err := docker.SecureDockerFile(dockerFile)
 			if err != nil {
 				response = events.APIGatewayProxyResponse{
 					StatusCode: http.StatusInternalServerError,
@@ -186,7 +191,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 			updateDependabotConfigRequest := ""
 			updateDependabotConfigRequest = httpRequest.Body
 
-			fixResponse, err := UpdateDependabotConfig(updateDependabotConfigRequest)
+			fixResponse, err := dependabot.UpdateDependabotConfig(updateDependabotConfigRequest)
 			if err != nil {
 				response = events.APIGatewayProxyResponse{
 					StatusCode: http.StatusInternalServerError,

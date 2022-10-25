@@ -1,4 +1,4 @@
-package main
+package workflow
 
 import (
 	"io/ioutil"
@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,13 +22,13 @@ func (m *mockDynamoDBClient) PutItem(input *dynamodb.PutItemInput) (*dynamodb.Pu
 
 func (m *mockDynamoDBClient) Scan(input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
 
-	actionPermissionsYaml, err := ioutil.ReadFile("./testfiles/action-permissions.yml")
+	actionPermissionsYaml, err := ioutil.ReadFile("../../testfiles/action-permissions.yml")
 
 	if err != nil {
 		return nil, err
 	}
 
-	actionPermissions := ActionPermissions{}
+	actionPermissions := metadata.ActionPermissions{}
 
 	err = yaml.Unmarshal(actionPermissionsYaml, &actionPermissions)
 
