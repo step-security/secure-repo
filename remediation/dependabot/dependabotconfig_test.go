@@ -1,4 +1,4 @@
-package main
+package dependabot
 
 import (
 	"encoding/json"
@@ -10,8 +10,8 @@ import (
 
 func TestConfigDependabotFile(t *testing.T) {
 
-	const inputDirectory = "./testfiles/dependabotfiles/input"
-	const outputDirectory = "./testfiles/dependabotfiles/output"
+	const inputDirectory = "../../testfiles/dependabotfiles/input"
+	const outputDirectory = "../../testfiles/dependabotfiles/output"
 
 	tests := []struct {
 		fileName   string

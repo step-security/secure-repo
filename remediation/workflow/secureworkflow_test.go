@@ -1,8 +1,9 @@
-package main
+package workflow
 
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"testing"
 
@@ -10,8 +11,8 @@ import (
 )
 
 func TestSecureWorkflow(t *testing.T) {
-	const inputDirectory = "./testfiles/secureworkflow/input"
-	const outputDirectory = "./testfiles/secureworkflow/output"
+	const inputDirectory = "../../testfiles/secureworkflow/input"
+	const outputDirectory = "../../testfiles/secureworkflow/output"
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -45,6 +46,8 @@ func TestSecureWorkflow(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		os.Setenv("KBFolder", "../../knowledge-base/actions")
 
 		queryParams := make(map[string]string)
 		switch test.fileName {

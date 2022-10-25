@@ -1,4 +1,4 @@
-package main
+package pin
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
 	"gopkg.in/yaml.v3"
 )
 
@@ -15,7 +16,7 @@ var Tr http.RoundTripper = remote.DefaultTransport
 
 func PinDocker(inputYaml string) (string, bool, error) {
 	updated := false
-	workflow := Workflow{}
+	workflow := metadata.Workflow{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {

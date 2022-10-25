@@ -1,7 +1,8 @@
-package main
+package docker
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/asottile/dockerfile"
@@ -9,6 +10,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
+
+var Tr http.RoundTripper = remote.DefaultTransport
 
 type SecureDockerfileResponse struct {
 	OriginalInput        string

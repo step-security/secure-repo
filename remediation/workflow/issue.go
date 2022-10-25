@@ -1,4 +1,4 @@
-package main
+package workflow
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v40/github"
+	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
 	"golang.org/x/oauth2"
 )
 
@@ -22,7 +23,7 @@ func CreateIssue(Action string) (int, error) {
 	// is action
 	if len(Action) > 0 {
 		// is kb not found
-		_, err := GetActionKnowledgeBase(Action)
+		_, err := metadata.GetActionKnowledgeBase(Action)
 
 		if err != nil {
 			// does issue already exist?

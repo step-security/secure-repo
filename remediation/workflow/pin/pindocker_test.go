@@ -1,4 +1,4 @@
-package main
+package pin
 
 import (
 	"io/ioutil"
@@ -19,8 +19,8 @@ func TestDockerActions(t *testing.T) {
 		return
 	}
 
-	const inputDirectory = "./testfiles/pindockers/input"
-	const outputDirectory = "./testfiles/pindockers/output"
+	const inputDirectory = "../../../testfiles/pindockers/input"
+	const outputDirectory = "../../../testfiles/pindockers/output"
 	files, err := ioutil.ReadDir(inputDirectory)
 	if err != nil {
 		log.Fatal(err)

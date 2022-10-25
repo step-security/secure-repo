@@ -1,14 +1,21 @@
-package main
+package hardenrunner
 
 import (
 	"fmt"
 	"strings"
 
+	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	HardenRunnerActionPath = "step-security/harden-runner"
+	HardenRunnerActionName = "Harden Runner"
+)
+
 func AddAction(inputYaml, action string) (string, bool, error) {
-	workflow := Workflow{}
+	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
@@ -18,7 +25,7 @@ func AddAction(inputYaml, action string) (string, bool, error) {
 
 	for jobName, job := range workflow.Jobs {
 		// Skip adding action for reusable jobs
-		if IsCallingReusableWorkflow(job) {
+		if metadata.IsCallingReusableWorkflow(job) {
 			continue
 		}
 		alreadyPresent := false
@@ -49,9 +56,9 @@ func addAction(inputYaml, jobName, action string) (string, error) {
 		return "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	jobNode := iterateNode(&t, jobName, "!!map", 0)
+	jobNode := permissions.IterateNode(&t, jobName, "!!map", 0)
 
-	jobNode = iterateNode(&t, "steps", "!!seq", jobNode.Line)
+	jobNode = permissions.IterateNode(&t, "steps", "!!seq", jobNode.Line)
 
 	if jobNode == nil {
 		return "", fmt.Errorf("jobName %s not found in the input yaml", jobName)
