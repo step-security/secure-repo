@@ -1,7 +1,2 @@
 name: Fossa Action
-github-token:
-  action-input:
-    input: github-token
-    is-default: true
-  permissions:
-   
+# Only require contents read permissions which gets added at workflow level
