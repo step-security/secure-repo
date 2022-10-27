@@ -1,2 +1,8 @@
 name: 'Require Labels'
-#Note: GITHUB_TOKEN not used
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+    is-default: false
+  permissions:
+    issues: read
+    issues-reason: to list labels on a pr 
+    #Refrences:https://github.com/mnajdova/github-action-required-labels/blob/a9a8832111eee32b8ed1128950f8896ad3346584/index.js#L28
