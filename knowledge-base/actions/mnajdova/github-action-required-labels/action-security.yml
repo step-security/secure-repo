@@ -1,7 +1,6 @@
 name: 'Require Labels'
 github-token:
   environment-variable-name: GITHUB_TOKEN
-    is-default: false
   permissions:
     issues: read
     issues-reason: to list labels on a pr 
