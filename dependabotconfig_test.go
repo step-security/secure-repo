@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"path"
@@ -13,27 +14,51 @@ func TestConfigDependabotFile(t *testing.T) {
 	const outputDirectory = "./testfiles/dependabotfiles/output"
 
 	tests := []struct {
-		fileName  string
-		isChanged bool
+		fileName   string
+		Ecosystems []Ecosystem
+		isChanged  bool
 	}{
-		{fileName: "DependabotFile-without-github-action.yml", isChanged: true},
-		{fileName: "DependabotFile-with-github-action.yml", isChanged: false},
+		{
+			fileName:   "Without-github-action.yml",
+			Ecosystems: []Ecosystem{{"github-actions", "/", "daily"}, {"npm", "/app", "daily"}},
+			isChanged:  true,
+		},
+		{
+			fileName:   "With-github-action.yml",
+			Ecosystems: []Ecosystem{{"github-actions", "/", "daily"}},
+			isChanged:  false,
+		},
+		{
+			fileName:   "File-not-exit.yml",
+			Ecosystems: []Ecosystem{{"github-actions", "/", "daily"}},
+			isChanged:  true,
+		},
+		{
+			fileName:   "Same-ecosystem-different-directory.yml",
+			Ecosystems: []Ecosystem{{"github-actions", "/", "daily"}, {"npm", "/sample", "daily"}},
+			isChanged:  true,
+		},
 	}
 
 	for _, test := range tests {
-
+		var updateDependabotConfigRequest UpdateDependabotConfigRequest
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, test.fileName))
 		if err != nil {
 			log.Fatal(err)
 		}
+		updateDependabotConfigRequest.Content = string(input)
+		updateDependabotConfigRequest.Ecosystems = test.Ecosystems
+		inputRequest, err := json.Marshal(updateDependabotConfigRequest)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		output, err := UpdateDependabotConfig(string(input))
+		output, err := UpdateDependabotConfig(string(inputRequest))
 		if err != nil {
 			t.Fatalf("Error not expected: %s", err)
 		}
 
 		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, test.fileName))
-
 		if err != nil {
 			log.Fatal(err)
 		}
