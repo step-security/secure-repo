@@ -1,4 +1,4 @@
-package main
+package hardenrunner
 
 import (
 	"io/ioutil"
@@ -11,8 +11,8 @@ func TestAddAction(t *testing.T) {
 		inputYaml string
 		action    string
 	}
-	const inputDirectory = "./testfiles/addaction/input"
-	const outputDirectory = "./testfiles/addaction/output"
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
 	tests := []struct {
 		name        string
 		args        args

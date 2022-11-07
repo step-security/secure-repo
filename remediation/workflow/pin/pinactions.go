@@ -1,4 +1,4 @@
-package main
+package pin
 
 import (
 	"context"
@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v40/github"
+	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )
 
 func PinActions(inputYaml string) (string, bool, error) {
-	workflow := Workflow{}
+	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {

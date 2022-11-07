@@ -1,4 +1,4 @@
-package main
+package workflow
 
 import (
 	"io/ioutil"
@@ -36,7 +36,7 @@ func Test_getGitHubWorkflowContents(t *testing.T) {
 			}
 		  }`))
 
-	expectedOutput, err := ioutil.ReadFile("./testfiles/workflow-expected.yml")
+	expectedOutput, err := ioutil.ReadFile("../../testfiles/workflow-expected.yml")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package main
+package docker
 
 import (
 	"io/ioutil"
@@ -9,12 +9,12 @@ import (
 	"github.com/jarcoal/httpmock"
 )
 
-var resp = httpmock.File("./testfiles/dockerfiles/response.json").String()
+var resp = httpmock.File("../../testfiles/dockerfiles/response.json").String()
 
 func TestSecureDockerFile(t *testing.T) {
 
-	const inputDirectory = "./testfiles/dockerfiles/input"
-	const outputDirectory = "./testfiles/dockerfiles/output"
+	const inputDirectory = "../../testfiles/dockerfiles/input"
+	const outputDirectory = "../../testfiles/dockerfiles/output"
 	// NOTE: http mocking is not working,
 	// need to investigate this issue
 	httpmock.Activate()

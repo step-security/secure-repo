@@ -1,4 +1,4 @@
-package main
+package permissions
 
 func removeDuplicates(strSlice []string) []string {
 	allKeys := make(map[string]bool)

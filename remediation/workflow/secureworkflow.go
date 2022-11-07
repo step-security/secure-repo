@@ -1,16 +1,15 @@
-package main
+package workflow
 
 import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/step-security/secure-workflows/remediation/workflow/hardenrunner"
+	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
+	"github.com/step-security/secure-workflows/remediation/workflow/pin"
 )
 
-const (
-	HardenRunnerActionPathWithTag = "step-security/harden-runner@v1"
-	HardenRunnerActionPath        = "step-security/harden-runner"
-	HardenRunnerActionName        = "Harden Runner"
-)
+const HardenRunnerActionPathWithTag = "step-security/harden-runner@v1"
 
-func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*SecureWorkflowReponse, error) {
+func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*permissions.SecureWorkflowReponse, error) {
 	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
 	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
 	ignoreMissingKBs := false
@@ -35,16 +34,16 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addProjectComment = false
 	}
 
-	secureWorkflowReponse := &SecureWorkflowReponse{FinalOutput: inputYaml, OriginalInput: inputYaml}
+	secureWorkflowReponse := &permissions.SecureWorkflowReponse{FinalOutput: inputYaml, OriginalInput: inputYaml}
 	var err error
 	if addPermissions {
-		secureWorkflowReponse, err = AddJobLevelPermissions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse, err = permissions.AddJobLevelPermissions(secureWorkflowReponse.FinalOutput)
 		secureWorkflowReponse.OriginalInput = inputYaml
 		if err != nil {
 			return nil, err
 		} else {
-			if !secureWorkflowReponse.HasErrors || shouldAddWorkflowLevelPermissions(secureWorkflowReponse.JobErrors) {
-				secureWorkflowReponse.FinalOutput, err = AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput, addProjectComment)
+			if !secureWorkflowReponse.HasErrors || permissions.ShouldAddWorkflowLevelPermissions(secureWorkflowReponse.JobErrors) {
+				secureWorkflowReponse.FinalOutput, err = permissions.AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput, addProjectComment)
 				if err != nil {
 					secureWorkflowReponse.HasErrors = true
 				} else {
@@ -64,13 +63,13 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if addHardenRunner {
-		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag)
+		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag)
 	}
 
 	if pinActions {
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, _ = PinActions(secureWorkflowReponse.FinalOutput)
-		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = PinDocker(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker
 	}
 
@@ -79,26 +78,4 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
 	return secureWorkflowReponse, nil
-}
-
-func shouldAddWorkflowLevelPermissions(jobErrors []JobError) bool {
-	if len(jobErrors) == 0 {
-		// if there are no job errors, there must have been workflow level errors,
-		// else this method would not have been called
-		// so we do not add workflow level permissions
-		return false
-	}
-	for _, jobError := range jobErrors {
-		for _, eachJobError := range jobError.Errors {
-			if eachJobError != errorAlreadyHasPermissions {
-				// if any of the errors is not errorAlreadyHasPermissions
-				// we do not add workflow level permissions
-				return false
-			}
-		}
-	}
-
-	// if there were job errors and all of them were errorAlreadyHasPermissions
-	// we can add workflow level permissions
-	return true
 }

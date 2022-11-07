@@ -1,4 +1,4 @@
-package main
+package permissions
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/PaesslerAG/gval"
 	"github.com/generikvault/gvalstrings"
+	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
 	"gopkg.in/yaml.v3"
 )
 
@@ -69,16 +70,16 @@ const (
 	statuses_write            = "statuses: write"
 )
 
-func alreadyHasJobPermissions(job Job) bool {
+func alreadyHasJobPermissions(job metadata.Job) bool {
 	return job.Permissions.IsSet
 }
 
-func alreadyHasWorkflowPermissions(workflow Workflow) bool {
+func alreadyHasWorkflowPermissions(workflow metadata.Workflow) bool {
 	return workflow.Permissions.IsSet
 }
 
 func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (string, error) {
-	workflow := Workflow{}
+	workflow := metadata.Workflow{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
@@ -141,7 +142,7 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 
 func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 
-	workflow := Workflow{}
+	workflow := metadata.Workflow{}
 	errors := make(map[string][]string)
 	//fixes := make(map[string]string)
 	fixWorkflowPermsReponse := &SecureWorkflowReponse{}
@@ -173,7 +174,7 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			continue
 		}
 
-		if IsCallingReusableWorkflow(job) {
+		if metadata.IsCallingReusableWorkflow(job) {
 			fixWorkflowPermsReponse.HasErrors = true
 			errors[jobName] = append(errors[jobName], fmt.Sprintf(errorReusableWorkflow, job.Uses))
 			continue
@@ -238,7 +239,7 @@ func isGitHubToken(literal string) bool {
 	return false
 }
 
-func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error) {
+func (jobState *JobState) getPermissionsForAction(action metadata.Step) ([]string, error) {
 	permissions := []string{}
 	atIndex := strings.Index(action.Uses, "@")
 
@@ -266,7 +267,7 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 
 	actionKey := action.Uses[0:atIndex]
 
-	actionMetadata, err := GetActionKnowledgeBase(actionKey)
+	actionMetadata, err := metadata.GetActionKnowledgeBase(actionKey)
 
 	if err != nil {
 		jobState.MissingActions = append(jobState.MissingActions, action.Uses)
@@ -304,7 +305,7 @@ func (jobState *JobState) getPermissionsForAction(action Step) ([]string, error)
 	return permissions, nil
 }
 
-func evaluateExpression(expression string, action Step) bool {
+func evaluateExpression(expression string, action metadata.Step) bool {
 	vars := make(map[string]interface{})
 	vars["with"] = action.With
 
@@ -317,7 +318,7 @@ func evaluateExpression(expression string, action Step) bool {
 		gvalstrings.SingleQuoted(),
 		gval.Function("contains", func(args ...interface{}) (interface{}, error) {
 			switch v := args[0].(type) {
-			case With:
+			case metadata.With:
 				inputMap := v
 				key := args[1].(string)
 				_, found := inputMap[key]
@@ -340,10 +341,10 @@ type JobState struct {
 	WorkflowEnv       map[string]string // map of workflow level environment variables
 	MissingActions    []string
 	Errors            []error
-	ActionPermissions *ActionPermissions
+	ActionPermissions *metadata.ActionPermissions
 }
 
-func evaluateEnvironmentVariables(step Step) string {
+func evaluateEnvironmentVariables(step metadata.Step) string {
 	keyToEvaluate := ""
 	run := step.Run
 	for key, value := range step.Env {
@@ -366,7 +367,7 @@ type Permission struct {
 	reason     string
 }
 
-func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, error) {
+func (jobState *JobState) getPermissionsForRunStep(step metadata.Step) ([]Permission, error) {
 	permissions := []Permission{}
 
 	runStep := evaluateEnvironmentVariables(step)
@@ -488,7 +489,7 @@ func (jobState *JobState) getPermissionsForRunStep(step Step) ([]Permission, err
 	return permissions, nil
 }
 
-func (jobState *JobState) getPermissions(steps []Step) ([]string, error) {
+func (jobState *JobState) getPermissions(steps []metadata.Step) ([]string, error) {
 	permissions := []string{}
 
 	for _, step := range steps {
@@ -594,7 +595,7 @@ func addPermissions(inputYaml string, jobName string, permissions []string) (str
 		return "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	jobNode := iterateNode(&t, jobName, "!!map", 0)
+	jobNode := IterateNode(&t, jobName, "!!map", 0)
 
 	if jobNode == nil {
 		return "", fmt.Errorf("jobName %s not found in the input yaml", jobName)
@@ -624,7 +625,7 @@ func addPermissions(inputYaml string, jobName string, permissions []string) (str
 	return strings.Join(output, "\n"), nil
 }
 
-func iterateNode(node *yaml.Node, identifier, tag string, minLine int) *yaml.Node {
+func IterateNode(node *yaml.Node, identifier, tag string, minLine int) *yaml.Node {
 	returnNode := false
 	for _, n := range node.Content {
 		if n.Value == identifier {
@@ -639,11 +640,33 @@ func iterateNode(node *yaml.Node, identifier, tag string, minLine int) *yaml.Nod
 			}
 		}
 		if len(n.Content) > 0 {
-			ac_node := iterateNode(n, identifier, tag, minLine)
+			ac_node := IterateNode(n, identifier, tag, minLine)
 			if ac_node != nil {
 				return ac_node
 			}
 		}
 	}
 	return nil
+}
+
+func ShouldAddWorkflowLevelPermissions(jobErrors []JobError) bool {
+	if len(jobErrors) == 0 {
+		// if there are no job errors, there must have been workflow level errors,
+		// else this method would not have been called
+		// so we do not add workflow level permissions
+		return false
+	}
+	for _, jobError := range jobErrors {
+		for _, eachJobError := range jobError.Errors {
+			if eachJobError != errorAlreadyHasPermissions {
+				// if any of the errors is not errorAlreadyHasPermissions
+				// we do not add workflow level permissions
+				return false
+			}
+		}
+	}
+
+	// if there were job errors and all of them were errorAlreadyHasPermissions
+	// we can add workflow level permissions
+	return true
 }
