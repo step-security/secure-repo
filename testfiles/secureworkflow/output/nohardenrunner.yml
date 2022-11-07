@@ -14,8 +14,8 @@ jobs:
       statuses: write  # for github/super-linter to mark status of each linter run
     runs-on: ubuntu-latest  
     steps:
-      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9
-      - uses: github/super-linter@34b2f8032d759425f6b42ea2e52231b33ae05401
+      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1
+      - uses: github/super-linter@34b2f8032d759425f6b42ea2e52231b33ae05401 # v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISABLE_ERRORS: true

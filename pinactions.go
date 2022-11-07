@@ -67,7 +67,7 @@ func pinAction(action, jobName, inputYaml string) (string, bool) {
 		return inputYaml, updated
 	}
 
-	pinnedAction := fmt.Sprintf("%s@%s", leftOfAt[0], commitSHA)
+	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
 	updated = !strings.EqualFold(action, pinnedAction)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
 	return inputYaml, updated
