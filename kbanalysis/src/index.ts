@@ -28,7 +28,7 @@ try{
         const status = resp.status;
         if (status === 200){
             for(let issue of resp.data){
-                issues.push(issue.number);
+                issues.push({title:issue.title, number:issue.number});
             }
         }
 

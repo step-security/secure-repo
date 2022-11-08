@@ -7,25 +7,45 @@ export async function handleKBIssue(
   octokit: Octokit & Api,
   owner,
   repo,
-  issue: number
+  issue: {title:string, number:number}
 ) {
-  let analysis = await getAnalysis(octokit, owner, repo, issue);
-  core.info(`Analysis For ${issue}:\n ${analysis}`)
+  let comment = await prepareComment(octokit, owner, repo, issue);
+  core.info(`Analysis For ${issue}:\n ${comment}`)
 }
 
-async function getAnalysis(client: Octokit & Api, owner, repo, issue: number) {
+
+
+function createIssueCommentBody(data: {title:string, body:string}){
+    let output = []
+    output.push(`- [ ] ${data.title}`)
+    let new_body = data.body.split("\n")
+    output.push("  <details>")
+    output.push("  <summary>Analysis</summary")
+    for(let line of new_body){
+        output.push(`  ${line}`)
+    }
+    output.push("  </details>")
+    return output.join("\n")
+
+}
+
+async function prepareComment(client: Octokit & Api, owner, repo, issue: {title:string, number:number}) {
   let resp = await client.rest.issues.listComments({
     owner: owner,
     repo: repo,
-    issue_number: issue,
+    issue_number: issue.number,
   });
 
   if(resp.status === 200){
     if(resp.data.length > 0){
-        return resp.data[0].body
+
+        let body = resp.data[0].body
+        return createIssueCommentBody({title:issue.title, body:body});
+        
     }
   }
   
   return "not found"
 
 }
+
