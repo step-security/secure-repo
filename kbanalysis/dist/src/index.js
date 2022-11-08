@@ -8330,10 +8330,9 @@ try {
     const event = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.eventName;
     if (event === "workflow_dispatch" || event === "schedule") {
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Launched by ${event}`);
-        const storage_issue = 86;
         const label = "knowledge-base";
-        const owner = "step-security";
-        const repo = "secure-workflows";
+        const owner = "h0x0er";
+        const repo = "kb_setup";
         let issues = [];
         const resp = await client.rest.issues.listForRepo({ owner: owner, repo: repo, labels: label, state: "open", per_page: 100 });
         const status = resp.status;
@@ -8342,8 +8341,10 @@ try {
                 issues.push({ title: issue.title, number: issue.number });
             }
         }
-        for (let issue of issues) {
-            await (0,_issues_util__WEBPACK_IMPORTED_MODULE_4__/* .handleKBIssue */ .A)(client, owner, repo, issue);
+        if (issues.length > 0) {
+            for (let issue of issues) {
+                await (0,_issues_util__WEBPACK_IMPORTED_MODULE_4__/* .handleKBIssue */ .A)(client, owner, repo, issue);
+            }
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to list KB issues`);
         (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
@@ -8522,17 +8523,53 @@ __webpack_handle_async_dependencies__();
 /* harmony export */ });
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2619);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var process__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(7282);
+/* harmony import */ var process__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(process__WEBPACK_IMPORTED_MODULE_1__);
+
 
 async function handleKBIssue(octokit, owner, repo, issue) {
+    const storage_issue = 86;
+    const comment_id = 1306827650; // TODO: change this id
     let comment = await prepareComment(octokit, owner, repo, issue);
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Analysis For ${issue}:\n ${comment}`);
+    let resp = await octokit.rest.issues.getComment({
+        owner: owner,
+        repo: repo,
+        comment_id: comment_id,
+    });
+    if (resp.status == 200) {
+        let old_body = resp.data.body;
+        let new_body = old_body + comment;
+        let resp2 = await octokit.rest.issues.updateComment({
+            owner: owner,
+            repo: repo,
+            comment_id: comment_id,
+            body: new_body,
+        });
+        if (resp2.status !== 200) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to add: ${issue.number} in the tracking comment`);
+        }
+        else {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Added ${issue.title} in tracking comment.`);
+            let resp3 = await octokit.rest.issues.update({ owner: owner, repo: repo, issue_number: issue.number, state: "closed" });
+            if (resp3.status === 200) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Closed Issue ${issue.number}`);
+            }
+            else {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to close issue ${issue.number}`);
+            }
+        }
+        (0,process__WEBPACK_IMPORTED_MODULE_1__.exit)(0);
+    }
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to handle: ${issue.title} `);
+    (0,process__WEBPACK_IMPORTED_MODULE_1__.exit)(0);
 }
 function createIssueCommentBody(data) {
     let output = [];
-    output.push(`- [ ] ${data.title}`);
+    output.push(`\n- [ ] ${data.title}`);
     let new_body = data.body.split("\n");
     output.push("  <details>");
-    output.push("  <summary>Analysis</summary");
+    output.push("  <summary>Analysis</summary\n");
     for (let line of new_body) {
         output.push(`  ${line}`);
     }

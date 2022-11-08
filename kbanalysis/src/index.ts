@@ -19,10 +19,10 @@ try{
 
     if(event === "workflow_dispatch" || event === "schedule"){
         core.info(`[!] Launched by ${event}`)
-        const storage_issue = 86;
+        
         const label = "knowledge-base";
-        const owner = "step-security"
-        const repo = "secure-workflows"
+        const owner = "h0x0er"
+        const repo = "kb_setup"
         let issues = [];
         const resp = await client.rest.issues.listForRepo({owner:owner, repo:repo, labels: label, state: "open", per_page:100});
         const status = resp.status;
@@ -31,10 +31,12 @@ try{
                 issues.push({title:issue.title, number:issue.number});
             }
         }
-
-        for(let issue of issues){
-            await handleKBIssue(client, owner, repo, issue);
+        if(issues.length > 0){
+            for(let issue of issues){
+                await handleKBIssue(client, owner, repo, issue);
+            }
         }
+        
         
         core.info(`[X] Unable to list KB issues`)
         exit(0);
