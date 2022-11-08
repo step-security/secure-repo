@@ -8322,19 +8322,28 @@ __nccwpck_require__.r(__webpack_exports__);
 
 
 try {
-    const issue_id = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("issue-id");
     const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("github-token");
+    const client = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(token); // authenticated octokit
     const repos = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo; // context repo
     const event = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.eventName;
-    if (event === "schedule") {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("[!] Launched by schedule");
+    if (event === "workflow_dispatch" || event === "schedule") {
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Launched by ${event}`);
+        const storage_issue = 86;
+        const label = "knowledge-base";
+        const owner = "step-security";
+        const repo = "secure-workflows";
+        let issues = [];
+        const resp = await client.rest.issues.listForRepo({ owner: owner, repo: repo, labels: label, state: "open", per_page: 100 });
+        const status = resp.status;
+        if (status === 200) {
+            for (let issue of resp.data) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[Y] ${issue.title}`);
+                issues.push(issue.number);
+            }
+        }
         (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
     }
-    if (event === "workflow_dispatch") {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("[!] Launched by workflow dispatch");
-        (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
-    }
-    const client = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(token); // authenticated octokit
+    const issue_id = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("issue-id");
     const resp = await client.rest.issues.get({ issue_number: Number(issue_id), owner: repos.owner, repo: repos.repo }); // target issue
     const title = resp.data.title; // extracting title of the issue.
     if (!(0,_utils__WEBPACK_IMPORTED_MODULE_5__/* .isKBIssue */ .yx)(title)) {
