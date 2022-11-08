@@ -8569,7 +8569,7 @@ function createIssueCommentBody(data) {
     output.push(`\n- [ ] ${data.title}`);
     let new_body = data.body.split("\n");
     output.push("  <details>");
-    output.push("  <summary>Analysis</summary\n");
+    output.push("  <summary>Analysis</summary>\n");
     for (let line of new_body) {
         output.push(`  ${line}`);
     }
@@ -8588,7 +8588,7 @@ async function prepareComment(client, owner, repo, issue) {
             return createIssueCommentBody({ title: issue.title, body: body });
         }
     }
-    return "not found";
+    return createIssueCommentBody({ title: issue.title, body: "no analysis" });
 }
 
 

@@ -54,7 +54,7 @@ function createIssueCommentBody(data: { title: string; body: string }) {
   output.push(`\n- [ ] ${data.title}`);
   let new_body = data.body.split("\n");
   output.push("  <details>");
-  output.push("  <summary>Analysis</summary\n");
+  output.push("  <summary>Analysis</summary>\n");
   for (let line of new_body) {
     output.push(`  ${line}`);
   }
@@ -81,5 +81,5 @@ async function prepareComment(
     }
   }
 
-  return "not found";
+  return createIssueCommentBody({ title: issue.title, body: "no analysis" });
 }
