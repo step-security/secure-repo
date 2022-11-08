@@ -2,6 +2,7 @@ import * as core from "@actions/core"
 import * as github from "@actions/github"
 import { existsSync, fstat, readFileSync } from "fs";
 import { exit } from "process";
+import { handleKBIssue } from "./issues-util";
 import { createPR } from "./pr_utils";
 import { isKBIssue, getAction, getActionYaml, findToken, printArray, comment, getRunsON, getReadme, checkDependencies, findEndpoints, permsToString, isValidLang, actionSecurity, getTokenInput, normalizePerms, isPaused} from "./utils"
 
@@ -27,12 +28,15 @@ try{
         const status = resp.status;
         if (status === 200){
             for(let issue of resp.data){
-                core.info(`[Y] ${issue.title}`)
                 issues.push(issue.number);
             }
         }
-        
 
+        for(let issue of issues){
+            await handleKBIssue(client, owner, repo, issue);
+        }
+        
+        core.info(`[X] Unable to list KB issues`)
         exit(0);
     }
 
