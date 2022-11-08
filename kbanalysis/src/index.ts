@@ -12,7 +12,14 @@ try{
     
     const repos = github.context.repo // context repo
     const event = github.context.eventName
-
+    if(event === "schedule"){
+        core.info("[!] Launched by schedule")
+        exit(0);
+    }
+    if(event === "workflow_dispatch"){
+        core.info("[!] Launched by workflow dispatch")
+        exit(0);
+    }
     const client = github.getOctokit(token) // authenticated octokit
     const resp = await client.rest.issues.get({issue_number: Number(issue_id ), owner: repos.owner, repo:repos.repo}) // target issue
 
