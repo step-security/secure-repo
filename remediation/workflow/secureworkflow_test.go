@@ -20,7 +20,7 @@ func TestSecureWorkflow(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/commits/v1",
 		httpmock.NewStringResponder(200, `544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/commits/v1",
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/commits/v2",
 		httpmock.NewStringResponder(200, `7206db2ec98c5538323a6d70e51f965d55c11c87`))
 
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/super-linter/commits/v3",
