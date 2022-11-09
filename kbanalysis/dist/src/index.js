@@ -8331,8 +8331,8 @@ try {
     if (event === "workflow_dispatch" || event === "schedule") {
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Launched by ${event}`);
         const label = "knowledge-base";
-        const owner = "h0x0er";
-        const repo = "kb_setup";
+        const owner = "step-security";
+        const repo = "secure-workflows";
         let issues = [];
         const resp = await client.rest.issues.listForRepo({ owner: owner, repo: repo, labels: label, state: "open", per_page: 100 });
         const status = resp.status;
@@ -8528,8 +8528,8 @@ __webpack_handle_async_dependencies__();
 
 
 async function handleKBIssue(octokit, owner, repo, issue) {
-    const storage_issue = 86;
-    const comment_id = 1306827650; // TODO: change this id
+    const storage_issue = 1380;
+    const comment_id = 1308209074;
     let comment = await prepareComment(octokit, owner, repo, issue);
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Analysis For ${issue}:\n ${comment}`);
     let resp = await octokit.rest.issues.getComment({
@@ -8551,7 +8551,12 @@ async function handleKBIssue(octokit, owner, repo, issue) {
         }
         else {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Added ${issue.title} in tracking comment.`);
-            let resp3 = await octokit.rest.issues.update({ owner: owner, repo: repo, issue_number: issue.number, state: "closed" });
+            let resp3 = await octokit.rest.issues.update({
+                owner: owner,
+                repo: repo,
+                issue_number: issue.number,
+                state: "closed",
+            });
             if (resp3.status === 200) {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Closed Issue ${issue.number}`);
             }
@@ -8566,7 +8571,7 @@ async function handleKBIssue(octokit, owner, repo, issue) {
 }
 function createIssueCommentBody(data) {
     let output = [];
-    output.push(`\n- [ ] ${data.title}`);
+    output.push(`\n- [ ] ${data.title.substring(5)}`);
     let new_body = data.body.split("\n");
     output.push("  <details>");
     output.push("  <summary>Analysis</summary>\n");
@@ -8587,8 +8592,17 @@ async function prepareComment(client, owner, repo, issue) {
             let body = resp.data[0].body;
             return createIssueCommentBody({ title: issue.title, body: body });
         }
+        else {
+            return createIssueCommentBody({
+                title: issue.title,
+                body: "no analysis found",
+            });
+        }
     }
-    return createIssueCommentBody({ title: issue.title, body: "no analysis" });
+    return createIssueCommentBody({
+        title: issue.title,
+        body: "unable to fetch analysis",
+    });
 }
 
 

@@ -21,8 +21,8 @@ try{
         core.info(`[!] Launched by ${event}`)
         
         const label = "knowledge-base";
-        const owner = "h0x0er"
-        const repo = "kb_setup"
+        const owner = "step-security"
+        const repo = "secure-workflows"
         let issues = [];
         const resp = await client.rest.issues.listForRepo({owner:owner, repo:repo, labels: label, state: "open", per_page:100});
         const status = resp.status;
