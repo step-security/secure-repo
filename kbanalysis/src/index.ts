@@ -33,7 +33,8 @@ try{
         }
         if(issues.length > 0){
             for(let issue of issues){
-                await handleKBIssue(client, owner, repo, issue);
+                core.info(issue);
+                // await handleKBIssue(client, owner, repo, issue);
             }
         }
         
