@@ -8345,6 +8345,11 @@ try {
             for (let issue of issues) {
                 const t = await (0,_issues_util__WEBPACK_IMPORTED_MODULE_4__/* .handleKBIssue */ .A)(client, owner, repo, issue);
             }
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Moved ${issues.length} issues`);
+            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
+        }
+        else {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("No KB issues found");
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to list KB issues`);
         (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
@@ -8528,8 +8533,7 @@ async function handleKBIssue(octokit, owner, repo, issue) {
     const storage_issue = 1380;
     const comment_id = 1308209074;
     let comment = await prepareComment(octokit, owner, repo, issue);
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Analysis For ${issue.title}:\n ${comment}`);
-    return "test_return";
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Moving ${issue.title}`);
     let resp = await octokit.rest.issues.getComment({
         owner: owner,
         repo: repo,
@@ -8561,7 +8565,7 @@ async function handleKBIssue(octokit, owner, repo, issue) {
             }
             else {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to close issue ${issue.number}`);
-                return "error while closing issue";
+                return "error: unable to close issue";
             }
         }
     }
