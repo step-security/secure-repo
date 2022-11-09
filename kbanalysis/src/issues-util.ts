@@ -12,9 +12,8 @@ export async function handleKBIssue(
   const storage_issue = 1380;
   const comment_id = 1308209074;
   let comment = await prepareComment(octokit, owner, repo, issue);
-  core.info(`Analysis For ${issue.title}:\n ${comment}`);
+  core.info(`[!] Moving ${issue.title}`);
 
-  return "test_return"
   let resp = await octokit.rest.issues.getComment({
     owner: owner,
     repo: repo,
@@ -43,13 +42,12 @@ export async function handleKBIssue(
       });
       if (resp3.status === 200) {
         core.info(`[!] Closed Issue ${issue.number}`);
-        return "success"
+        return "success";
       } else {
         core.info(`[X] Unable to close issue ${issue.number}`);
-        return "error while closing issue"
+        return "error: unable to close issue";
       }
     }
-
   }
   core.info(`[X] Unable to handle: ${issue.title} `);
   return "error: unable to get comment";
