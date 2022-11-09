@@ -12,8 +12,8 @@ export async function handleKBIssue(
   const storage_issue = 1380;
   const comment_id = 1308209074;
   let comment = await prepareComment(octokit, owner, repo, issue);
-  core.info(`Analysis For ${issue}:\n ${comment}`);
-
+  core.info(`Analysis For ${issue.title}:\n ${comment}`);
+  exit(0)
   let resp = await octokit.rest.issues.getComment({
     owner: owner,
     repo: repo,
