@@ -7,7 +7,7 @@ import (
 	"github.com/step-security/secure-workflows/remediation/workflow/pin"
 )
 
-const HardenRunnerActionPathWithTag = "step-security/harden-runner@v1"
+const HardenRunnerActionPathWithTag = "step-security/harden-runner@v2"
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*permissions.SecureWorkflowReponse, error) {
 	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
