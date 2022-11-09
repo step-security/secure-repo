@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	HardenRunnerActionPathWithTag = "step-security/harden-runner@v1"
+	HardenRunnerActionPathWithTag = "step-security/harden-runner@v2"
 	HardenRunnerActionPath        = "step-security/harden-runner"
 	HardenRunnerActionName        = "Harden Runner"
 )
