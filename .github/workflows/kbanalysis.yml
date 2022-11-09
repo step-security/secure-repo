@@ -2,9 +2,13 @@ name: KBAnalysis
 on:
   issues:
     types:
-     - opened
-     - reopened
-     - closed
+      - opened
+      - reopened
+      - closed
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
 permissions:
   contents: read
 
@@ -15,7 +19,7 @@ jobs:
       issues: write
       contents: write
       pull-requests: write
-    
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
@@ -25,7 +29,7 @@ jobs:
       - uses: actions/checkout@d0651293c4a5a52e711f25b41b05b2212f385d28
         with:
           repository: step-security/secure-workflows
-    
+
       - name: KBAnalysis
         uses: step-security/secure-workflows/kbanalysis@03a07b65449688ebe9e517e4446b9f323bb194a0
         with:
