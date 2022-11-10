@@ -8343,8 +8343,13 @@ try {
         }
         if (issues.length > 0) {
             for (let issue of issues) {
-                await (0,_issues_util__WEBPACK_IMPORTED_MODULE_4__/* .handleKBIssue */ .A)(client, owner, repo, issue);
+                const t = await (0,_issues_util__WEBPACK_IMPORTED_MODULE_4__/* .handleKBIssue */ .A)(client, owner, repo, issue);
             }
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Moved ${issues.length} issues`);
+            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
+        }
+        else {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("No KB issues found");
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to list KB issues`);
         (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
@@ -8523,15 +8528,12 @@ __webpack_handle_async_dependencies__();
 /* harmony export */ });
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2619);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var process__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(7282);
-/* harmony import */ var process__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(process__WEBPACK_IMPORTED_MODULE_1__);
-
 
 async function handleKBIssue(octokit, owner, repo, issue) {
     const storage_issue = 1380;
     const comment_id = 1308209074;
     let comment = await prepareComment(octokit, owner, repo, issue);
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Analysis For ${issue}:\n ${comment}`);
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Moving ${issue.title}`);
     let resp = await octokit.rest.issues.getComment({
         owner: owner,
         repo: repo,
@@ -8559,15 +8561,16 @@ async function handleKBIssue(octokit, owner, repo, issue) {
             });
             if (resp3.status === 200) {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Closed Issue ${issue.number}`);
+                return "success";
             }
             else {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to close issue ${issue.number}`);
+                return "error: unable to close issue";
             }
         }
-        (0,process__WEBPACK_IMPORTED_MODULE_1__.exit)(0);
     }
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[X] Unable to handle: ${issue.title} `);
-    (0,process__WEBPACK_IMPORTED_MODULE_1__.exit)(0);
+    return "error: unable to get comment";
 }
 function createIssueCommentBody(data) {
     let output = [];

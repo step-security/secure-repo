@@ -33,10 +33,13 @@ try{
         }
         if(issues.length > 0){
             for(let issue of issues){
-                await handleKBIssue(client, owner, repo, issue);
+                const t = await handleKBIssue(client, owner, repo, issue);
             }
+            core.info(`[!] Moved ${issues.length} issues`)
+            exit(0);
+        }else{
+            core.info("No KB issues found");
         }
-        
         
         core.info(`[X] Unable to list KB issues`)
         exit(0);
