@@ -47,7 +47,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-containerregistry v0.8.0
 	github.com/google/go-github/v40 v40.0.0
-	github.com/jarcoal/httpmock v1.1.0
+	github.com/jarcoal/httpmock v1.2.0
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/lestrrat-go/jwx v1.2.25
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
