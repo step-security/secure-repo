@@ -1,22 +1,19 @@
+<p align="center"><img src="images/banner.png" height="80" /></p>
+
+<h1 align="center">Secure Workflows</h1>
+
 <p align="center">
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
-  <img src="images/banner.png" width="400">
-</picture>
+Secure GitHub Actions CI/CD workflows via automated remediations
 </p>
 
 <div align="center">
 
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-workflows)
+[![Go Report Card](https://goreportcard.com/badge/github.com/step-security/secure-workflows)](https://goreportcard.com/report/github.com/step-security/secure-workflows)
 [![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/step-security/secure-workflows/main/LICENSE)
 
 </div>
-
-<p align="center">
-Secure GitHub Actions CI/CD workflows via automated remediations
-</p>
 
 <p align="center">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
@@ -24,8 +21,6 @@ Secure GitHub Actions CI/CD workflows via automated remediations
 
 <h3>
   <a href="#quickstart">Quickstart</a>
-  <span> • </span>
-   <a href="#impact">Impact</a>
   <span> • </span>
   <a href="#functionality-overview">Functionality Overview</a> 
    <span> • </span>
@@ -56,14 +51,9 @@ To secure GitHub Actions workflows using a pull request:
 
 To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _cloudformation/resources.yml_ CloudFormation templates in your AWS account. You can take a look at _.github/workflows/release.yml_ for reference.
 
-## Impact
-
-- SecureWorkflows has been used to [secure 30 of the top 100 critical open source projects](https://github.com/step-security/secure-workflows/issues/462)
-- SecureWorkflows was demoed at `SupplyChainSecurityCon` at [Open Source Summit North America 2022](http://sched.co/11Pvu)
-
 ## Functionality Overview
 
-SecureWorkflows API
+Secure Workflows
 
 - Takes in a GitHub Actions workflow YAML file as an input
 - Returns a transformed workflow file with fixes applied
