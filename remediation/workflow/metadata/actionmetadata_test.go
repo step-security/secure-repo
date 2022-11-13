@@ -1,4 +1,4 @@
-package main
+package metadata
 
 import (
 	"context"
@@ -20,7 +20,7 @@ func TestKnowledgeBase(t *testing.T) {
 	kbFolder := os.Getenv("KBFolder")
 
 	if kbFolder == "" {
-		kbFolder = "knowledge-base/actions"
+		kbFolder = "../../../knowledge-base/actions"
 	}
 
 	lintIssues := []string{}
@@ -181,8 +181,8 @@ func TestKnowledgeBase(t *testing.T) {
 
 func doesActionRepoExist(filePath string) bool {
 	splitOnSlash := strings.Split(filePath, "/")
-	owner := splitOnSlash[2]
-	repo := splitOnSlash[3]
+	owner := splitOnSlash[5]
+	repo := splitOnSlash[6]
 
 	PAT := os.Getenv("PAT")
 	if len(PAT) == 0 {
@@ -207,13 +207,13 @@ func doesActionRepoExist(filePath string) bool {
 	ref.Ref = *branch
 
 	// does the path to folder is correct for action repository
-	if len(splitOnSlash) > 5 {
-		folder := strings.Join(splitOnSlash[4:len(splitOnSlash)-1], "/")
+	if len(splitOnSlash) > 8 {
+		folder := strings.Join(splitOnSlash[7:len(splitOnSlash)-1], "/")
 		folder += "/action.yml"
 		_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 
 		if err != nil {
-			folder := strings.Join(splitOnSlash[4:len(splitOnSlash)-1], "/")
+			folder := strings.Join(splitOnSlash[7:len(splitOnSlash)-1], "/")
 			folder += "/action.yaml" // try out .yaml extension as well
 			_, _, _, err = client.Repositories.GetContents(context.Background(), owner, repo, folder, &ref)
 

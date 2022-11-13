@@ -1,16 +1,17 @@
-package main
+package permissions
 
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"strings"
 	"testing"
 )
 
 func TestAddJobLevelPermissions(t *testing.T) {
-	const inputDirectory = "./testfiles/joblevelpermskb/input"
-	const outputDirectory = "./testfiles/joblevelpermskb/output"
+	const inputDirectory = "../../../testfiles/joblevelpermskb/input"
+	const outputDirectory = "../../../testfiles/joblevelpermskb/output"
 	files, err := ioutil.ReadDir(inputDirectory)
 	if err != nil {
 		log.Fatal(err)
@@ -22,6 +23,8 @@ func TestAddJobLevelPermissions(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		os.Setenv("KBFolder", "../../../knowledge-base/actions")
 
 		fixWorkflowPermsResponse, err := AddJobLevelPermissions(string(input))
 		output := fixWorkflowPermsResponse.FinalOutput
@@ -97,8 +100,8 @@ func Test_addPermissions(t *testing.T) {
 }
 
 func TestAddWorkflowLevelPermissions(t *testing.T) {
-	const inputDirectory = "./testfiles/toplevelperms/input"
-	const outputDirectory = "./testfiles/toplevelperms/output"
+	const inputDirectory = "../../../testfiles/toplevelperms/input"
+	const outputDirectory = "../../../testfiles/toplevelperms/output"
 	files, err := ioutil.ReadDir(inputDirectory)
 	if err != nil {
 		log.Fatal(err)
