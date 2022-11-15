@@ -8541,6 +8541,11 @@ async function handleKBIssue(octokit, owner, repo, issue) {
     });
     if (resp.status == 200) {
         let old_body = resp.data.body;
+        let action_name = get_action(issue.title);
+        if (old_body.indexOf(action_name) >= 0) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] Action ${action_name} is already being tracked`);
+            return "Issue already being tracked";
+        }
         let new_body = old_body + comment;
         let resp2 = await octokit.rest.issues.updateComment({
             owner: owner,
@@ -8606,6 +8611,10 @@ async function prepareComment(client, owner, repo, issue) {
         title: issue.title,
         body: "unable to fetch analysis",
     });
+}
+function get_action(x) {
+    x = x.split(" ");
+    return x[6];
 }
 
 
