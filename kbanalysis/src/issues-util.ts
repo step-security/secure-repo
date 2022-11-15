@@ -1,7 +1,6 @@
 import { Octokit } from "@octokit/core";
 import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 import * as core from "@actions/core";
-import { exit } from "process";
 
 export async function handleKBIssue(
   octokit: Octokit & Api,
@@ -22,8 +21,13 @@ export async function handleKBIssue(
 
   if (resp.status == 200) {
     let old_body = resp.data.body;
-    let new_body = old_body + comment;
+    let action_name = get_action(issue.title);
+    if (old_body.indexOf(action_name) >= 0) {
+      core.info(`[!] Action ${action_name} is already being tracked`);
+      return "Issue already being tracked";
+    }
 
+    let new_body = old_body + comment;
     let resp2 = await octokit.rest.issues.updateComment({
       owner: owner,
       repo: repo,
@@ -94,4 +98,9 @@ async function prepareComment(
     title: issue.title,
     body: "unable to fetch analysis",
   });
+}
+
+function get_action(x) {
+  x = x.split(" ");
+  return x[6];
 }
