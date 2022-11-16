@@ -1,7 +1,6 @@
 import { Octokit } from "@octokit/core";
 import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 import * as core from "@actions/core";
-import { exit } from "process";
 
 export async function handleKBIssue(
   octokit: Octokit & Api,
@@ -22,8 +21,14 @@ export async function handleKBIssue(
 
   if (resp.status == 200) {
     let old_body = resp.data.body;
-    let new_body = old_body + comment;
+    let action_name = getAction(issue.title);
+    if (old_body.indexOf(action_name) >= 0) {
+      core.info(`[!] Action ${action_name} is already being tracked`);
+      let ret = await closeIssue(octokit, owner, repo, issue)
+      return ret;
+    }
 
+    let new_body = old_body + comment;
     let resp2 = await octokit.rest.issues.updateComment({
       owner: owner,
       repo: repo,
@@ -34,19 +39,8 @@ export async function handleKBIssue(
       core.info(`[X] Unable to add: ${issue.number} in the tracking comment`);
     } else {
       core.info(`[!] Added ${issue.title} in tracking comment.`);
-      let resp3 = await octokit.rest.issues.update({
-        owner: owner,
-        repo: repo,
-        issue_number: issue.number,
-        state: "closed",
-      });
-      if (resp3.status === 200) {
-        core.info(`[!] Closed Issue ${issue.number}`);
-        return "success";
-      } else {
-        core.info(`[X] Unable to close issue ${issue.number}`);
-        return "error: unable to close issue";
-      }
+      let ret = await closeIssue(octokit, owner, repo, issue)
+      return ret;
     }
   }
   core.info(`[X] Unable to handle: ${issue.title} `);
@@ -94,4 +88,25 @@ async function prepareComment(
     title: issue.title,
     body: "unable to fetch analysis",
   });
+}
+
+function getAction(x) {
+  x = x.split(" ");
+  return x[6];
+}
+
+async function closeIssue(octokit, owner, repo, issue) {
+  let resp3 = await octokit.rest.issues.update({
+    owner: owner,
+    repo: repo,
+    issue_number: issue.number,
+    state: "closed",
+  });
+  if (resp3.status === 200) {
+    core.info(`[!] Closed Issue ${issue.number}`);
+    return "success";
+  } else {
+    core.info(`[X] Unable to close issue ${issue.number}`);
+    return "error: unable to close issue";
+  }
 }
