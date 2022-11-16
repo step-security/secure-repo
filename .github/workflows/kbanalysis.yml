@@ -31,7 +31,7 @@ jobs:
           repository: step-security/secure-workflows
 
       - name: KBAnalysis
-        uses: step-security/secure-workflows/kbanalysis@438e8f844c8e38da5d72f8f1c5c76e4a1fe2dfe5
+        uses: step-security/secure-workflows/kbanalysis@9d85dcc91fadd9e87b427561d92e9fb82690940f
         with:
           github-token: ${{secrets.PAT }}
           issue-id: ${{ github.event.issue.number}}
