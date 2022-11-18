@@ -34,14 +34,14 @@ Secure GitHub Actions CI/CD workflows via automated remediations
 To secure GitHub Actions workflows using a pull request:
 
 - Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
-- Login using your GitHub Account (no need to install any App or grant `write` access)
-- View recommendations and click `Create pull request`. Here is a [sample pull request](https://github.com/Kapiche/cobertura-action/pull/60).
+- Log in using your GitHub Account (no need to install any App or grant `write` access)
+- View recommendations and click `Create pull request.` Here is an example pull request: https://github.com/electron/electron/pull/36343.
 
 ### Integration with OpenSSF Scorecard
 
 - Add [OpenSSF Scorecards](https://github.com/ossf/scorecard-action) starter workflow
 - View the Scorecard results in GitHub Code Scanning UI
-- Follow remediation tip that points to https://app.stepsecurity.io
+- Follow the remediation tip that points to https://app.stepsecurity.io
 
 <p align="center">
   <img src="images/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="600">
@@ -64,7 +64,7 @@ Secure Workflows
 #### Why is this needed?
 
 - The GITHUB_TOKEN is an automatically generated secret to make authenticated calls to the GitHub API
-- If the token is compromised, it can be abused to compromise your environment (e.g. to overwrite releases or source code). This will also impact everyone who use your software in their software supply chain.
+- If the token is compromised, it can be abused to compromise your environment (e.g., to overwrite releases or source code). This compromise will also impact everyone using your software in their supply chain.
 - To limit the damage, [GitHub recommends setting minimum token permissions for the GITHUB_TOKEN](https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/).
 
 #### Before and After the fix
@@ -78,14 +78,14 @@ In this pull request, minimum permissions are set automatically for the GITHUB_T
 #### How does SecureWorkflows fix this issue?
 
 - SecureWorkflows stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions)>)
-- It looks up the permissions needed by each Action in your workflow, and sums the permissions up to come up with a final recommendation
+- It looks up the permissions needed by each Action in your workflow and sums the permissions up to come up with a final recommendation
 - If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
 
 ### 2. Pin Actions to a full length commit SHA
 
 #### Why is this needed?
 
-- GitHub Action tags and Docker tags are mutatble. This poses a security risk
+- GitHub Action tags and Docker tags are mutable, which poses a security risk
 - If the tag changes you will not have a chance to review the change before it gets used
 - GitHub's Security Hardening for GitHub Actions guide [recommends pinning actions to full length commit for third party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions).
 
@@ -93,7 +93,7 @@ In this pull request, minimum permissions are set automatically for the GITHUB_T
 
 Before the fix, your workflow may look like this (use of `v1` and `latest` tags)
 
-After the fix, each Action and docker image will be pinned to an immutable checksum.
+After the fix, SecureWorkflows pins each Action and docker image to an immutable checksum.
 
 **Pull request example**: https://github.com/electron/electron/pull/36343
 
@@ -145,7 +145,7 @@ This pull request updates the Dependabot configuration.
 
 #### How does SecureWorkflows fix this issue?
 
-SecureWorkflows updates the `dependabot.yml` file to add missing ecosystems. As an example, if Dependabot configuration was already configured to update `npm` packages, but not `GitHub Actions`, it is updated to add `GitHub Actions` ecosystem as well.
+SecureWorkflows updates the `dependabot.yml` file to add missing ecosystems. For example, if the Dependabot configuration updates npm packages but not GitHub Actions, it is updated to add the GitHub Actions ecosystem.
 
 ## Contributing
 
