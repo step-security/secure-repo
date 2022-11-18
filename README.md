@@ -43,7 +43,7 @@ To secure GitHub Actions workflows using a pull request:
 - View the Scorecard results in GitHub Code Scanning UI
 - Follow remediation tip that points to https://app.stepsecurity.io
 
-<p align="left">
+<p align="center">
   <img src="images/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="600">
 </p>
 
@@ -73,7 +73,7 @@ Secure Workflows
 
 In this pull request, minimum permissions are set automatically for the GITHUB_TOKEN
 
-<p align="center"><img src="images/token-perm-example.png" width="600" /></p>
+<p align="center"><img src="images/token-perm-example.png" alt="Screenshot of token permissions set in a workflow" width="600" /></p>
 
 #### How does SecureWorkflows fix this issue?
 
@@ -99,7 +99,7 @@ After the fix, each Action and docker image will be pinned to an immutable check
 
 In this pull request, the workflow file has the GitHub Actions tags pinned automatically to their full-length commit SHA.
 
-<p align="center"><img src="images/pin-example.png" width="600" /></p>
+<p align="center"><img src="images/pin-example.png" alt="Screenshot of Action pinned to commit SHA" width="600" /></p>
 
 #### How does SecureWorkflows fix this issue?
 
@@ -118,7 +118,7 @@ In this pull request, the workflow file has the GitHub Actions tags pinned autom
 
 This pull request adds the Harden Runner GitHub Action to the workflow file.
 
-<p align="center"><img src="images/harden-runner-example.png" width="600" /></p>
+<p align="center"><img src="images/harden-runner-example.png" width="600" alt="Screenshot of Harden-Runner GitHub Action added to a workflow" /></p>
 
 #### How does SecureWorkflows fix this issue?
 
