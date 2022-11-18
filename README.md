@@ -69,40 +69,11 @@ Secure Workflows
 
 #### Before and After the fix
 
-Before the fix, your workflow may look like this (no permissions set)
+**Pull request example**: https://github.com/nginxinc/kubernetes-ingress/pull/3134
 
-```yaml
-jobs:
-  closeissue:
-    runs-on: ubuntu-latest
+In this pull request, minimum permissions are set automatically for the GITHUB_TOKEN
 
-    steps:
-      - name: Close Issue
-        uses: peter-evans/close-issue@v1
-        with:
-          issue-number: 1
-          comment: Auto-closing issue
-```
-
-After the fix, the workflow will have minimum permissions added for the GITHUB token.
-
-```yaml
-permissions:
-  contents: read
-
-jobs:
-  closeissue:
-    permissions:
-      issues: write # for peter-evans/close-issue to close issues
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Close Issue
-        uses: peter-evans/close-issue@v1
-        with:
-          issue-number: 1
-          comment: Auto-closing issue
-```
+<p align="center"><img src="images/token-perm-example.png"  /></p>
 
 #### How does SecureWorkflows fix this issue?
 
@@ -122,29 +93,13 @@ jobs:
 
 Before the fix, your workflow may look like this (use of `v1` and `latest` tags)
 
-```yaml
-jobs:
-  integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v1
-      - name: Integration test
-        uses: docker://ghcr.io/step-security/integration-test/int:latest
-```
-
 After the fix, each Action and docker image will be pinned to an immutable checksum.
 
-```yaml
-jobs:
-  integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9
-      - name: Integration test
-        uses: docker://ghcr.io/step-security/integration-test/int@sha256:1efef3bbdd297d1b321b9b4559092d3131961913bc68b7c92b681b4783d563f0
-```
+**Pull request example**: https://github.com/nginxinc/kubernetes-ingress/pull/3134
+
+In this pull request, the workflow file has the GitHub Actions tags pinned automatically to their full-length commit SHA.
+
+<p align="center"><img src="images/pin-example.png"  /></p>
 
 #### How does SecureWorkflows fix this issue?
 
@@ -159,40 +114,12 @@ jobs:
 
 #### Before and After the fix
 
-Before the fix, your workflow may look like this
+**Pull request example**: https://github.com/python-attrs/attrs/pull/1034
 
-```yaml
-jobs:
-  closeissue:
-    runs-on: ubuntu-latest
+This pull request adds the Harden Runner GitHub Action to the workflow file.
 
-    steps:
-      - name: Close Issue
-        uses: peter-evans/close-issue@v1
-        with:
-          issue-number: 1
-          comment: Auto-closing issue
-```
 
-After the fix, each workflow has the harden-runner Action added as the first step.
-
-```yaml
-jobs:
-  closeissue:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-
-      - name: Close Issue
-        uses: peter-evans/close-issue@v1
-        with:
-          issue-number: 1
-          comment: Auto-closing issue
-```
+<p align="center"><img src="images/harden-runner-example.png"  /></p>
 
 #### How does SecureWorkflows fix this issue?
 
