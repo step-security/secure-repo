@@ -95,7 +95,7 @@ Before the fix, your workflow may look like this (use of `v1` and `latest` tags)
 
 After the fix, each Action and docker image will be pinned to an immutable checksum.
 
-**Pull request example**: https://github.com/nginxinc/kubernetes-ingress/pull/3134
+**Pull request example**: https://github.com/electron/electron/pull/36343
 
 In this pull request, the workflow file has the GitHub Actions tags pinned automatically to their full-length commit SHA.
 
