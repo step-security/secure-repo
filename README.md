@@ -16,13 +16,13 @@ Secure GitHub Actions CI/CD workflows via automated remediations
 </div>
 
 <p align="center">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/secure-repo.gif" alt="Secure repo screenshot" >
+  <img src="images/secure-repo.gif" alt="Secure repo screenshot" >
 </p>
 
 <h3>
   <a href="#quickstart">Quickstart</a>
   <span> • </span>
-  <a href="#functionality-overview">Functionality Overview</a> 
+  <a href="#functionality-overview">Functionality</a> 
    <span> • </span>
   <a href="#contributing">Contributing</a>  
 </h3>
@@ -51,7 +51,7 @@ To secure GitHub Actions workflows using a pull request:
 
 To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _cloudformation/resources.yml_ CloudFormation templates in your AWS account. You can take a look at _.github/workflows/release.yml_ for reference.
 
-## Functionality Overview
+## Functionality
 
 Secure Workflows
 
