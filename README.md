@@ -124,6 +124,29 @@ This pull request adds the Harden Runner GitHub Action to the workflow file.
 
 SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
 
+### 4. Add or update Dependabot configuration
+
+#### Why is this needed?
+
+- You enable Dependabot version updates by checking a `dependabot.yml` configuration file into your repository
+- Dependabot ensures that your repository automatically keeps up with the latest releases of the packages and applications it depends on
+
+#### Before and After the fix
+
+Before the fix, you might not have a `dependabot.yml` file or it might not cover all ecosystems used in your project.
+
+After the fix, the `dependabot.yml` file is added or updated with configuration for all package ecosystems used in your project.
+
+**Pull request example**: https://github.com/muir/libschema/pull/31
+
+This pull request updates the Dependabot configuration.
+
+<p align="center"><img src="images/dependabot-example.png" width="600" alt="Screenshot of Dependabot config updated" /></p>
+
+#### How does SecureWorkflows fix this issue?
+
+SecureWorkflows updates the `dependabot.yml` file to add missing ecosystems. As an example, if Dependabot configuration was already configured to update `npm` packages, but not `GitHub Actions`, it is updated to add `GitHub Actions` ecosystem as well.
+
 ## Contributing
 
 Contributions are welcome!
