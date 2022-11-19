@@ -118,10 +118,10 @@ func getSemanticVersion(client *github.Client, owner, repo, tagOrBranch, commitS
 	}
 
 	for i := len(tags) - 1; i >= 0; i-- {
-		tag := (*tags[i].Ref)[10:]
+		tag := strings.TrimPrefix(*tags[i].Ref, "refs/tags/")
 		if *tags[i].Object.Type == "commit" {
 			if commitSHA == *tags[i].Object.SHA {
-				tagOrBranch = tag
+				return tag, nil
 			}
 		} else {
 			commitsha, _, err := client.Repositories.GetCommitSHA1(context.Background(), owner, repo, tag, "")
@@ -129,7 +129,7 @@ func getSemanticVersion(client *github.Client, owner, repo, tagOrBranch, commitS
 				return "", err
 			}
 			if commitSHA == commitsha {
-				tagOrBranch = tag
+				return tag, nil
 			}
 		}
 	}

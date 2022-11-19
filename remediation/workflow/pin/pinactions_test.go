@@ -56,13 +56,36 @@ func TestPinActions(t *testing.T) {
 		httpmock.NewStringResponder(200,
 			`[
 				{
-					"ref": "refs/tags/v1.2.0",
-					"object": {
-					  "sha": "a2ca40438991a1ab62db1b7cad0fd4e36a2ac254",
-					  "type": "tag"
-					}
+				  "ref": "refs/tags/v1.0.0",
+				  "node_id": "MDM6UmVmMTk3ODE0NjI5OnJlZnMvdGFncy92MS4wLjA=",
+				  "url": "https://api.github.com/repos/actions/checkout/git/refs/tags/v1.0.0",
+				  "object": {
+					"sha": "af513c7a016048ae468971c52ed77d9562c7c819",
+					"type": "commit",
+					"url": "https://api.github.com/repos/actions/checkout/git/commits/af513c7a016048ae468971c52ed77d9562c7c819"
+				  }
+				},
+				{
+				  "ref": "refs/tags/v1.1.0",
+				  "node_id": "MDM6UmVmMTk3ODE0NjI5OnJlZnMvdGFncy92MS4xLjA=",
+				  "url": "https://api.github.com/repos/actions/checkout/git/refs/tags/v1.1.0",
+				  "object": {
+					"sha": "ec3afacf7f605c9fc12c70bc1c9e1708ddb99eca",
+					"type": "tag",
+					"url": "https://api.github.com/repos/actions/checkout/git/tags/ec3afacf7f605c9fc12c70bc1c9e1708ddb99eca"
+				  }
+				},
+				{
+				  "ref": "refs/tags/v1.2.0",
+				  "node_id": "MDM6UmVmMTk3ODE0NjI5OnJlZnMvdGFncy92MS4yLjA=",
+				  "url": "https://api.github.com/repos/actions/checkout/git/refs/tags/v1.2.0",
+				  "object": {
+					"sha": "a2ca40438991a1ab62db1b7cad0fd4e36a2ac254",
+					"type": "tag",
+					"url": "https://api.github.com/repos/actions/checkout/git/tags/a2ca40438991a1ab62db1b7cad0fd4e36a2ac254"
+				  }
 				}
-			]`),
+			  ]`),
 	)
 
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/commits/v1.2.0",
@@ -105,12 +128,32 @@ func TestPinActions(t *testing.T) {
 		httpmock.NewStringResponder(200,
 			`[
 				{
+					"ref": "refs/tags/v2.5.3",
+					"node_id": "MDM6UmVmMjI4MTk2ODk5OnJlZnMvdGFncy92Mi41LjM=",
+					"url": "https://api.github.com/repos/brandedoutcast/publish-nuget/git/refs/tags/v2.5.3",
+					"object": {
+					  "sha": "4637c3bdd3fb4c052235299664c57b14c398cbd0",
+					  "type": "commit",
+					  "url": "https://api.github.com/repos/brandedoutcast/publish-nuget/git/commits/4637c3bdd3fb4c052235299664c57b14c398cbd0"
+					}
+				},
+				{
+					"ref": "refs/tags/v2.5.4",
+					"node_id": "MDM6UmVmMjI4MTk2ODk5OnJlZnMvdGFncy92Mi41LjQ=",
+					"url": "https://api.github.com/repos/brandedoutcast/publish-nuget/git/refs/tags/v2.5.4",
+					"object": {
+					  "sha": "108c10b32aa03efa5f71af6a233dc2e8e32845cb",
+					  "type": "commit",
+					  "url": "https://api.github.com/repos/brandedoutcast/publish-nuget/git/commits/108c10b32aa03efa5f71af6a233dc2e8e32845cb"
+					}
+				},
+				{
 					"ref": "refs/tags/v2.5.5",
 					"object": {
 					  "sha": "c12b8546b67672ee38ac87bea491ac94a587f7cc",
 					  "type": "commit"
 					}
-				  }
+				}
 			]`))
 
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/rohith/publish-nuget/commits/v2",
