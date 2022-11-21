@@ -2,18 +2,52 @@ import * as core from "@actions/core"
 import * as github from "@actions/github"
 import { existsSync, fstat, readFileSync } from "fs";
 import { exit } from "process";
+import { handleKBIssue } from "./issues-util";
 import { createPR } from "./pr_utils";
 import { isKBIssue, getAction, getActionYaml, findToken, printArray, comment, getRunsON, getReadme, checkDependencies, findEndpoints, permsToString, isValidLang, actionSecurity, getTokenInput, normalizePerms, isPaused} from "./utils"
 
 try{
 
-    const issue_id = core.getInput("issue-id");
-    const token = core.getInput("github-token")
-    
+
+    const token = core.getInput("github-token");
+    const client = github.getOctokit(token) // authenticated octokit
+
     const repos = github.context.repo // context repo
     const event = github.context.eventName
 
-    const client = github.getOctokit(token) // authenticated octokit
+
+
+    if(event === "workflow_dispatch" || event === "schedule"){
+        core.info(`[!] Launched by ${event}`)
+        
+        const label = "knowledge-base";
+        const owner = "step-security"
+        const repo = "secure-workflows"
+        let issues = [];
+        const resp = await client.rest.issues.listForRepo({owner:owner, repo:repo, labels: label, state: "open", per_page:100});
+        const status = resp.status;
+        if (status === 200){
+            for(let issue of resp.data){
+                issues.push({title:issue.title, number:issue.number});
+            }
+        }
+        if(issues.length > 0){
+            for(let issue of issues){
+                const t = await handleKBIssue(client, owner, repo, issue);
+            }
+            core.info(`[!] Moved ${issues.length} issues`)
+            exit(0);
+        }else{
+            core.info("No KB issues found");
+        }
+        
+        core.info(`[X] Unable to list KB issues`)
+        exit(0);
+    }
+
+    const issue_id = core.getInput("issue-id");
+    
+    
     const resp = await client.rest.issues.get({issue_number: Number(issue_id ), owner: repos.owner, repo:repos.repo}) // target issue
 
     const title = resp.data.title // extracting title of the issue.

@@ -52,13 +52,13 @@ func TestDockerActions(t *testing.T) {
 	//step.2> Get manifest file by setting header as (Authorization : Bearer <token>) and using this api call (https://<service>/v2/<name>/manifests/<tag>)
 	//step.3> Download response and save it in this path (testfiles/pindockers/response/<name>.txt)
 	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/step-security/integration-test/int/manifests/latest",
-		httpmock.NewStringResponder(200, httpmock.File("testfiles/pindockers/response/ghcrResponse.json").String()))
+		httpmock.NewStringResponder(200, httpmock.File("../../../testfiles/pindockers/response/ghcrResponse.json").String()))
 
 	httpmock.RegisterResponder("GET", "https://gcr.io/v2/gcp-runtimes/container-structure-test/manifests/latest",
-		httpmock.NewStringResponder(200, httpmock.File("testfiles/pindockers/response/gcrResponse.json").String()))
+		httpmock.NewStringResponder(200, httpmock.File("../../../testfiles/pindockers/response/gcrResponse.json").String()))
 
 	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/markstreet/conker/manifests/latest",
-		httpmock.NewStringResponder(200, httpmock.File("testfiles/pindockers/response/dockerResponse.json").String()))
+		httpmock.NewStringResponder(200, httpmock.File("../../../testfiles/pindockers/response/dockerResponse.json").String()))
 
 	for _, f := range files {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))

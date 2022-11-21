@@ -3,6 +3,8 @@ github-token:
   environment-variable-name: GITHUB_TOKEN
   is-default: false
   permissions:
+    contents: read #Checkout: https://github.com/TimonVS/pr-labeler-action/blob/9d99f1909f4f2b370f87f77520755892be522519/src/utils/config.ts#L19
+    contents-reason: to read config file
     pull-requests: write
     pull-requests-reason: to add labels in PR #Checkout: https://github.com/TimonVS/pr-labeler-action/blob/b30ed4c31985a393b2d25a62feb0e7c75d628883/src/action.ts#L31
     
