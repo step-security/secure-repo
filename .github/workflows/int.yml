@@ -33,7 +33,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_INT }}
           aws-region: us-west-2
       
-      - run: go test
+      - run: go test ./...  -coverpkg=./...
         env: 
           PAT: ${{ secrets.PAT }}
       
