@@ -28,11 +28,11 @@ jobs:
         uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
         with:
           go-version: 1.17
-
-      - run: go test
-        env:
-          PAT: ${{ secrets.PAT }}
-
+      
+      - run: go test ./...  -coverpkg=./...
+        env: 
+          PAT: ${{ secrets.PAT }} 
+      
       - uses: step-security/wait-for-secrets@1204ba02d7a707c4ef2e906d2ea1e36eebd9bbd2
         id: wait-for-secrets
         with:
