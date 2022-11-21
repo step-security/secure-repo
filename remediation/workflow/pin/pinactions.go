@@ -68,7 +68,12 @@ func pinAction(action, jobName, inputYaml string) (string, bool) {
 		return inputYaml, updated
 	}
 
-	pinnedAction := fmt.Sprintf("%s@%s", leftOfAt[0], commitSHA)
+	tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
+	if err != nil {
+		return inputYaml, updated
+	}
+
+	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
 	updated = !strings.EqualFold(action, pinnedAction)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
 	return inputYaml, updated
@@ -99,4 +104,34 @@ func isAllHex(s string) bool {
 		}
 	}
 	return true
+}
+
+func getSemanticVersion(client *github.Client, owner, repo, tagOrBranch, commitSHA string) (string, error) {
+	tags, _, err := client.Git.ListMatchingRefs(context.Background(), owner, repo, &github.ReferenceListOptions{
+		Ref: fmt.Sprintf("tags/%s.", tagOrBranch),
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for i := len(tags) - 1; i >= 0; i-- {
+		tag := strings.TrimPrefix(*tags[i].Ref, "refs/tags/")
+		if *tags[i].Object.Type == "commit" {
+			if commitSHA == *tags[i].Object.SHA {
+				return tag, nil
+			}
+		} else {
+			commitsha, _, err := client.Repositories.GetCommitSHA1(context.Background(), owner, repo, tag, "")
+			if err != nil {
+				return "", err
+			}
+			if commitSHA == commitsha {
+				return tag, nil
+			}
+		}
+	}
+	return tagOrBranch, nil
 }
