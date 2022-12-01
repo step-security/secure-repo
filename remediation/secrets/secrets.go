@@ -184,12 +184,13 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 
 	// If record exists, check if secrets are set
 	if gitHubWorkflowSecretsFromDB != nil {
-		if !authHeaderVerified && gitHubWorkflowSecretsFromDB.AreSecretsSet {
+		if !authHeaderVerified { // called by user
 			for i := range gitHubWorkflowSecretsFromDB.Secrets {
 				// the secret should be cleared. but if not, it should only be returned to the authorized GitHub Action
 				gitHubWorkflowSecretsFromDB.Secrets[i].Value = ""
 			}
 		}
+		// called by GitHub Action
 		return gitHubWorkflowSecretsFromDB, nil
 	}
 
