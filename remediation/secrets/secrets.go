@@ -148,7 +148,7 @@ func getClaimsFromAuthToken(authHeader string, skipClaimValidation bool) (*GitHu
 	return &gitHubWorkflowSecrets, nil
 }
 
-func GetSecrets(queryStringParams map[string]string, authHeader string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
+func GetSecrets(queryStringParams map[string]string, authHeader string, svc dynamodbiface.DynamoDBAPI, skipValidation bool) (*GitHubWorkflowSecrets, error) {
 	owner := ""
 	repo := ""
 	runId := ""
@@ -158,7 +158,7 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 	// this is a call from the GitHub Action
 	if len(authHeader) > 0 {
 		// verify OIDC token
-		gitHubWorkflowSecrets, err = getClaimsFromAuthToken(authHeader, svc == nil) // skip validation for unit tests
+		gitHubWorkflowSecrets, err = getClaimsFromAuthToken(authHeader, skipValidation) // skip validation for unit tests
 		if err != nil {
 			return nil, err
 		}
@@ -184,23 +184,14 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 
 	// If record exists, check if secrets are set
 	if gitHubWorkflowSecretsFromDB != nil {
-		if !authHeaderVerified && gitHubWorkflowSecretsFromDB.AreSecretsSet {
-			return nil, fmt.Errorf("once secrets are set, they can only be returned to GitHub workflow")
+		if !authHeaderVerified { // called by user
+			for i := range gitHubWorkflowSecretsFromDB.Secrets {
+				// the secret should be cleared. but if not, it should only be returned to the authorized GitHub Action
+				gitHubWorkflowSecretsFromDB.Secrets[i].Value = ""
+			}
 		}
+		// called by GitHub Action
 		return gitHubWorkflowSecretsFromDB, nil
-	}
-
-	// If record does not exist, insert record
-	gitHubWorkflowSecrets.AreSecretsSet = false
-	secrets := strings.Split(queryStringParams["secrets"], ",")
-	for _, secret := range secrets {
-		gitHubWorkflowSecrets.Secrets = append(gitHubWorkflowSecrets.Secrets, Secret{Name: secret, Value: ""})
-	}
-
-	err = setWorkflowSecrets(*gitHubWorkflowSecrets, svc)
-
-	if err != nil {
-		return nil, err
 	}
 
 	return gitHubWorkflowSecrets, nil
