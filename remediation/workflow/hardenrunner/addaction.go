@@ -6,6 +6,7 @@ import (
 
 	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
 	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
+	"github.com/step-security/secure-workflows/remediation/workflow/pin"
 	"gopkg.in/yaml.v3"
 )
 
@@ -14,7 +15,7 @@ const (
 	HardenRunnerActionName = "Harden Runner"
 )
 
-func AddAction(inputYaml, action string) (string, bool, error) {
+func AddAction(inputYaml, action string, pinActions bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -43,6 +44,10 @@ func AddAction(inputYaml, action string) (string, bool, error) {
 			}
 			updated = true
 		}
+	}
+
+	if updated && pinActions {
+		out, _ = pin.PinAction(action, out)
 	}
 
 	return out, updated, nil

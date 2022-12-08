@@ -22,12 +22,12 @@ func PinActions(inputYaml string) (string, bool, error) {
 
 	out := inputYaml
 
-	for jobName, job := range workflow.Jobs {
+	for _, job := range workflow.Jobs {
 
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = pinAction(step.Uses, jobName, out)
+				out, localUpdated = PinAction(step.Uses, out)
 				updated = updated || localUpdated
 			}
 		}
@@ -36,7 +36,7 @@ func PinActions(inputYaml string) (string, bool, error) {
 	return out, updated, nil
 }
 
-func pinAction(action, jobName, inputYaml string) (string, bool) {
+func PinAction(action, inputYaml string) (string, bool) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {

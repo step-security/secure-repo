@@ -66,15 +66,15 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addedPermissions = !secureWorkflowReponse.HasErrors
 	}
 
-	if addHardenRunner {
-		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag)
-	}
-
 	if pinActions {
 		pinnedAction, pinnedDocker := false, false
 		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput)
 		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker
+	}
+
+	if addHardenRunner {
+		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag, pinActions)
 	}
 
 	// Setting appropriate flags
