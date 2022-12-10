@@ -12,8 +12,8 @@ import (
 const CodeQLWorkflowFileName = "codeql.yml"
 
 type WorkflowParameters struct {
-	languagesToAdd []string
-	defaultBranch  string
+	LanguagesToAdd []string
+	DefaultBranch  string
 }
 
 func getTemplate(file string) (string, error) {
@@ -38,9 +38,9 @@ func AddWorkflow(name string, workflowParameters WorkflowParameters) (string, er
 			return "", err
 		}
 
-		sort.Strings(workflowParameters.languagesToAdd)
-		codeqlWorkflow = strings.ReplaceAll(codeqlWorkflow, "$default-branch", fmt.Sprintf(`"%s"`, workflowParameters.defaultBranch))
-		codeqlWorkflow = strings.ReplaceAll(codeqlWorkflow, "$detected-codeql-languages", strings.Join(workflowParameters.languagesToAdd, ", "))
+		sort.Strings(workflowParameters.LanguagesToAdd)
+		codeqlWorkflow = strings.ReplaceAll(codeqlWorkflow, "$default-branch", fmt.Sprintf(`"%s"`, workflowParameters.DefaultBranch))
+		codeqlWorkflow = strings.ReplaceAll(codeqlWorkflow, "$detected-codeql-languages", strings.Join(workflowParameters.LanguagesToAdd, ", "))
 		codeqlWorkflow = strings.ReplaceAll(codeqlWorkflow, "$cron-weekly", fmt.Sprintf(`"%s"`, "0 0 * * 1")) // Note: Runs every monday at 12:00 AM
 
 		return codeqlWorkflow, nil

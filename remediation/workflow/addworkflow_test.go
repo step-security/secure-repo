@@ -16,8 +16,8 @@ func Test_AddWorkflow(t *testing.T) {
 		{
 			workflowName: "codeql",
 			workflowParameters: WorkflowParameters{
-				languagesToAdd: []string{"cpp", "go", "java"},
-				defaultBranch:  "main",
+				LanguagesToAdd: []string{"cpp", "go", "java"},
+				DefaultBranch:  "main",
 			},
 			expectedError:      false,
 			expectedOutputFile: "../../testfiles/expected-codeql.yml",
@@ -25,8 +25,8 @@ func Test_AddWorkflow(t *testing.T) {
 		{
 			workflowName: "xyz",
 			workflowParameters: WorkflowParameters{
-				languagesToAdd: []string{"cpp"},
-				defaultBranch:  "main",
+				LanguagesToAdd: []string{"cpp"},
+				DefaultBranch:  "main",
 			},
 			expectedError:      true,
 			expectedOutputFile: "",
