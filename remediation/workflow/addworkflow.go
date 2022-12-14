@@ -17,7 +17,7 @@ type WorkflowParameters struct {
 }
 
 func getTemplate(file string) (string, error) {
-	templatePath := os.Getenv("WORKFLOW-TEMPLATE")
+	templatePath := os.Getenv("WORKFLOW_TEMPLATES")
 
 	if templatePath == "" {
 		templatePath = "../../workflow-templates"
