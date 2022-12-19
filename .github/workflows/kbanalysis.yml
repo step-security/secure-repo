@@ -26,7 +26,7 @@ jobs:
         with:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-      - uses: actions/checkout@d0651293c4a5a52e711f25b41b05b2212f385d28
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           repository: step-security/secure-workflows
 
