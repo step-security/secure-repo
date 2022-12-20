@@ -1,0 +1,10 @@
+name: "sarif-to-issue-action"
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to create issue from SARIF file
+
+#https://github.com/sett-and-hive/sarif-to-issue-action/blob/32fe9c4d9595403bb4a559727e7ee7e9c49e4538/README.md#branch

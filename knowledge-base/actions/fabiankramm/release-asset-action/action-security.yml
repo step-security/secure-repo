@@ -1,0 +1,7 @@
+name: 'Release Asset'
+github-token:
+  action-input: 
+    input: GITHUB_TOKEN
+  permissions: 
+    contents: write
+    contents-reason: to upload release asset

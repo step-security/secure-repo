@@ -1,0 +1,10 @@
+name: 'Assign PR to Author'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to assign author to pr
+
+#References-https://github.com/samspills/assign-pr-to-author/blob/223a87a821f7e7447cfb5221bc53ceeb633341c2/src/main.ts#L7

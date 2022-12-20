@@ -1,0 +1,10 @@
+name: 'Push Checkstyle report'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to push results as check run annotations
+
+#Reference: https://github.com/jwgmeligmeyling/checkstyle-github-action/blob/a12be500c097a5cedab881d4785ef9b4a4d3ee6a/src/main.ts#L97

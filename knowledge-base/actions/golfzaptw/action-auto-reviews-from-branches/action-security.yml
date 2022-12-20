@@ -1,0 +1,9 @@
+name: 'Auto reviews'
+github-token:
+  action-input: 
+    input: GITHUB_TOKEN
+  permissions: 
+    pull-requests: write
+    pull-requests-reason: to create review for PRs
+
+#Reference: https://github.com/golfzaptw/action-auto-reviews-from-branches/blob/269a54ff625c35873ba83b807b5530c89d37d0e9/index.js#L6
