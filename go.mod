@@ -4,11 +4,11 @@ go 1.17
 
 require (
 	github.com/asottile/dockerfile v3.1.0+incompatible
-	github.com/aws/aws-lambda-go v1.30.0
+	github.com/aws/aws-lambda-go v1.36.1
 	github.com/aws/aws-sdk-go v1.43.45
 	github.com/paulvollmer/dependabot-config-go v0.1.1
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
