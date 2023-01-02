@@ -20,7 +20,7 @@ func Test_AddWorkflow(t *testing.T) {
 				DefaultBranch:  "main",
 			},
 			expectedError:      false,
-			expectedOutputFile: "../../testfiles/expected-codeql.yml",
+			expectedOutputFile: "../../testfiles/addworkflow/expected-codeql.yml",
 		},
 		{
 			workflowName: "xyz",
@@ -30,6 +30,20 @@ func Test_AddWorkflow(t *testing.T) {
 			},
 			expectedError:      true,
 			expectedOutputFile: "",
+		},
+		{
+			workflowName:       "dependency-review",
+			workflowParameters: WorkflowParameters{},
+			expectedError:      false,
+			expectedOutputFile: "../../testfiles/addworkflow/expected-dependency-review.yml",
+		},
+		{
+			workflowName: "scorecards",
+			workflowParameters: WorkflowParameters{
+				DefaultBranch: "main",
+			},
+			expectedError:      false,
+			expectedOutputFile: "../../testfiles/addworkflow/expected-scorecards.yml",
 		},
 	}
 
