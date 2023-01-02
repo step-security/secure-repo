@@ -36,7 +36,7 @@ func getTemplate(file string) (string, error) {
 }
 
 func AddWorkflow(name string, workflowParameters WorkflowParameters) (string, error) {
-	if name == "codeql" {
+	if name == "Codeql" {
 		codeqlWorkflow, err := getTemplate(CodeQLWorkflowFileName)
 		if err != nil {
 			return "", err
@@ -49,14 +49,14 @@ func AddWorkflow(name string, workflowParameters WorkflowParameters) (string, er
 
 		return codeqlWorkflow, nil
 
-	} else if name == "dependency-review" {
+	} else if name == "Dependency-review" {
 		dependencyReviewWorkflow, err := getTemplate(DependencyReviewFileName)
 		if err != nil {
 			return "", err
 		}
 		return dependencyReviewWorkflow, nil
 
-	} else if name == "scorecards" {
+	} else if name == "Scorecards" {
 		scorecardsWorkflow, err := getTemplate(ScorecardFileName)
 		if err != nil {
 			return "", err
