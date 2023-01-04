@@ -13,6 +13,9 @@ const (
 	CodeQLWorkflowFileName   = "codeql.yml"
 	DependencyReviewFileName = "dependency-review.yml"
 	ScorecardFileName        = "scorecards.yml"
+	CodeQL                   = "CodeQL"
+	DependencyReview         = "Dependency-review"
+	Scorecard                = "Scorecard"
 )
 
 type WorkflowParameters struct {
@@ -36,7 +39,7 @@ func getTemplate(file string) (string, error) {
 }
 
 func AddWorkflow(name string, workflowParameters WorkflowParameters) (string, error) {
-	if name == "Codeql" {
+	if name == CodeQL {
 		codeqlWorkflow, err := getTemplate(CodeQLWorkflowFileName)
 		if err != nil {
 			return "", err
@@ -49,14 +52,14 @@ func AddWorkflow(name string, workflowParameters WorkflowParameters) (string, er
 
 		return codeqlWorkflow, nil
 
-	} else if name == "Dependency-review" {
+	} else if name == DependencyReview {
 		dependencyReviewWorkflow, err := getTemplate(DependencyReviewFileName)
 		if err != nil {
 			return "", err
 		}
 		return dependencyReviewWorkflow, nil
 
-	} else if name == "Scorecards" {
+	} else if name == Scorecard {
 		scorecardsWorkflow, err := getTemplate(ScorecardFileName)
 		if err != nil {
 			return "", err
