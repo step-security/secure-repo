@@ -81,7 +81,7 @@ func Test_getSecretsFromString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getSecretsFromString(tt.args.body)
+			got, _, err := getSecretsFromString(tt.args.body)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getSecretsFromString() error = %v, wantErr %v", err, tt.wantErr)
 				return
