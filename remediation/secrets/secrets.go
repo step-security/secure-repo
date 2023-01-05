@@ -25,6 +25,7 @@ type GitHubWorkflowSecrets struct {
 	Workflow       string   `json:"workflow"`
 	EventName      string   `json:"event_name"`
 	JobWorkflowRef string   `json:"job_workflow_ref"`
+	PublicKey      string   `json:"publicKey"`
 }
 
 type Secret struct {
@@ -197,14 +198,21 @@ func GetSecrets(queryStringParams map[string]string, authHeader string, svc dyna
 	return gitHubWorkflowSecrets, nil
 }
 
-func getSecretsFromString(body string) ([]Secret, error) {
+func getSecretsFromString(body string) ([]Secret, string, error) {
+	type secretsResponse struct {
+		publicKey string
+		secrets   []string
+	}
+	secretsApiResponse := secretsResponse{}
 	var secretStrings []string
 	var secrets []*Secret
-	err := json.Unmarshal([]byte(body), &secretStrings)
+	err := json.Unmarshal([]byte(body), &secretsApiResponse)
 
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
+
+	secretStrings = secretsApiResponse.secrets
 
 	var secret *Secret
 	for _, value := range secretStrings {
@@ -232,7 +240,7 @@ func getSecretsFromString(body string) ([]Secret, error) {
 	for _, s := range secrets {
 		secretsToReturn = append(secretsToReturn, Secret{SecretName: s.SecretName, Name: s.Name, Description: s.Description})
 	}
-	return secretsToReturn, nil
+	return secretsToReturn, secretsApiResponse.publicKey, nil
 }
 
 func InitSecrets(body string, authHeader string, svc dynamodbiface.DynamoDBAPI) (*GitHubWorkflowSecrets, error) {
@@ -252,13 +260,15 @@ func InitSecrets(body string, authHeader string, svc dynamodbiface.DynamoDBAPI) 
 
 	gitHubWorkflowSecrets.AreSecretsSet = false
 
-	secrets, err := getSecretsFromString(body)
+	secrets, publicKey, err := getSecretsFromString(body)
 
 	if err != nil {
 		return nil, fmt.Errorf("error in parsing secrets: %w", err)
 	}
 
 	gitHubWorkflowSecrets.Secrets = secrets
+
+	gitHubWorkflowSecrets.PublicKey = publicKey
 
 	err = setWorkflowSecrets(*gitHubWorkflowSecrets, svc)
 
