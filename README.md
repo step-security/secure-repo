@@ -53,11 +53,11 @@ To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _
 
 ## Functionality
 
-Secure Workflows
-
-- Takes in a GitHub Actions workflow YAML file as an input
-- Returns a transformed workflow file with fixes applied
-- You can select which of these changes you want to make
+1. [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
+2. [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
+3. [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
+4. [Add or update Dependabot configuration](#4-add-or-update-dependabot-configuration)
+5. [Add CodeQL workflow (SAST)]()
 
 ### 1. Automatically set minimum GITHUB_TOKEN permissions
 
@@ -146,6 +146,26 @@ This pull request updates the Dependabot configuration.
 #### How does SecureWorkflows fix this issue?
 
 SecureWorkflows updates the `dependabot.yml` file to add missing ecosystems. For example, if the Dependabot configuration updates npm packages but not GitHub Actions, it is updated to add the GitHub Actions ecosystem.
+
+### 5. Add CodeQL workflow (SAST)
+
+#### Why is this needed?
+
+- Using Static Application Security Testing (SAST) tools can prevent known classes of bugs from being introduced in the codebase
+
+#### Before and After the fix
+
+Before the fix, you do not have a CodeQL workflow.
+
+After the fix, a `codeql.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/rubygems/rubygems.org/pull/3314
+
+This pull request adds CodeQL to the list of workflows.
+
+#### How does SecureWorkflows fix this issue?
+
+SecureWorkflows has a [workflow-templates](https://github.com/step-security/secure-workflows/tree/main/workflow-templates) folder. This folder has the default CodeQL workflow, which gets added as part of the pull request. The placeholder for languages in the template gets replaced with languages for your GitHub repository.
 
 ## Contributing
 
