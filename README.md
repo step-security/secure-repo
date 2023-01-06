@@ -57,7 +57,7 @@ To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _
 2. [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
 3. [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
 4. [Add or update Dependabot configuration](#4-add-or-update-dependabot-configuration)
-5. [Add CodeQL workflow (SAST)]()
+5. [Add CodeQL workflow (SAST)](#5-add-codeql-workflow-sast)
 
 ### 1. Automatically set minimum GITHUB_TOKEN permissions
 
