@@ -1,5 +1,6 @@
 import {info} from "@actions/core"
 import { searchEndpoints } from "./endpoints"
+import { countReset } from "console"
 
 export function isKBIssue(title:String){
     const prefix = "[KB] Add GitHub token permissions for" // pattern to check, for KB issue
@@ -164,6 +165,7 @@ export async function comment(client, repos, issue_id, body){
         issue_number: Number(issue_id),
         body: body
     })
+
 }
 
 export function getTokenInput(action_yml:String, tokens_found:String[]){
@@ -181,16 +183,16 @@ export function getTokenInput(action_yml:String, tokens_found:String[]){
 
 export function actionSecurity(data:{name:string, token_input:string, perms:{}}){
 
-    let template = ["```yaml"]
+    let template = []
+
     template.push(`${data.name}`)
     template.push("github-token:")
     template.push(`  ${data.token_input}`)
     template.push("  permissions:")
     for(let perm_key of Object.keys(data.perms)){
         template.push(`    ${perm_key}: ${data.perms[perm_key]}`)
+        template.push(`    ${perm_key}-reason: to <reason_here> # specify why ${perm_key} is used.`)
     }
-
-    template.push("```\n")
 
     return template.join("\n")
 

@@ -1,13 +1,13 @@
 name: KBAnalysis
 on:
-  issues:
-    types:
-      - opened
-      - reopened
-      - closed
   workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"
+    inputs:
+      owner:
+        type: string
+        description: owner of the missing KB
+      repo:
+        type: string
+        description: repo of the missing KB     
 
 permissions:
   contents: read
@@ -31,10 +31,11 @@ jobs:
           repository: step-security/secure-workflows
 
       - name: KBAnalysis
-        uses: step-security/secure-workflows/kbanalysis@9d85dcc91fadd9e87b427561d92e9fb82690940f
+        uses: step-security/secure-workflows/kbanalysis@main
         with:
-          github-token: ${{secrets.PAT }}
-          issue-id: ${{ github.event.issue.number}}
+          github-token: ${{secrets.PAT}}
+          owner: ${{inputs.owner}}
+          repo : ${{inputs.repo}}
 
       - id: get-action
         uses: actions/github-script@5d03ada4b0a753e9460b312e61cc4f8fdeacf163
@@ -47,7 +48,8 @@ jobs:
         uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672
         with:
           token: ${{secrets.PAT}} #  need to use PAT since GITHUB_TOKEN does not initiate workflows
-          body: "This PR adds a YAML file to describe token permissions needed for Action: ${{steps.get-action.outputs.id}}."
-          commit-message: "added KB for issue#${{github.event.issue.number}}"
-          title: "[KB] Add GitHub token permissions for ${{steps.get-action.outputs.id}} Action"
-          branch: "issue#${{github.event.issue.number}}"
+          commit-message: "added action-security.yml for ${{inputs.owner}}/${{inputs.repo}}"
+          title: "[KB] Add GitHub token permissions for ${{inputs.owner}}/${{inputs.repo}}"
+          branch: "kb-${{inputs.owner}}-${{inputs.repo}}"
+          base: "knowledge-base"
+          body: "PR added by kb-analysis workflow"
