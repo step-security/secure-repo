@@ -59,10 +59,10 @@ try {
       core.setFailed(err);
     }
     if (issue_id > 0) {
-      core.info(
+      core.setFailed(
         `[+] PR-${issue_id} already exists for the action ${owner}/${repo}`
       );
-      exit(0);
+      exit(1);
     }
 
     const target_owner = owner;
