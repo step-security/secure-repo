@@ -34,8 +34,8 @@ try {
         `knowledge-base/actions/${owner.toLocaleLowerCase()}/${repo.toLocaleLowerCase()}`
       )
     ) {
-      core.info(`[!] KB already exists for action ${owner}/${repo}`);
-      exit(0);
+      core.setFailed(`[!] KB already exists for action ${owner}/${repo}`);
+      exit(1);
     }
 
     core.info("[+] Need to perform analysis");
@@ -74,8 +74,8 @@ try {
         `knowledge-base/actions/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`
       )
     ) {
-      core.info("[+] Not performing analysis as issue is already analyzed");
-      exit(0);
+      core.setFailed("[+] Not performing analysis as issue is already analyzed");
+      exit(1);
     }
 
     core.info("===== Performing analysis:  =====");
@@ -87,7 +87,8 @@ try {
         repo: target_repo.split("/")[0],
       }); // info related to repo.
     } catch (err) {
-      core.setFailed(`Failed to fetch repo info: ${err}`);
+      core.setFailed(`[+] Failed to fetch repo info: ${err}`);
+      exit(1);
     }
 
     let lang: String = "";
@@ -239,6 +240,7 @@ try {
       }
     } catch (err) {
       core.setFailed(err);
+      exit(1);
     }
 
     exit(0);

@@ -8330,8 +8330,8 @@ try {
         let owner = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("owner");
         let repo = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("repo");
         if ((0,fs__WEBPACK_IMPORTED_MODULE_2__.existsSync)(`knowledge-base/actions/${owner.toLocaleLowerCase()}/${repo.toLocaleLowerCase()}`)) {
-            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`[!] KB already exists for action ${owner}/${repo}`);
-            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(`[!] KB already exists for action ${owner}/${repo}`);
+            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(1);
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("[+] Need to perform analysis");
         let issue_id = -1; // PR_ ID
@@ -8362,8 +8362,8 @@ try {
         const target_repo = repo;
         const action_name = `${owner}/${repo}`;
         if ((0,fs__WEBPACK_IMPORTED_MODULE_2__.existsSync)(`knowledge-base/actions/${target_owner.toLocaleLowerCase()}/${target_repo.toLocaleLowerCase()}/action-security.yml`)) {
-            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("[+] Not performing analysis as issue is already analyzed");
-            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed("[+] Not performing analysis as issue is already analyzed");
+            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(1);
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("===== Performing analysis:  =====");
         let repo_info;
@@ -8374,7 +8374,8 @@ try {
             }); // info related to repo.
         }
         catch (err) {
-            _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(`Failed to fetch repo info: ${err}`);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(`[+] Failed to fetch repo info: ${err}`);
+            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(1);
         }
         let lang = "";
         try {
@@ -8483,6 +8484,7 @@ try {
         }
         catch (err) {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(err);
+            (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(1);
         }
         (0,process__WEBPACK_IMPORTED_MODULE_3__.exit)(0);
     }
