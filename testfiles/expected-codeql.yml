@@ -13,12 +13,12 @@ name: "CodeQL"
 
 on:
   push:
-    branches: ["main"]
+    branches: [$default-branch]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: ["main"]
+    branches: [$default-branch]
   schedule:
-    - cron: "0 0 * * 1"
+    - cron: $cron-weekly
 
 permissions:
   contents: read
@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [cpp, go, java]
+        language: [$detected-codeql-languages]
         # CodeQL supports [ $supported-codeql-languages ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
@@ -51,7 +51,7 @@ jobs:
           # If you wish to specify custom queries, you can do so here or in a config file.
           # By default, queries listed here will override any specified in a config file.
           # Prefix the list here with "+" to use these queries and those in the config file.
-
+          
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
