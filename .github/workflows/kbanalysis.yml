@@ -53,3 +53,4 @@ jobs:
           branch: "kb-${{inputs.owner}}-${{inputs.repo}}"
           base: "knowledge-base"
           body: "PR added by kb-analysis workflow"
+          labels: "knowledge-base"
