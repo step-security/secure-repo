@@ -13,14 +13,14 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [$default-branch]
+    branches: ["main"]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [$default-branch]
+    branches: ["main"]
   schedule:
-    - cron: $cron-weekly
+    - cron: "0 0 * * 1"
 
-permissions: # added using https://github.com/step-security/secure-workflows
+permissions:
   contents: read
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [$detected-codeql-languages]
+        language: [cpp, go, java]
         # CodeQL supports [ $supported-codeql-languages ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
