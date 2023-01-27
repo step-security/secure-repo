@@ -1,0 +1,10 @@
+name: Changesets
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to <reason_here> # specify why pull-requests is used.
+    undefined: read
+    undefined-reason: to <reason_here> # specify why undefined is used.
+    contents: write
+    contents-reason: to <reason_here> # specify why contents is used.
