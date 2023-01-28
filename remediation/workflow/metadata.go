@@ -24,7 +24,7 @@ func StoreMissingActions(missingActions []string, svc dynamodbiface.DynamoDBAPI)
 		}
 
 		actionKey := action[0:atIndex]
-		CreateIssue(actionKey)
+		CreatePR(actionKey)
 		input := dynamodb.PutItemInput{
 			TableName: aws.String(MissingActionsTable),
 			Item: map[string]*dynamodb.AttributeValue{
