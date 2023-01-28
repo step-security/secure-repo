@@ -1,2 +1,2 @@
-# Action is docker or composite based.
-#Need to perform manual analysis
+name: "Install Poetry Action" #snok/install-poetry
+# GITHUB_TOKEN not used
