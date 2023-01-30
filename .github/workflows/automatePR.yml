@@ -21,7 +21,7 @@ jobs:
           repository: step-security/secure-workflows
     
       - name: Automate PR
-        uses: step-security/secure-workflows/Automate-PR@98ff385ea512d8ac7a1445f95e199f6864f439e1
+        uses: step-security/secure-workflows/Automate-PR@934296fd93592695fa9889b62e166b6811d30715
         with:
           github-token: ${{secrets.PAT }}
           issue-id: ${{ github.event.issue.number}}
