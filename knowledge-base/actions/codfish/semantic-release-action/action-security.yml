@@ -1,2 +1,7 @@
-# Action is docker or composite based.
-#Need to perform manual analysis
+name: 'Semantic Release Action'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  is-default: false
+  permissions:
+    contents: write
+    contents-reason: to create release tags
