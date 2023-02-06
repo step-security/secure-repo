@@ -4,5 +4,5 @@ github-token:
     input: token
     is-default: true
   permissions:
-    undefined: write
-    undefined-reason: to <reason_here> # specify why undefined is used.
+    packages: write
+    packages-reason: to delete packages
