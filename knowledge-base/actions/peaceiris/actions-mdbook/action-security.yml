@@ -1,1 +1,2 @@
-# Error in determining permissions
+name: 'mdBook Action'
+# GITHUB_TOKEN not used
