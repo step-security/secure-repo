@@ -4,3 +4,5 @@ github-token:
     input: github-token
     is-default: false
   permissions:
+    repository-projects: write
+    repository-projects-reason: to assign issues and PRs to repo project
