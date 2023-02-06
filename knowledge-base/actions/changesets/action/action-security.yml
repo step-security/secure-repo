@@ -1,0 +1,8 @@
+name: Changesets
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create PRs # https://github.com/changesets/action/issues/220#issuecomment-1272514354
+    contents: write
+    contents-reason: to push to the repo # https://github.com/changesets/action/issues/220#issuecomment-1272514354
