@@ -5,3 +5,4 @@ github-token:
     is-default: true
   permissions: 
     id-token: write
+    id-token-reason: to authenticate Action to API
