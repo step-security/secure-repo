@@ -1,6 +1,2 @@
 name: 'Setup protoc'
-github-token:
-  action-input:
-    input: token
-    is-default: false
-  permissions:
+# GITHUB_TOKEN only used to prevent throttling
