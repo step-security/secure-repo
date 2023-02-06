@@ -1,0 +1,7 @@
+name: "Wait for secrets"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions: 
+    id-token: write
