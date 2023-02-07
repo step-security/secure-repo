@@ -6,7 +6,7 @@ If you are the owner of a GitHub Action, please contribute information about the
 
 To contribute information about the use of `GITHUB_TOKEN` for your Action:
 
-1. Add a folder for your GitHub Action under the [`knowledge-base/actions`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/) folder. It should match the path of your GitHub Action's `action.yml` file. As an example, 
+1. Add a folder for your GitHub Action under the [`knowledge-base/actions`](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/) folder. It should match the path of your GitHub Action's `action.yml` file. As an example, 
    - If your GitHub Action's `action.yml` file is at the root, e.g. https://github.com/stelligent/cfn_nag/blob/master/action.yml, the path should be `knowledge-base/actions/stelligent/cfn_nag`
    - If your GitHub Action's `action.yml` file is in a sub folder, e.g. at https://github.com/snyk/actions/blob/master/gradle/action.yml, the path should be `knowledge-base/actions/snyk/actions/gradle`
 2. In the folder for your GitHub Action, add an `action-security.yml` file.
@@ -19,7 +19,7 @@ For this scenario,
 1. Add a `name` attribute in your `action-security.yml` file. You can set the name to be same as the name in your `action.yml` file. 
 2. In a comment just mention that the GitHub token is not used. 
 
-Here is an [example](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/stelligent/cfn_nag/action-security.yml). 
+Here is an [example](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/stelligent/cfn_nag/action-security.yml). 
 
 ``` yaml
 name: 'Stelligent cfn_nag' # stelligent/cfn_nag
@@ -33,13 +33,13 @@ Note: if your Action just uses `metadata` permission to overcome throttle limits
 For this scenario, follow these steps:
 1. Add a `name` attribute in your `action-security.yml` file. You can set the name to be same as the name in your `action.yml` file. 
 2. Mention where you expect the GitHub token.
-    - If you expect it as an environment variable, you specify it this way. Here is an [example](https://github.com/step-security/secure-workflows/blob/00c05310c1c97a91b98c46f904e857a617a2fc02/knowledge-base/actions/dev-drprasad/delete-tag-and-release/action-security.yml):
+    - If you expect it as an environment variable, you specify it this way. Here is an [example](https://github.com/step-security/secure-repo/blob/00c05310c1c97a91b98c46f904e857a617a2fc02/knowledge-base/actions/dev-drprasad/delete-tag-and-release/action-security.yml):
     ``` yaml
     name: Delete tag and release
     github-token:
       environment-variable-name: GITHUB_TOKEN      
     ```
-    - If you expect it as an action input, you specify it as shown below. If you set the default value for the token to be the GITHUB_TOKEN, then set the “is-default” attribute to true. Here is an [example](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/irongut/editrelease/action-security.yml):
+    - If you expect it as an action input, you specify it as shown below. If you set the default value for the token to be the GITHUB_TOKEN, then set the “is-default” attribute to true. Here is an [example](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/irongut/editrelease/action-security.yml):
     ``` yaml
     name: 'Edit Release'
     github-token:
@@ -48,7 +48,7 @@ For this scenario, follow these steps:
         is-default: false      
     ```
   3. Mention the permissions needed and a reason for the permissions. The reason must start with the word `to`. 
-  Here is an [example](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/peter-evans/create-or-update-comment/action-security.yml):
+  Here is an [example](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/peter-evans/create-or-update-comment/action-security.yml):
   ``` yaml
   name: 'Create or Update Comment'
   github-token:
@@ -78,7 +78,7 @@ The above two scenarios should take care of most of the cases. For more advanced
 
 This example is for `peter-evans/close-issue` GitHub Action. It shows that the Action expects GitHub token as an action input, the name of the input is `token`, and that it is set to `GITHUB_TOKEN` as the default value. It also shows that the permissions needed for the Action are `issues: write` and the reason for that permission is specified in the `issues-reason` key.
 
-[`knowledge-base/actions/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/peter-evans/close-issue/action-security.yml)
+[`knowledge-base/actions/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/peter-evans/close-issue/action-security.yml)
 
 ``` yaml
 github-token:
@@ -110,7 +110,7 @@ github-token:
 
 This example is for `github/super-linter` GitHub Action. It shows that the Action expects GitHub token as an environment variable, the name of the environment variable is `GITHUB_TOKEN`. It also shows that the permissions needed for the Action are `statuses: write` and the reason for that permission is specified in the `statuses-reason` key.
 
-[`knowledge-base/actions/github/super-linter/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/github/super-linter/action-security.yml)
+[`knowledge-base/actions/github/super-linter/action-security.yml`](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/github/super-linter/action-security.yml)
 
 ``` yaml
 name: 'Super-Linter'
@@ -129,7 +129,7 @@ github-token:
 
 This example is for `actions/setup-node` GitHub Action. It shows that the Action expects GitHub token as an Action input. The permissions key is set, but no scopes are defined, since it only uses it for rate-limiting.
 
-[`knowledge-base/actions/actions/setup-node/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/actions/setup-node/action-security.yml)
+[`knowledge-base/actions/actions/setup-node/action-security.yml`](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/actions/setup-node/action-security.yml)
 
 ``` yaml
 name: 'Setup Node.js environment'
@@ -152,7 +152,7 @@ github-token:
 
 As an example, consider this `action-security.yml` for `peter-evans/close-issue` GitHub Action.
 
-[`knowledge-base/actions/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/peter-evans/close-issue/action-security.yml)
+[`knowledge-base/actions/peter-evans/close-issue/action-security.yml`](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/peter-evans/close-issue/action-security.yml)
 
 ``` yaml
 github-token:
@@ -189,7 +189,7 @@ jobs:
 
 As an example, consider this `action-security.yml` for `dessant/lock-threads` GitHub Action. The `issues` scope only applies if either the `with` (action input) does not have `process-only` or `process-only` is set to `issues`.
 
-[`knowledge-base/actions/dessant/lock-threads/action-security.yml`](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/dessant/lock-threads/action-security.yml)
+[`knowledge-base/actions/dessant/lock-threads/action-security.yml`](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/dessant/lock-threads/action-security.yml)
 
 ``` yaml
 github-token:
