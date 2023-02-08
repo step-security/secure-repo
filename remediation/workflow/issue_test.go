@@ -39,7 +39,7 @@ func TestCreatePR(t *testing.T) {
 
 	os.Setenv("PAT", "temp_pat")
 
-	httpmock.RegisterResponder("POST", "https://api.github.com/repos/step-security/secure-workflows/actions/workflows/kbanalysis.yml/dispatches", httpmock.NewStringResponder(204, ""))
+	httpmock.RegisterResponder("POST", "https://api.github.com/repos/step-security/secure-repo/actions/workflows/kbanalysis.yml/dispatches", httpmock.NewStringResponder(204, ""))
 
 	tests := []struct {
 		name    string

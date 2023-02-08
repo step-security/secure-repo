@@ -7,7 +7,7 @@ on:
     branches:
       - main # to update code coverage
 
-permissions: # added using https://github.com/step-security/secure-workflows
+permissions: # added using https://github.com/step-security/secure-repo
   contents: read
 concurrency:
   group: ${{ github.workflow }}

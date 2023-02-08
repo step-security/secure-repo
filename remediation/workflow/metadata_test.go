@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"gopkg.in/yaml.v3"
 )
 
