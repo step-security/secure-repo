@@ -1,17 +1,15 @@
-<p align="center"><img src="images/banner.png" height="80" /></p>
-
-<h1 align="center">Secure Workflows</h1>
+<p align="center"><img src="images/banner1.png" height="80" /></p>
 
 <p align="center">
-Secure GitHub Actions CI/CD workflows via automated remediations
+Secure your GitHub repo with ease through automated security fixes
 </p>
 
 <div align="center">
 
-[![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-workflows)
-[![Go Report Card](https://goreportcard.com/badge/github.com/step-security/secure-workflows)](https://goreportcard.com/report/github.com/step-security/secure-workflows)
-[![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows)
+[![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-repo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/step-security/secure-repo)](https://goreportcard.com/report/github.com/step-security/secure-repo)
+[![codecov](https://codecov.io/gh/step-security/secure-repo/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-repo)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/secure-repo/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/secure-repo)
 
 </div>
 
@@ -31,7 +29,7 @@ Secure GitHub Actions CI/CD workflows via automated remediations
 
 ### Hosted Instance: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
 
-To secure GitHub Actions workflows using a pull request:
+To secure your GitHub repo using a pull request:
 
 - Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
 - Log in using your GitHub Account (no need to install any App or grant `write` access)
@@ -44,7 +42,7 @@ To secure GitHub Actions workflows using a pull request:
 - Follow the remediation tip that points to https://app.stepsecurity.io
 
 <p align="center">
-  <img src="images/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="600">
+  <img src="images/SecureWorkflowsIntegration.png" alt="Secure repo Scorecard integration screenshot" width="600">
 </p>
 
 ### Self Hosted
@@ -53,11 +51,11 @@ To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _
 
 ## Functionality
 
-Secure Workflows
-
-- Takes in a GitHub Actions workflow YAML file as an input
-- Returns a transformed workflow file with fixes applied
-- You can select which of these changes you want to make
+1. [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
+2. [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
+3. [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
+4. [Add or update Dependabot configuration](#4-add-or-update-dependabot-configuration)
+5. [Add CodeQL workflow (SAST)](#5-add-codeql-workflow-sast)
 
 ### 1. Automatically set minimum GITHUB_TOKEN permissions
 
@@ -75,11 +73,11 @@ In this pull request, minimum permissions are set automatically for the GITHUB_T
 
 <p align="center"><img src="images/token-perm-example.png" alt="Screenshot of token permissions set in a workflow" width="600" /></p>
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-- SecureWorkflows stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions)>)
+- Secure-Repo stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-repo/tree/main/knowledge-base/actions)>)
 - It looks up the permissions needed by each Action in your workflow and sums the permissions up to come up with a final recommendation
-- If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
+- If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/README.md)
 
 ### 2. Pin Actions to a full length commit SHA
 
@@ -93,7 +91,7 @@ In this pull request, minimum permissions are set automatically for the GITHUB_T
 
 Before the fix, your workflow may look like this (use of `v1` and `latest` tags)
 
-After the fix, SecureWorkflows pins each Action and docker image to an immutable checksum.
+After the fix, Secure-Repo pins each Action and docker image to an immutable checksum.
 
 **Pull request example**: https://github.com/electron/electron/pull/36343
 
@@ -101,9 +99,9 @@ In this pull request, the workflow file has the GitHub Actions tags pinned autom
 
 <p align="center"><img src="images/pin-example.png" alt="Screenshot of Action pinned to commit SHA" width="600" /></p>
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-- SecureWorkflows automates the process of getting the commit SHA for each mutable Action version or Docker image tag
+- Secure-Repo automates the process of getting the commit SHA for each mutable Action version or Docker image tag
 - It does this by using GitHub and Docker registry APIs
 
 ### 3. Add Harden-Runner GitHub Action to each job
@@ -120,9 +118,9 @@ This pull request adds the Harden Runner GitHub Action to the workflow file.
 
 <p align="center"><img src="images/harden-runner-example.png" width="600" alt="Screenshot of Harden-Runner GitHub Action added to a workflow" /></p>
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
+Secure-Repo updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
 
 ### 4. Add or update Dependabot configuration
 
@@ -143,12 +141,32 @@ This pull request updates the Dependabot configuration.
 
 <p align="center"><img src="images/dependabot-example.png" width="600" alt="Screenshot of Dependabot config updated" /></p>
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-SecureWorkflows updates the `dependabot.yml` file to add missing ecosystems. For example, if the Dependabot configuration updates npm packages but not GitHub Actions, it is updated to add the GitHub Actions ecosystem.
+Secure-Repo updates the `dependabot.yml` file to add missing ecosystems. For example, if the Dependabot configuration updates npm packages but not GitHub Actions, it is updated to add the GitHub Actions ecosystem.
+
+### 5. Add CodeQL workflow (SAST)
+
+#### Why is this needed?
+
+- Using Static Application Security Testing (SAST) tools can prevent known classes of bugs from being introduced in the codebase
+
+#### Before and After the fix
+
+Before the fix, you do not have a CodeQL workflow.
+
+After the fix, a `codeql.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/rubygems/rubygems.org/pull/3314
+
+This pull request adds CodeQL to the list of workflows.
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default CodeQL workflow, which gets added as part of the pull request. The placeholder for languages in the template gets replaced with languages for your GitHub repository.
 
 ## Contributing
 
 Contributions are welcome!
 
-If you are the owner of a GitHub Action, please contribute information about the use of GITHUB_TOKEN for your Action. This will enable the community to automatically calculate minimum token permissions for the GITHUB_TOKEN for their workflows. Check out the [Contributing Guide](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
+If you are the owner of a GitHub Action, please contribute information about the use of GITHUB_TOKEN for your Action. This will enable the community to automatically calculate minimum token permissions for the GITHUB_TOKEN for their workflows. Check out the [Contributing Guide](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/README.md)
