@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v40/github"
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )

@@ -6,4 +6,4 @@ outbound-endpoints:
   - fqdn: '*.dkr.ecr.*.amazonaws.com'
     port: 443
     reason: to log in the local Docker client to ECR registery(s)
-harden-runner-link: https://app.stepsecurity.io/github/step-security/secure-workflows/actions/runs/1627574653
+harden-runner-link: https://app.stepsecurity.io/github/step-security/secure-repo/actions/runs/1627574653

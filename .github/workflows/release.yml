@@ -6,7 +6,7 @@ on:
     branches:
       - main
 
-permissions: # added using https://github.com/step-security/secure-workflows
+permissions: # added using https://github.com/step-security/secure-repo
   contents: read
 
 jobs:
@@ -40,13 +40,13 @@ jobs:
           secrets: |
             AWS_ACCESS_KEY_ID: 
               name: 'AWS access key id'
-              description: 'Access key id for secure-workflows prod'
+              description: 'Access key id for secure-repo prod'
             AWS_SECRET_ACCESS_KEY:
               name: 'AWS secret access key'
-              description: 'Secret access key for secure-workflows prod'
+              description: 'Secret access key for secure-repo prod'
             AWS_SESSION_TOKEN:
               name: 'AWS session token'
-              description: 'Session token for secure-workflows prod'
+              description: 'Session token for secure-repo prod'
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
