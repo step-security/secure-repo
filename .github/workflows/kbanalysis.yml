@@ -28,7 +28,7 @@ jobs:
 
       - uses: actions/checkout@d0651293c4a5a52e711f25b41b05b2212f385d28
         with:
-          repository: step-security/secure-workflows
+          repository: step-security/secure-repo
 
       - name: KBAnalysis
         uses: step-security/secure-workflows/kbanalysis@main

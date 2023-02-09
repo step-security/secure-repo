@@ -2,9 +2,9 @@ package workflow
 
 import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/step-security/secure-workflows/remediation/workflow/hardenrunner"
-	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
-	"github.com/step-security/secure-workflows/remediation/workflow/pin"
+	"github.com/step-security/secure-repo/remediation/workflow/hardenrunner"
+	"github.com/step-security/secure-repo/remediation/workflow/permissions"
+	"github.com/step-security/secure-repo/remediation/workflow/pin"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"gopkg.in/yaml.v3"
 )
 
