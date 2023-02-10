@@ -1,0 +1,2 @@
+name: 'Running AQA test' # adoptium/run-aqa
+# GITHUB_TOKEN not used
