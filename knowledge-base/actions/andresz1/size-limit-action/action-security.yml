@@ -1,0 +1,8 @@
+name: 'size-limit-action'
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to <reason_here> # specify why issues is used.
