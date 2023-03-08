@@ -57,6 +57,8 @@ To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _
 4. [Pin image tags to digests in Dockerfiles](#4-pin-image-tags-to-digests-in-dockerfiles)
 5. [Add or update Dependabot configuration](#5-add-or-update-dependabot-configuration)
 6. [Add CodeQL workflow (SAST)](#6-add-codeql-workflow-sast)
+7. [Add Dependency review Workflow]()
+8. [Add OpenSSF Scorecard Workflow]()
 
 ### 1. Automatically set minimum GITHUB_TOKEN permissions
 
@@ -190,6 +192,48 @@ This pull request adds CodeQL to the list of workflows.
 #### How does Secure-Repo fix this issue?
 
 Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default CodeQL workflow, which gets added as part of the pull request. The placeholder for languages in the template gets replaced with languages for your GitHub repository.
+
+### 7. Add Dependency review Workflow
+
+#### Why is this needed?
+
+- You can use the dependency review workflow in your repository to enforce dependency reviews on your pull requests.
+- The workflow scans for vulnerable versions of dependencies introduced by package version changes in pull requests, and warns you about the associated security vulnerabilities.
+
+#### Before and After the fix
+
+Before the fix, you do not have a dependency review workflow.
+
+After the fix, a `depdendency-review.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/input-output-hk/catalyst-core/pull/286
+
+This pull request adds GitHub's `actions/dependency-review-action` workflow to the list of workflows.
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default dependency review workflow, which gets added as part of the pull request.
+
+### 8. Add OpenSSF Scorecard Workflow
+
+#### Why is this needed?
+
+- OpenSSF Scorecard is a way to measure the security of your project. - Scorecard has a set of security checks that are run against your project and produce a score. The score is a number between 0 and 10, with 10 being the highest score possible. 
+- The score is a measure of how well your project follows security best practices
+
+#### Before and After the fix
+
+Before the fix, you do not have a OpenSSF Scorecard workflow.
+
+After the fix, a `scorecards.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/mcornick/clilol/pull/14
+
+This pull request adds OpenSSF Scorecard to the list of workflows.
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default Scorecard workflow, which gets added as part of the pull request. 
 
 ## Contributing
 
