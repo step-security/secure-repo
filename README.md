@@ -57,8 +57,8 @@ To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _
 4. [Pin image tags to digests in Dockerfiles](#4-pin-image-tags-to-digests-in-dockerfiles)
 5. [Add or update Dependabot configuration](#5-add-or-update-dependabot-configuration)
 6. [Add CodeQL workflow (SAST)](#6-add-codeql-workflow-sast)
-7. [Add Dependency review Workflow]()
-8. [Add OpenSSF Scorecard Workflow]()
+7. [Add Dependency review workflow](#7-add-dependency-review-workflow)
+8. [Add OpenSSF Scorecard workflow](#8-add-openssf-scorecard-workflow)
 
 ### 1. Automatically set minimum GITHUB_TOKEN permissions
 
@@ -193,7 +193,7 @@ This pull request adds CodeQL to the list of workflows.
 
 Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default CodeQL workflow, which gets added as part of the pull request. The placeholder for languages in the template gets replaced with languages for your GitHub repository.
 
-### 7. Add Dependency review Workflow
+### 7. Add Dependency review workflow
 
 #### Why is this needed?
 
@@ -214,7 +214,7 @@ This pull request adds GitHub's `actions/dependency-review-action` workflow to t
 
 Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default dependency review workflow, which gets added as part of the pull request.
 
-### 8. Add OpenSSF Scorecard Workflow
+### 8. Add OpenSSF Scorecard workflow
 
 #### Why is this needed?
 
