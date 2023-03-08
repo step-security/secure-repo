@@ -197,8 +197,8 @@ Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-r
 
 #### Why is this needed?
 
-- You can use the dependency review workflow in your repository to enforce dependency reviews on your pull requests.
-- The workflow scans for vulnerable versions of dependencies introduced by package version changes in pull requests, and warns you about the associated security vulnerabilities.
+- The Dependency review workflow scans for vulnerable versions of dependencies introduced by package version changes in pull requests, and warns you about the associated security vulnerabilities.
+- This gives you better visibility of what's changing in a pull request, and helps prevent vulnerabilities being added to your repository.
 
 #### Before and After the fix
 
@@ -218,8 +218,8 @@ Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-r
 
 #### Why is this needed?
 
-- OpenSSF Scorecard is a way to measure the security of your project. - Scorecard has a set of security checks that are run against your project and produce a score. The score is a number between 0 and 10, with 10 being the highest score possible. 
-- The score is a measure of how well your project follows security best practices
+- OpenSSF Scorecard is an automated tool that assesses a number of important heuristics ("checks") associated with software security and assigns each check a score of 0-10.
+- You can use these scores to understand specific areas to improve in order to strengthen the security posture of your project.
 
 #### Before and After the fix
 
@@ -233,7 +233,7 @@ This pull request adds OpenSSF Scorecard to the list of workflows.
 
 #### How does Secure-Repo fix this issue?
 
-Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default Scorecard workflow, which gets added as part of the pull request. 
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default Scorecard workflow, which gets added as part of the pull request.
 
 ## Contributing
 
