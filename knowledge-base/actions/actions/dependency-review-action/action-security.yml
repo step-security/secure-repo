@@ -1,0 +1,10 @@
+name: 'Dependency Review'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to <reason_here> # specify why issues is used.
+    contents: read
+    contents-reason: to <reason_here> # specify why contents is used.
