@@ -42,7 +42,11 @@ func PinDocker(inputYaml string) (string, bool, error) {
 func pinDocker(action, jobName, inputYaml string) (string, bool) {
 	updated := false
 	leftOfAt := strings.Split(action, ":")
-	tag := leftOfAt[2]
+	tag := "latest"
+	// Reference :latest tag if no tag is present
+	if len(leftOfAt) > 2 {
+		tag = leftOfAt[2]
+	}
 	image := leftOfAt[1][2:]
 
 	ref, err := name.ParseReference(image, name.WithDefaultTag(tag))
