@@ -45,6 +45,7 @@ func TestSecureDockerFile(t *testing.T) {
 	}{
 		{fileName: "Dockerfile-not-pinned", isChanged: true},
 		{fileName: "Dockerfile-not-pinned-as", isChanged: true},
+		{fileName: "Dockerfile-multiple-images", isChanged: true},
 	}
 
 	for _, test := range tests {
