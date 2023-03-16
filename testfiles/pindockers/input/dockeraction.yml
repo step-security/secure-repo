@@ -38,7 +38,7 @@ jobs:
       with:
         args: sh -c "cd conker && make --jobs"
     - name: Perform make replace
-      uses: docker://docker.io/markstreet/conker:latest
+      uses: docker://docker.io/markstreet/conker@sha256:1efef3bbdd297d1b321b9b4559092d3131961913bc68b7c92b681b4783d563f0 # latest
       with:
         args: sh -c "cd conker && make replace"
 

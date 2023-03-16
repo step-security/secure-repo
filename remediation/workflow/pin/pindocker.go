@@ -28,7 +28,7 @@ func PinDocker(inputYaml string) (string, bool, error) {
 	for jobName, job := range workflow.Jobs {
 
 		for _, step := range job.Steps {
-			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, "docker://") {
+			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, "docker://") && !strings.Contains(step.Uses, "@") {
 				localUpdated := false
 				out, localUpdated = pinDocker(step.Uses, jobName, out)
 				updated = updated || localUpdated
@@ -68,6 +68,8 @@ func pinDocker(action, jobName, inputYaml string) (string, bool) {
 
 	pinnedAction := fmt.Sprintf("%s:%s@%s # %s", leftOfAt[0], leftOfAt[1], imghash.String(), tag)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
+	// Revert the extra hash for already pinned docker actions
+	inputYaml = strings.ReplaceAll(inputYaml, pinnedAction+"@", action+"@")
 	updated = !strings.EqualFold(action, pinnedAction)
 	return inputYaml, updated
 }
