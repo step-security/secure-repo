@@ -21,7 +21,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5
+        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
         with:
           fetch-depth: 0
       - name: Set up Go
