@@ -1,17 +1,15 @@
-<p align="center"><img src="images/banner.png" height="80" /></p>
-
-<h1 align="center">Secure Workflows</h1>
+<p align="center"><img src="images/banner1.png" height="80" /></p>
 
 <p align="center">
-Secure GitHub Actions CI/CD workflows via automated remediations
+Secure your GitHub repo with ease through automated security fixes
 </p>
 
 <div align="center">
 
-[![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-workflows)
-[![Go Report Card](https://goreportcard.com/badge/github.com/step-security/secure-workflows)](https://goreportcard.com/report/github.com/step-security/secure-workflows)
-[![codecov](https://codecov.io/gh/step-security/secure-workflows/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-workflows)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/secure-workflows)
+[![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=secure-repo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/step-security/secure-repo)](https://goreportcard.com/report/github.com/step-security/secure-repo)
+[![codecov](https://codecov.io/gh/step-security/secure-repo/branch/main/graph/badge.svg?token=02ONA6U92A)](https://codecov.io/gh/step-security/secure-repo)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/secure-repo/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/secure-repo)
 
 </div>
 
@@ -31,7 +29,7 @@ Secure GitHub Actions CI/CD workflows via automated remediations
 
 ### Hosted Instance: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
 
-To secure GitHub Actions workflows using a pull request:
+To secure your GitHub repo using a pull request:
 
 - Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
 - Log in using your GitHub Account (no need to install any App or grant `write` access)
@@ -44,7 +42,7 @@ To secure GitHub Actions workflows using a pull request:
 - Follow the remediation tip that points to https://app.stepsecurity.io
 
 <p align="center">
-  <img src="images/SecureWorkflowsIntegration.png" alt="Secure workflow Scorecard integration screenshot" width="600">
+  <img src="images/SecureWorkflowsIntegration.png" alt="Secure repo Scorecard integration screenshot" width="600">
 </p>
 
 ### Self Hosted
@@ -54,10 +52,13 @@ To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _
 ## Functionality
 
 1. [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
-2. [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
-3. [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
-4. [Add or update Dependabot configuration](#4-add-or-update-dependabot-configuration)
-5. [Add CodeQL workflow (SAST)](#5-add-codeql-workflow-sast)
+2. [Add Harden-Runner GitHub Action to each job](#2-add-harden-runner-github-action-to-each-job)
+3. [Pin Actions to a full length commit SHA](#3-pin-actions-to-a-full-length-commit-sha)
+4. [Pin image tags to digests in Dockerfiles](#4-pin-image-tags-to-digests-in-dockerfiles)
+5. [Add or update Dependabot configuration](#5-add-or-update-dependabot-configuration)
+6. [Add CodeQL workflow (SAST)](#6-add-codeql-workflow-sast)
+7. [Add Dependency review workflow](#7-add-dependency-review-workflow)
+8. [Add OpenSSF Scorecard workflow](#8-add-openssf-scorecard-workflow)
 
 ### 1. Automatically set minimum GITHUB_TOKEN permissions
 
@@ -75,38 +76,13 @@ In this pull request, minimum permissions are set automatically for the GITHUB_T
 
 <p align="center"><img src="images/token-perm-example.png" alt="Screenshot of token permissions set in a workflow" width="600" /></p>
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-- SecureWorkflows stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-workflows/tree/main/knowledge-base/actions)>)
+- Secure-Repo stores the permissions needed by different GitHub Actions in a [knowledge base](<(https://github.com/step-security/secure-repo/tree/main/knowledge-base/actions)>)
 - It looks up the permissions needed by each Action in your workflow and sums the permissions up to come up with a final recommendation
-- If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
+- If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/README.md)
 
-### 2. Pin Actions to a full length commit SHA
-
-#### Why is this needed?
-
-- GitHub Action tags and Docker tags are mutable, which poses a security risk
-- If the tag changes you will not have a chance to review the change before it gets used
-- GitHub's Security Hardening for GitHub Actions guide [recommends pinning actions to full length commit for third party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions).
-
-#### Before and After the fix
-
-Before the fix, your workflow may look like this (use of `v1` and `latest` tags)
-
-After the fix, SecureWorkflows pins each Action and docker image to an immutable checksum.
-
-**Pull request example**: https://github.com/electron/electron/pull/36343
-
-In this pull request, the workflow file has the GitHub Actions tags pinned automatically to their full-length commit SHA.
-
-<p align="center"><img src="images/pin-example.png" alt="Screenshot of Action pinned to commit SHA" width="600" /></p>
-
-#### How does SecureWorkflows fix this issue?
-
-- SecureWorkflows automates the process of getting the commit SHA for each mutable Action version or Docker image tag
-- It does this by using GitHub and Docker registry APIs
-
-### 3. Add Harden-Runner GitHub Action to each job
+### 2. Add Harden-Runner GitHub Action to each job
 
 #### Why is this needed?
 
@@ -120,11 +96,61 @@ This pull request adds the Harden Runner GitHub Action to the workflow file.
 
 <p align="center"><img src="images/harden-runner-example.png" width="600" alt="Screenshot of Harden-Runner GitHub Action added to a workflow" /></p>
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-SecureWorkflows updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
+Secure-Repo updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
 
-### 4. Add or update Dependabot configuration
+### 3. Pin Actions to a full length commit SHA
+
+#### Why is this needed?
+
+- GitHub Action tags and Docker tags are mutable, which poses a security risk
+- If the tag changes you will not have a chance to review the change before it gets used
+- GitHub's Security Hardening for GitHub Actions guide [recommends pinning actions to full length commit for third party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions).
+
+#### Before and After the fix
+
+Before the fix, your workflow may look like this (use of `v1` and `latest` tags)
+
+After the fix, Secure-Repo pins each Action and docker image to an immutable checksum.
+
+**Pull request example**: https://github.com/electron/electron/pull/36343
+
+In this pull request, the workflow file has the GitHub Actions tags pinned automatically to their full-length commit SHA.
+
+<p align="center"><img src="images/pin-example.png" alt="Screenshot of Action pinned to commit SHA" width="600" /></p>
+
+#### How does Secure-Repo fix this issue?
+
+- Secure-Repo automates the process of getting the commit SHA for each mutable Action version or Docker image tag
+- It does this by using GitHub and Docker registry APIs
+
+### 4. Pin image tags to digests in Dockerfiles
+
+#### Why is this needed?
+
+- Docker tags are mutable, so use digests in place of tags when pulling images
+- If the tag changes you will not have a chance to review the change before it gets used
+- OpenSSF Scorecard [recommends pinning image tags for Dockerfiles used in building and releasing your project](https://github.com/ossf/scorecard/blob/main/docs/checks.md#pinned-dependencies).
+
+#### Before and After the fix
+
+Before the fix, your Dockerfile uses image:tag, e.g. `rust:latest`
+
+After the fix, Secure-Repo pins each docker image to an immutable checksum, e.g. `rust:latest@sha256:02a53e734724bef4a58d856c694f826aa9e7ea84353516b76d9a6d241e9da60e`.
+
+**Pull request example**: https://github.com/fleetdm/fleet/pull/10205
+
+In this pull request, the Docker file has tags pinned automatically to their checksum.
+
+<p align="center"><img src="images/pin-docker-example.png" alt="Screenshot of docker image pinned to checksum" width="600" /></p>
+
+#### How does Secure-Repo fix this issue?
+
+- Secure-Repo automates the process of getting the checksum for each Docker image tag
+- It does this by using Docker registry APIs
+
+### 5. Add or update Dependabot configuration
 
 #### Why is this needed?
 
@@ -143,11 +169,11 @@ This pull request updates the Dependabot configuration.
 
 <p align="center"><img src="images/dependabot-example.png" width="600" alt="Screenshot of Dependabot config updated" /></p>
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-SecureWorkflows updates the `dependabot.yml` file to add missing ecosystems. For example, if the Dependabot configuration updates npm packages but not GitHub Actions, it is updated to add the GitHub Actions ecosystem.
+Secure-Repo updates the `dependabot.yml` file to add missing ecosystems. For example, if the Dependabot configuration updates npm packages but not GitHub Actions, it is updated to add the GitHub Actions ecosystem.
 
-### 5. Add CodeQL workflow (SAST)
+### 6. Add CodeQL workflow (SAST)
 
 #### Why is this needed?
 
@@ -163,12 +189,54 @@ After the fix, a `codeql.yml` GitHub Actions workflow gets added to your project
 
 This pull request adds CodeQL to the list of workflows.
 
-#### How does SecureWorkflows fix this issue?
+#### How does Secure-Repo fix this issue?
 
-SecureWorkflows has a [workflow-templates](https://github.com/step-security/secure-workflows/tree/main/workflow-templates) folder. This folder has the default CodeQL workflow, which gets added as part of the pull request. The placeholder for languages in the template gets replaced with languages for your GitHub repository.
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default CodeQL workflow, which gets added as part of the pull request. The placeholder for languages in the template gets replaced with languages for your GitHub repository.
+
+### 7. Add Dependency review workflow
+
+#### Why is this needed?
+
+- The Dependency review workflow scans for vulnerable versions of dependencies introduced by package version changes in pull requests, and warns you about the associated security vulnerabilities.
+- This gives you better visibility of what's changing in a pull request, and helps prevent vulnerabilities being added to your repository.
+
+#### Before and After the fix
+
+Before the fix, you do not have a dependency review workflow.
+
+After the fix, a `depdendency-review.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/input-output-hk/catalyst-core/pull/286
+
+This pull request adds GitHub's `actions/dependency-review-action` workflow to the list of workflows.
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default dependency review workflow, which gets added as part of the pull request.
+
+### 8. Add OpenSSF Scorecard workflow
+
+#### Why is this needed?
+
+- OpenSSF Scorecard is an automated tool that assesses a number of important heuristics ("checks") associated with software security and assigns each check a score of 0-10.
+- You can use these scores to understand specific areas to improve in order to strengthen the security posture of your project.
+
+#### Before and After the fix
+
+Before the fix, you do not have a OpenSSF Scorecard workflow.
+
+After the fix, a `scorecards.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/mcornick/clilol/pull/14
+
+This pull request adds OpenSSF Scorecard to the list of workflows.
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default Scorecard workflow, which gets added as part of the pull request.
 
 ## Contributing
 
 Contributions are welcome!
 
-If you are the owner of a GitHub Action, please contribute information about the use of GITHUB_TOKEN for your Action. This will enable the community to automatically calculate minimum token permissions for the GITHUB_TOKEN for their workflows. Check out the [Contributing Guide](https://github.com/step-security/secure-workflows/blob/main/knowledge-base/actions/README.md)
+If you are the owner of a GitHub Action, please contribute information about the use of GITHUB_TOKEN for your Action. This will enable the community to automatically calculate minimum token permissions for the GITHUB_TOKEN for their workflows. Check out the [Contributing Guide](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/README.md)

@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/step-security/secure-workflows/remediation/dependabot"
-	"github.com/step-security/secure-workflows/remediation/docker"
-	"github.com/step-security/secure-workflows/remediation/secrets"
-	"github.com/step-security/secure-workflows/remediation/workflow"
-	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
+	"github.com/step-security/secure-repo/remediation/dependabot"
+	"github.com/step-security/secure-repo/remediation/docker"
+	"github.com/step-security/secure-repo/remediation/secrets"
+	"github.com/step-security/secure-repo/remediation/workflow"
+	"github.com/step-security/secure-repo/remediation/workflow/permissions"
 )
 
 type Handler struct {

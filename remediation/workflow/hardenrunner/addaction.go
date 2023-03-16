@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
-	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
-	"github.com/step-security/secure-workflows/remediation/workflow/pin"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
+	"github.com/step-security/secure-repo/remediation/workflow/permissions"
+	"github.com/step-security/secure-repo/remediation/workflow/pin"
 	"gopkg.in/yaml.v3"
 )
 

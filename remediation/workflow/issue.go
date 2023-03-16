@@ -6,16 +6,16 @@ import (
 	"os"
 
 	"github.com/google/go-github/v40/github"
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"golang.org/x/oauth2"
 )
 
 const (
 	kblabel           = "knowledge-base"
 	stepsecurityowner = "step-security"
-	stepsecurityrepo  = "secure-workflows"
 	branch            = "main"
 	workflowFile      = "kbanalysis.yml"
+	stepsecurityrepo  = "secure-repo"
 	allIssues         = "all"
 	openIssues        = "open"
 )

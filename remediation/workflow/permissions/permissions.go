@@ -7,7 +7,7 @@ import (
 
 	"github.com/PaesslerAG/gval"
 	"github.com/generikvault/gvalstrings"
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,7 +40,7 @@ const errorDockerAction = "KnownIssue-6: Action %s is a docker action which uses
 const errorReusableWorkflow = "KnownIssue-7: Action %s is a reusable workflow. Reusable workflows are not supported as of now."
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
-//To avoid a typo while adding the permissions
+// To avoid a typo while adding the permissions
 const (
 	actions_read              = "actions: read"
 	actions_write             = "actions: write"
@@ -125,7 +125,7 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 	}
 
 	if addProjectComment {
-		output = append(output, spaces+"permissions:  # added using https://github.com/step-security/secure-workflows")
+		output = append(output, spaces+"permissions:  # added using https://github.com/step-security/secure-repo")
 	} else {
 		output = append(output, spaces+"permissions:")
 	}
