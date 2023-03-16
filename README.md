@@ -52,10 +52,13 @@ To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _
 ## Functionality
 
 1. [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
-2. [Pin Actions to a full length commit SHA](#2-pin-actions-to-a-full-length-commit-sha)
-3. [Add Harden-Runner GitHub Action to each job](#3-add-harden-runner-github-action-to-each-job)
-4. [Add or update Dependabot configuration](#4-add-or-update-dependabot-configuration)
-5. [Add CodeQL workflow (SAST)](#5-add-codeql-workflow-sast)
+2. [Add Harden-Runner GitHub Action to each job](#2-add-harden-runner-github-action-to-each-job)
+3. [Pin Actions to a full length commit SHA](#3-pin-actions-to-a-full-length-commit-sha)
+4. [Pin image tags to digests in Dockerfiles](#4-pin-image-tags-to-digests-in-dockerfiles)
+5. [Add or update Dependabot configuration](#5-add-or-update-dependabot-configuration)
+6. [Add CodeQL workflow (SAST)](#6-add-codeql-workflow-sast)
+7. [Add Dependency review workflow](#7-add-dependency-review-workflow)
+8. [Add OpenSSF Scorecard workflow](#8-add-openssf-scorecard-workflow)
 
 ### 1. Automatically set minimum GITHUB_TOKEN permissions
 
@@ -79,7 +82,25 @@ In this pull request, minimum permissions are set automatically for the GITHUB_T
 - It looks up the permissions needed by each Action in your workflow and sums the permissions up to come up with a final recommendation
 - If you are the owner of a GitHub Action, please [contribute to the knowledge base](https://github.com/step-security/secure-repo/blob/main/knowledge-base/actions/README.md)
 
-### 2. Pin Actions to a full length commit SHA
+### 2. Add Harden-Runner GitHub Action to each job
+
+#### Why is this needed?
+
+[Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.
+
+#### Before and After the fix
+
+**Pull request example**: https://github.com/python-attrs/attrs/pull/1034
+
+This pull request adds the Harden Runner GitHub Action to the workflow file.
+
+<p align="center"><img src="images/harden-runner-example.png" width="600" alt="Screenshot of Harden-Runner GitHub Action added to a workflow" /></p>
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
+
+### 3. Pin Actions to a full length commit SHA
 
 #### Why is this needed?
 
@@ -104,25 +125,32 @@ In this pull request, the workflow file has the GitHub Actions tags pinned autom
 - Secure-Repo automates the process of getting the commit SHA for each mutable Action version or Docker image tag
 - It does this by using GitHub and Docker registry APIs
 
-### 3. Add Harden-Runner GitHub Action to each job
+### 4. Pin image tags to digests in Dockerfiles
 
 #### Why is this needed?
 
-[Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.
+- Docker tags are mutable, so use digests in place of tags when pulling images
+- If the tag changes you will not have a chance to review the change before it gets used
+- OpenSSF Scorecard [recommends pinning image tags for Dockerfiles used in building and releasing your project](https://github.com/ossf/scorecard/blob/main/docs/checks.md#pinned-dependencies).
 
 #### Before and After the fix
 
-**Pull request example**: https://github.com/python-attrs/attrs/pull/1034
+Before the fix, your Dockerfile uses image:tag, e.g. `rust:latest`
 
-This pull request adds the Harden Runner GitHub Action to the workflow file.
+After the fix, Secure-Repo pins each docker image to an immutable checksum, e.g. `rust:latest@sha256:02a53e734724bef4a58d856c694f826aa9e7ea84353516b76d9a6d241e9da60e`.
 
-<p align="center"><img src="images/harden-runner-example.png" width="600" alt="Screenshot of Harden-Runner GitHub Action added to a workflow" /></p>
+**Pull request example**: https://github.com/fleetdm/fleet/pull/10205
+
+In this pull request, the Docker file has tags pinned automatically to their checksum.
+
+<p align="center"><img src="images/pin-docker-example.png" alt="Screenshot of docker image pinned to checksum" width="600" /></p>
 
 #### How does Secure-Repo fix this issue?
 
-Secure-Repo updates the YAML file and adds [Harden-Runner GitHub Action](https://github.com/step-security/harden-runner) as the first step to each job.
+- Secure-Repo automates the process of getting the checksum for each Docker image tag
+- It does this by using Docker registry APIs
 
-### 4. Add or update Dependabot configuration
+### 5. Add or update Dependabot configuration
 
 #### Why is this needed?
 
@@ -145,7 +173,7 @@ This pull request updates the Dependabot configuration.
 
 Secure-Repo updates the `dependabot.yml` file to add missing ecosystems. For example, if the Dependabot configuration updates npm packages but not GitHub Actions, it is updated to add the GitHub Actions ecosystem.
 
-### 5. Add CodeQL workflow (SAST)
+### 6. Add CodeQL workflow (SAST)
 
 #### Why is this needed?
 
@@ -164,6 +192,48 @@ This pull request adds CodeQL to the list of workflows.
 #### How does Secure-Repo fix this issue?
 
 Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default CodeQL workflow, which gets added as part of the pull request. The placeholder for languages in the template gets replaced with languages for your GitHub repository.
+
+### 7. Add Dependency review workflow
+
+#### Why is this needed?
+
+- The Dependency review workflow scans for vulnerable versions of dependencies introduced by package version changes in pull requests, and warns you about the associated security vulnerabilities.
+- This gives you better visibility of what's changing in a pull request, and helps prevent vulnerabilities being added to your repository.
+
+#### Before and After the fix
+
+Before the fix, you do not have a dependency review workflow.
+
+After the fix, a `depdendency-review.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/input-output-hk/catalyst-core/pull/286
+
+This pull request adds GitHub's `actions/dependency-review-action` workflow to the list of workflows.
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default dependency review workflow, which gets added as part of the pull request.
+
+### 8. Add OpenSSF Scorecard workflow
+
+#### Why is this needed?
+
+- OpenSSF Scorecard is an automated tool that assesses a number of important heuristics ("checks") associated with software security and assigns each check a score of 0-10.
+- You can use these scores to understand specific areas to improve in order to strengthen the security posture of your project.
+
+#### Before and After the fix
+
+Before the fix, you do not have a OpenSSF Scorecard workflow.
+
+After the fix, a `scorecards.yml` GitHub Actions workflow gets added to your project.
+
+**Pull request example**: https://github.com/mcornick/clilol/pull/14
+
+This pull request adds OpenSSF Scorecard to the list of workflows.
+
+#### How does Secure-Repo fix this issue?
+
+Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default Scorecard workflow, which gets added as part of the pull request.
 
 ## Contributing
 
