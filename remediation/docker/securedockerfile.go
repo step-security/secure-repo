@@ -71,6 +71,8 @@ func SecureDockerFile(inputDockerFile string) (*SecureDockerfileResponse, error)
 				}
 				new_cmd := strings.ReplaceAll(c.Original, c.Value[0], fmt.Sprintf("%s:%s@%s", image, tag, sha))
 				response.FinalOutput = strings.ReplaceAll(response.FinalOutput, c.Original, new_cmd)
+				// Revert the extra hash for already pinned docker images
+				response.FinalOutput = strings.ReplaceAll(response.FinalOutput, new_cmd+"@", c.Original+"@")
 				response.IsChanged = true
 
 			}
