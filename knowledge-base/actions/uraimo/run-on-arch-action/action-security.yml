@@ -1,0 +1,8 @@
+name: 'Run on architecture'
+github-token:
+  action-input:
+    input: githubToken
+    is-default: false
+  permissions:
+    packages: write
+    packages-reason: to cache docker images #Reference: https://github.com/uraimo/run-on-arch-action/blob/a8003307a739516fdd80ee6d3da8924db811b8da/action.yml#L17
