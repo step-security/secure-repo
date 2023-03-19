@@ -1,0 +1,6 @@
+name: Code-Suggester
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
+    contents: write
+    contents-reason: to <reason_here> # specify why contents is used.
