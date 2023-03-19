@@ -4,7 +4,6 @@ github-token:
     input: repo-token
     is-default: true
   permissions:
-    issues: write
-    issues-reason: to <reason_here> # specify why issues is used.
-    contents: read
-    contents-reason: to <reason_here> # specify why contents is used.
+   pull-requests: write
+   pull-requests-reason: to post comments on PRs #Checkout: https://github.com/actions/dependency-review-action/blob/e3fb5152be474702523c77d8f5ecd4c0a5bde872/action.yml#L44
+   pull-requests-if: ${{ contains(with, 'comment-summary-in-pr') && with['comment-summary-in-pr'] == 'true' }}
