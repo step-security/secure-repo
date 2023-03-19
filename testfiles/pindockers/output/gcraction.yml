@@ -19,12 +19,12 @@ jobs:
         go-version: ${{ env.GO_VERSION }}
 
     - name: Container structure test (scratch)
-      uses: docker://gcr.io/gcp-runtimes/container-structure-test@sha256:4affda1c8f058f8d6c86dcad965cdb438a3d1d9a982828ff6737ea492b6bc8ce # latest
+      uses: docker://gcr.io/gcp-runtimes/container-structure-test:latest@sha256:4affda1c8f058f8d6c86dcad965cdb438a3d1d9a982828ff6737ea492b6bc8ce
       with:
         args: 'test --image ffurrer/semver:latest --config test/semver_container_test.yml'
 
     - name: Container structure test (alpine)
-      uses: docker://gcr.io/gcp-runtimes/container-structure-test@sha256:4affda1c8f058f8d6c86dcad965cdb438a3d1d9a982828ff6737ea492b6bc8ce # latest
+      uses: docker://gcr.io/gcp-runtimes/container-structure-test:latest@sha256:4affda1c8f058f8d6c86dcad965cdb438a3d1d9a982828ff6737ea492b6bc8ce
       with:
         args: 'test --image ffurrer/semver:alpine --config test/semver_alpine_container_test.yml'
 

@@ -66,10 +66,11 @@ func pinDocker(action, jobName, inputYaml string) (string, bool) {
 		return inputYaml, updated
 	}
 
-	pinnedAction := fmt.Sprintf("%s:%s@%s # %s", leftOfAt[0], leftOfAt[1], imghash.String(), tag)
+	pinnedAction := fmt.Sprintf("%s:%s:%s@%s", leftOfAt[0], leftOfAt[1], tag, imghash.String())
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
 	// Revert the extra hash for already pinned docker actions
 	inputYaml = strings.ReplaceAll(inputYaml, pinnedAction+"@", action+"@")
+	inputYaml = strings.ReplaceAll(inputYaml, pinnedAction+":", action+":")
 	updated = !strings.EqualFold(action, pinnedAction)
 	return inputYaml, updated
 }
