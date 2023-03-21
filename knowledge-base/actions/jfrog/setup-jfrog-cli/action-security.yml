@@ -1,0 +1,4 @@
+name: "Setup JFrog CLI"
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
