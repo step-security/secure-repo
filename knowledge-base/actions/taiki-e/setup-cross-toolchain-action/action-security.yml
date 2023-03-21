@@ -1,0 +1,2 @@
+name: Setup toolchains for cross compilation and cross testing for Rust # taiki-e/setup-cross-toolchain-action
+# GITHUB_TOKEN not used
