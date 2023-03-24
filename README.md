@@ -1,4 +1,4 @@
-<p align="center"><img src="images/banner1.png" height="80" /></p>
+<p align="center"><img src="images/banner1.png" width="350" /></p>
 
 <div align="center">
 
