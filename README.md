@@ -1,8 +1,4 @@
-<p align="center"><img src="images/banner1.png" height="80" /></p>
-
-<p align="center">
-Secure your GitHub repo with ease through automated security fixes
-</p>
+<p align="center"><img src="images/banner1.png" width="350" /></p>
 
 <div align="center">
 
@@ -14,42 +10,22 @@ Secure your GitHub repo with ease through automated security fixes
 </div>
 
 <p align="center">
-  <img src="images/secure-repo.gif" alt="Secure repo screenshot" >
+Automatically apply security best practices in your GitHub repository
+</p>
+
+<p align="center">
+  <img src="images/secure-repo-1.gif" alt="Secure repo screenshot" >
 </p>
 
 <h3>
+  <a href="#catalog-of-fixes">Catalog of Fixes</a> 
+   <span> • </span>
   <a href="#quickstart">Quickstart</a>
-  <span> • </span>
-  <a href="#functionality-overview">Functionality</a> 
    <span> • </span>
   <a href="#contributing">Contributing</a>  
 </h3>
 
-## Quickstart
-
-### Hosted Instance: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
-
-To secure your GitHub repo using a pull request:
-
-- Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
-- Log in using your GitHub Account (no need to install any App or grant `write` access)
-- View recommendations and click `Create pull request.` Here is an example pull request: https://github.com/electron/electron/pull/36343.
-
-### Integration with OpenSSF Scorecard
-
-- Add [OpenSSF Scorecards](https://github.com/ossf/scorecard-action) starter workflow
-- View the Scorecard results in GitHub Code Scanning UI
-- Follow the remediation tip that points to https://app.stepsecurity.io
-
-<p align="center">
-  <img src="images/SecureWorkflowsIntegration.png" alt="Secure repo Scorecard integration screenshot" width="600">
-</p>
-
-### Self Hosted
-
-To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _cloudformation/resources.yml_ CloudFormation templates in your AWS account. You can take a look at _.github/workflows/release.yml_ for reference.
-
-## Functionality
+## Catalog of Fixes
 
 1. [Automatically set minimum GITHUB_TOKEN permissions](#1-automatically-set-minimum-github_token-permissions)
 2. [Add Harden-Runner GitHub Action to each job](#2-add-harden-runner-github-action-to-each-job)
@@ -227,13 +203,37 @@ Before the fix, you do not have a OpenSSF Scorecard workflow.
 
 After the fix, a `scorecards.yml` GitHub Actions workflow gets added to your project.
 
-**Pull request example**: https://github.com/mcornick/clilol/pull/14
+**Pull request example**: https://github.com/microsoft/CLRInstrumentationEngine/pull/527
 
 This pull request adds OpenSSF Scorecard to the list of workflows.
 
 #### How does Secure-Repo fix this issue?
 
 Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-repo/tree/main/workflow-templates) folder. This folder has the default Scorecard workflow, which gets added as part of the pull request.
+
+## Quickstart
+
+### Hosted Instance: [app.stepsecurity.io/securerepo](https://app.stepsecurity.io/securerepo)
+
+To secure your GitHub repo using a pull request:
+
+- Go to https://app.stepsecurity.io/securerepo and enter your public GitHub repository
+- Log in using your GitHub Account (no need to install any App or grant `write` access)
+- View recommendations and click `Create pull request.` Here is an example pull request: https://github.com/electron/electron/pull/36343.
+
+### Integration with OpenSSF Scorecard
+
+- Add [OpenSSF Scorecards](https://github.com/ossf/scorecard-action) starter workflow
+- View the Scorecard results in GitHub Code Scanning UI
+- Follow the remediation tip that points to https://app.stepsecurity.io
+
+<p align="center">
+  <img src="images/SecureWorkflowsIntegration.png" alt="Secure repo Scorecard integration screenshot" width="600">
+</p>
+
+### Self Hosted
+
+To create an instance of Secure Workflows, deploy _cloudformation/ecr.yml_ and _cloudformation/resources.yml_ CloudFormation templates in your AWS account. You can take a look at _.github/workflows/release.yml_ for reference.
 
 ## Contributing
 
