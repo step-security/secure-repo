@@ -14,7 +14,7 @@ Automatically apply security best practices in your GitHub repository
 </p>
 
 <p align="center">
-  <img src="images/secure-repo.gif" alt="Secure repo screenshot" >
+  <img src="images/secure-repo-1.gif" alt="Secure repo screenshot" >
 </p>
 
 <h3>
