@@ -18,7 +18,7 @@ Automatically apply security best practices in your GitHub repository
 </p>
 
 <h3>
-  <a href="#functionality-overview">Catalog of Fixes</a> 
+  <a href="#catalog-of-fixes">Catalog of Fixes</a> 
    <span> • </span>
   <a href="#quickstart">Quickstart</a>
    <span> • </span>
@@ -203,7 +203,7 @@ Before the fix, you do not have a OpenSSF Scorecard workflow.
 
 After the fix, a `scorecards.yml` GitHub Actions workflow gets added to your project.
 
-**Pull request example**: https://github.com/mcornick/clilol/pull/14
+**Pull request example**: https://github.com/microsoft/CLRInstrumentationEngine/pull/527
 
 This pull request adds OpenSSF Scorecard to the list of workflows.
 
