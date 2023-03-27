@@ -1,0 +1,10 @@
+name: 'Detect Rapid Scan Action'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    checks: write
+    checks-reason: to <reason_here> # specify why checks is used.
+    issues: write
+    issues-reason: to <reason_here> # specify why issues is used.
