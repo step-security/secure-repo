@@ -120,6 +120,7 @@ func TestSecureWorkflow(t *testing.T) {
 		{fileName: "nopin.yml", wantPinnedActions: false, wantAddedHardenRunner: true, wantAddedPermissions: true},
 		{fileName: "allperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true},
 		{fileName: "multiplejobperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true},
+		{fileName: "error.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: false},
 	}
 	for _, test := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, test.fileName))
