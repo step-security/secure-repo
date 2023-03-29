@@ -101,6 +101,9 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 	line := 0
 	column := 0
 	topNode := t.Content
+	if len(topNode) == 0 {
+		return inputYaml, fmt.Errorf("Workflow file provided is Empty")
+	}
 	for _, n := range topNode[0].Content {
 		if n.Value == "jobs" && n.Tag == "!!str" {
 			line = n.Line
