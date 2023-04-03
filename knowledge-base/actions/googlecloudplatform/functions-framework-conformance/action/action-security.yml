@@ -1,0 +1,2 @@
+name: 'Run conformance tests' # GoogleCloudPlatform/functions-framework-conformance/action
+# GITHUB_TOKEN not used
