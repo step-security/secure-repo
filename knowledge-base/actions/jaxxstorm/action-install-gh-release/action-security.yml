@@ -1,0 +1,8 @@
+name: "Install a binary from GitHub releases"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to <reason_here> # specify why contents is used.
