@@ -1,0 +1,6 @@
+name: 'github-status-action'
+github-token:
+  action-input:
+    input: Token
+    is-default: false
+  permissions:
