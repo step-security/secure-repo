@@ -1,0 +1,10 @@
+name: 'Retest'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: read
+    actions-reason: to <reason_here> # specify why actions is used.
+    undefined: write
+    undefined-reason: to <reason_here> # specify why undefined is used.
