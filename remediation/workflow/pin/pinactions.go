@@ -76,6 +76,13 @@ func PinAction(action, inputYaml string) (string, bool) {
 	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
 	updated = !strings.EqualFold(action, pinnedAction)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
+	stringParts := strings.SplitN(inputYaml, pinnedAction, 2)
+	if len(stringParts) > 1 {
+		trimmedString := strings.SplitN(stringParts[1], "\n", 2)
+		if len(trimmedString) > 1 {
+			inputYaml = stringParts[0] + pinnedAction + "\n" + trimmedString[1]
+		}
+	}
 	return inputYaml, updated
 }
 

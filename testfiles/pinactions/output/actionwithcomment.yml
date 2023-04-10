@@ -1,0 +1,16 @@
+name: "close issue"
+
+on:
+  push:
+  
+
+jobs:
+  closeissue:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Close Issue
+      uses: peter-evans/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53dbe # v1.0.3
+      with:
+       issue-number: 1
+       comment: Auto-closing issue
