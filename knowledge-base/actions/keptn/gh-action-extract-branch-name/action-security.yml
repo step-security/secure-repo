@@ -1,0 +1,2 @@
+name: 'Extract Branch Name' # keptn/gh-action-extract-branch-name
+# GITHUB_TOKEN not used
