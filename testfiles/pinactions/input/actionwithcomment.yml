@@ -27,8 +27,3 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           registry: https://npm.pkg.github.com
-      - name: Close Issue
-        uses: peter-evans/close-issue@v1 #Mock comment to remove
-        with:
-        issue-number: 1
-        comment: Auto-closing issue

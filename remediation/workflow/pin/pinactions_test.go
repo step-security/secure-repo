@@ -183,7 +183,7 @@ func TestPinActions(t *testing.T) {
 		{fileName: "dockeraction.yml", wantUpdated: true},
 		{fileName: "multipleactions.yml", wantUpdated: true},
 		{fileName: "actionwithcomment.yml", wantUpdated: true},
-		{fileName: "basicactionwithcomment.yml", wantUpdated: true},
+		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true},
 	}
 	for _, tt := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
