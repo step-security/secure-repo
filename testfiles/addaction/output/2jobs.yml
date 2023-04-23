@@ -8,7 +8,7 @@ jobs:
      - name: Harden Runner
        uses: step-security/harden-runner@v2
        with:
-         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+         egress-policy: audit
 
      - run: ls -R
   list-directory1:
@@ -17,6 +17,6 @@ jobs:
      - name: Harden Runner
        uses: step-security/harden-runner@v2
        with:
-         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+         egress-policy: audit
 
      - run: ls -R

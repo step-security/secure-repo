@@ -1,0 +1,28 @@
+name: "close issue"
+
+on:
+  push:
+
+jobs:
+  closeissue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Close Issue
+        uses: peter-evans/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53dbe # v1.0.3
+        with:
+          issue-number: 1
+          comment: Auto-closing issue
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1.2.0
+      - uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e # v1.4.6
+        with:
+          node-version: 10
+      - run: npm install
+      - run: npm test
+      - uses: JS-DevTools/npm-publish@0f451a94170d1699fd50710966d48fb26194d939 # v1.4.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          registry: https://npm.pkg.github.com
