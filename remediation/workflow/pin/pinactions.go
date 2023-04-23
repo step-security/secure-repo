@@ -76,6 +76,19 @@ func PinAction(action, inputYaml string) (string, bool) {
 	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
 	updated = !strings.EqualFold(action, pinnedAction)
 	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
+	yamlWithPreviousActionCommentsRemoved, wasModified := removePreviousActionComments(pinnedAction, inputYaml)
+	if wasModified {
+		return yamlWithPreviousActionCommentsRemoved, updated
+	}
+	return inputYaml, updated
+}
+
+// It may be that there was already a comment next to the action
+// In this case we want to remove the earlier comment
+// we add a comment with the Action version so dependabot/ renovatebot can update it
+// if there was no comment next to any action, updated will be false
+func removePreviousActionComments(pinnedAction, inputYaml string) (string, bool) {
+	updated := false
 	stringParts := strings.Split(inputYaml, pinnedAction)
 	if len(stringParts) > 1 {
 		inputYaml = ""
@@ -83,10 +96,14 @@ func PinAction(action, inputYaml string) (string, bool) {
 		for idx := 1; idx < len(stringParts); idx++ {
 			trimmedString := strings.SplitN(stringParts[idx], "\n", 2)
 			if len(trimmedString) > 1 {
+				if strings.Contains(trimmedString[0], "#") {
+					updated = true
+				}
 				inputYaml = inputYaml + pinnedAction + "\n" + trimmedString[1]
 			}
 		}
 	}
+
 	return inputYaml, updated
 }
 
