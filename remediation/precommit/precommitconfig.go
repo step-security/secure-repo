@@ -137,7 +137,6 @@ func UpdatePrecommitConfig(precommitConfig string) (*UpdatePrecommitConfigRespon
 
 	for _, Update := range Hooks {
 		repoAlreadyExist := false
-		// fmt.Println(Update.Hooks)
 		for _, update := range configMetadata.Repos {
 			if update.Repo == Update.Repo {
 				repoAlreadyExist = true
@@ -150,7 +149,6 @@ func UpdatePrecommitConfig(precommitConfig string) (*UpdatePrecommitConfigRespon
 		if err != nil {
 			return nil, err
 		}
-		// fmt.Println(response.FinalOutput)
 		response.IsChanged = true
 	}
 

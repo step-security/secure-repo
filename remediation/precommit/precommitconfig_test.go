@@ -60,7 +60,6 @@ func TestUpdatePrecommitConfig(t *testing.T) {
 
 		if string(expectedOutput) != output.FinalOutput {
 			t.Errorf("test failed %s did not match expected output\n%s", test.fileName, output.FinalOutput)
-			ioutil.WriteFile(test.fileName, []byte(output.FinalOutput), 0644)
 		}
 
 		if output.IsChanged != test.isChanged {
