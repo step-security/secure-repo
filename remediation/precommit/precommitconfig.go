@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/step-security/secure-repo/remediation/workflow/permissions"
@@ -101,6 +102,9 @@ func GetHooks(languages []string, alreadyPresentHooks map[string]bool) ([]Repo, 
 	for _, repo := range newHooks {
 		repos = append(repos, repo)
 	}
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].Repo < repos[j].Repo
+	})
 	return repos, nil
 }
 
