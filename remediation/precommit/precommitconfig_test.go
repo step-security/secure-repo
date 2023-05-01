@@ -48,7 +48,11 @@ func TestUpdatePrecommitConfig(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, err := UpdatePrecommitConfig(string(inputRequest))
+		hooks, err := GetHooks(string(inputRequest))
+		if err != nil {
+			log.Fatal(err)
+		}
+		output, err := UpdatePrecommitConfig(string(inputRequest), hooks)
 		if err != nil {
 			t.Fatalf("Error not expected: %s", err)
 		}

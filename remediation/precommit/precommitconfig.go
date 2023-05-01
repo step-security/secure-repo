@@ -43,10 +43,6 @@ type FetchPrecommitConfig struct {
 	Hooks Hooks `yaml:"hooks"`
 }
 
-// type LangHook struct {
-// 	Repo Repo `yaml:"hook"`
-// }
-
 type Hooks map[string][]Repo
 
 func getConfigFile() (string, error) {
@@ -64,7 +60,23 @@ func getConfigFile() (string, error) {
 	return string(configFile), nil
 }
 
-func GetHooks(languages []string, alreadyPresentHooks map[string]bool) ([]Repo, error) {
+func GetHooks(precommitConfig string) ([]Repo, error) {
+	var updatePrecommitConfigRequest UpdatePrecommitConfigRequest
+	json.Unmarshal([]byte(precommitConfig), &updatePrecommitConfigRequest)
+	inputConfigFile := []byte(updatePrecommitConfigRequest.Content)
+	configMetadata := PrecommitConfig{}
+	err := yaml.Unmarshal(inputConfigFile, &configMetadata)
+	if err != nil {
+		return nil, err
+	}
+
+	alreadyPresentHooks := make(map[string]bool)
+	for _, repos := range configMetadata.Repos {
+		for _, hook := range repos.Hooks {
+			alreadyPresentHooks[hook.Id] = true
+		}
+	}
+
 	configFile, err := getConfigFile()
 	if err != nil {
 		return nil, err
@@ -72,7 +84,10 @@ func GetHooks(languages []string, alreadyPresentHooks map[string]bool) ([]Repo, 
 	var fetchPrecommitConfig FetchPrecommitConfig
 	yaml.Unmarshal([]byte(configFile), &fetchPrecommitConfig)
 	newHooks := make(map[string]Repo)
-	for _, lang := range languages {
+	for _, lang := range updatePrecommitConfigRequest.Languages {
+		if _, isSupported := fetchPrecommitConfig.Hooks[lang]; !isSupported {
+			continue
+		}
 		if _, ok := alreadyPresentHooks[fetchPrecommitConfig.Hooks[lang][0].Hooks[0].Id]; !ok {
 			if repo, ok := newHooks[fetchPrecommitConfig.Hooks[lang][0].Repo]; ok {
 				repo.Hooks = append(repo.Hooks, fetchPrecommitConfig.Hooks[lang][0].Hooks...)
@@ -108,7 +123,7 @@ func GetHooks(languages []string, alreadyPresentHooks map[string]bool) ([]Repo, 
 	return repos, nil
 }
 
-func UpdatePrecommitConfig(precommitConfig string) (*UpdatePrecommitConfigResponse, error) {
+func UpdatePrecommitConfig(precommitConfig string, Hooks []Repo) (*UpdatePrecommitConfigResponse, error) {
 	var updatePrecommitConfigRequest UpdatePrecommitConfigRequest
 	json.Unmarshal([]byte(precommitConfig), &updatePrecommitConfigRequest)
 	inputConfigFile := []byte(updatePrecommitConfigRequest.Content)
@@ -125,18 +140,6 @@ func UpdatePrecommitConfig(precommitConfig string) (*UpdatePrecommitConfigRespon
 
 	if updatePrecommitConfigRequest.Content == "" {
 		response.FinalOutput = "repos:"
-	}
-
-	alreadyPresentHooks := make(map[string]bool)
-	for _, repos := range configMetadata.Repos {
-		for _, hook := range repos.Hooks {
-			alreadyPresentHooks[hook.Id] = true
-		}
-	}
-	// Contains a list of hooks to be added and not present in the file
-	Hooks, err := GetHooks(updatePrecommitConfigRequest.Languages, alreadyPresentHooks)
-	if err != nil {
-		return nil, err
 	}
 
 	for _, Update := range Hooks {
