@@ -1,0 +1,4 @@
+name: 'get-cmake'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
