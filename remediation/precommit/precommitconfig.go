@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"sort"
 	"strings"
 
@@ -49,10 +48,10 @@ func getConfigFile() (string, error) {
 	filePath := os.Getenv("PRECOMMIT_CONFIG")
 
 	if filePath == "" {
-		filePath = "./"
+		filePath = "./precommit-config.yml"
 	}
 
-	configFile, err := ioutil.ReadFile(path.Join(filePath, "precommit-config.yml"))
+	configFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return "", err
 	}
