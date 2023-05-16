@@ -1,0 +1,4 @@
+name: 'maven-settings-action'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
