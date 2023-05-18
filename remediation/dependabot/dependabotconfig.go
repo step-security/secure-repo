@@ -3,10 +3,11 @@ package dependabot
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	dependabot "github.com/paulvollmer/dependabot-config-go"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type UpdateDependabotConfigResponse struct {
@@ -27,6 +28,28 @@ type UpdateDependabotConfigRequest struct {
 	Content    string
 }
 
+func getIndentation(dependabotConfig string) (int, error) {
+	t := yaml.Node{}
+
+	err := yaml.Unmarshal([]byte(dependabotConfig), &t)
+	if err != nil {
+		return 0, fmt.Errorf("unable to parse yaml %v", err)
+	}
+
+	column := 0
+	topNode := t.Content
+	if len(topNode) == 0 {
+		return 0, fmt.Errorf("file provided is Empty")
+	}
+	for _, n := range topNode[0].Content {
+		if n.Value == "" && n.Tag == "!!seq" {
+			column = n.Column
+			break
+		}
+	}
+	return column, nil
+}
+
 func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigResponse, error) {
 	var updateDependabotConfigRequest UpdateDependabotConfigRequest
 	json.Unmarshal([]byte(dependabotConfig), &updateDependabotConfigRequest)
@@ -36,6 +59,8 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	if err != nil {
 		return nil, err
 	}
+
+	indentation := 3
 
 	response := new(UpdateDependabotConfigResponse)
 	response.FinalOutput = updateDependabotConfigRequest.Content
@@ -49,6 +74,10 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		response.FinalOutput = "version: 2\nupdates:"
 	} else {
 		response.FinalOutput += "\n"
+		indentation, err = getIndentation(string(inputConfigFile))
+		if err != nil {
+			return nil, err
+		}
 	}
 	for _, Update := range updateDependabotConfigRequest.Ecosystems {
 		updateAlreadyExist := false
@@ -72,7 +101,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 			addedItem, err := yaml.Marshal(items)
 			data := string(addedItem)
 
-			data = addIndentation(data)
+			data = addIndentation(data, indentation)
 			if err != nil {
 				return nil, err
 			}
@@ -84,11 +113,15 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	return response, nil
 }
 
-func addIndentation(data string) string {
+func addIndentation(data string, indentation int) string {
 	scanner := bufio.NewScanner(strings.NewReader(data))
 	finalData := "\n"
+	spaces := ""
+	for i := 0; i < indentation-1; i++ {
+		spaces += " "
+	}
 	for scanner.Scan() {
-		finalData += "  " + scanner.Text() + "\n"
+		finalData += spaces + scanner.Text() + "\n"
 	}
 	return finalData
 }

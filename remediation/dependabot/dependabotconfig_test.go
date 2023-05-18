@@ -38,6 +38,16 @@ func TestConfigDependabotFile(t *testing.T) {
 			Ecosystems: []Ecosystem{{"github-actions", "/", "daily"}, {"npm", "/sample", "daily"}},
 			isChanged:  true,
 		},
+		{
+			fileName:   "No-Indentation.yml",
+			Ecosystems: []Ecosystem{{"npm", "/sample", "daily"}},
+			isChanged:  true,
+		},
+		{
+			fileName:   "High-Indentation.yml",
+			Ecosystems: []Ecosystem{{"npm", "/sample", "daily"}},
+			isChanged:  true,
+		},
 	}
 
 	for _, test := range tests {
