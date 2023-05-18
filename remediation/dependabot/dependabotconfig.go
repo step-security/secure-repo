@@ -3,6 +3,7 @@ package dependabot
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -28,34 +29,49 @@ type UpdateDependabotConfigRequest struct {
 	Content    string
 }
 
+// getIndentation returns the indentation level of the first list found in a given YAML string.
+// If the YAML string is empty or invalid, or if no list is found, it returns an error.
 func getIndentation(dependabotConfig string) (int, error) {
+	// Initialize an empty YAML node
 	t := yaml.Node{}
 
+	// Unmarshal the YAML string into the node
 	err := yaml.Unmarshal([]byte(dependabotConfig), &t)
 	if err != nil {
-		return 0, fmt.Errorf("unable to parse yaml %v", err)
+		return 0, fmt.Errorf("unable to parse yaml: %w", err)
 	}
 
-	column := 0
+	// Retrieve the top node of the YAML document
 	topNode := t.Content
 	if len(topNode) == 0 {
-		return 0, fmt.Errorf("file provided is Empty")
+		return 0, errors.New("file provided is empty or invalid")
 	}
+
+	// Check for the first list and its indentation level
 	for _, n := range topNode[0].Content {
 		if n.Value == "" && n.Tag == "!!seq" {
-			column = n.Column
-			break
+			// Return the column of the first list found
+			return n.Column, nil
 		}
 	}
-	return column, nil
+
+	// Return an error if no list was found
+	return 0, errors.New("no list found in yaml")
 }
 
+// UpdateDependabotConfig is used to update dependabot configuration and returns an UpdateDependabotConfigResponse.
 func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigResponse, error) {
 	var updateDependabotConfigRequest UpdateDependabotConfigRequest
-	json.Unmarshal([]byte(dependabotConfig), &updateDependabotConfigRequest)
+
+	// Handle error in json unmarshalling
+	err := json.Unmarshal([]byte(dependabotConfig), &updateDependabotConfigRequest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %v", err)
+	}
+
 	inputConfigFile := []byte(updateDependabotConfigRequest.Content)
 	configMetadata := dependabot.New()
-	err := configMetadata.Unmarshal(inputConfigFile)
+	err = configMetadata.Unmarshal(inputConfigFile)
 	if err != nil {
 		return nil, err
 	}
@@ -67,18 +83,23 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	response.OriginalInput = updateDependabotConfigRequest.Content
 	response.IsChanged = false
 
+	// Using strings.Builder for efficient string concatenation
+	var finalOutput strings.Builder
+	finalOutput.WriteString(response.FinalOutput)
+
 	if updateDependabotConfigRequest.Content == "" {
 		if len(updateDependabotConfigRequest.Ecosystems) == 0 {
 			return response, nil
 		}
-		response.FinalOutput = "version: 2\nupdates:"
+		finalOutput.WriteString("version: 2\nupdates:")
 	} else {
-		response.FinalOutput += "\n"
+		finalOutput.WriteString("\n")
 		indentation, err = getIndentation(string(inputConfigFile))
 		if err != nil {
 			return nil, err
 		}
 	}
+
 	for _, Update := range updateDependabotConfigRequest.Ecosystems {
 		updateAlreadyExist := false
 		for _, update := range configMetadata.Updates {
@@ -87,6 +108,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 				break
 			}
 		}
+
 		if !updateAlreadyExist {
 			item := dependabot.Update{}
 			item.PackageEcosystem = Update.PackageEcosystem
@@ -99,29 +121,47 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 			items := []dependabot.Update{}
 			items = append(items, item)
 			addedItem, err := yaml.Marshal(items)
-			data := string(addedItem)
-
-			data = addIndentation(data, indentation)
 			if err != nil {
 				return nil, err
 			}
-			response.FinalOutput = response.FinalOutput + data
+
+			data, err := addIndentation(string(addedItem), indentation)
+			if err != nil {
+				return nil, err
+			}
+			finalOutput.WriteString(data)
 			response.IsChanged = true
 		}
 	}
 
+	// Set FinalOutput to the built string
+	response.FinalOutput = finalOutput.String()
+
 	return response, nil
 }
 
-func addIndentation(data string, indentation int) string {
+// addIndentation adds a certain number of spaces to the start of each line in the input string.
+// It returns a new string with the added indentation.
+func addIndentation(data string, indentation int) (string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(data))
-	finalData := "\n"
-	spaces := ""
-	for i := 0; i < indentation-1; i++ {
-		spaces += " "
-	}
+	var finalData strings.Builder
+
+	// Create the indentation string
+	spaces := strings.Repeat(" ", indentation-1)
+
+	finalData.WriteString("\n")
+
+	// Add indentation to each line
 	for scanner.Scan() {
-		finalData += spaces + scanner.Text() + "\n"
+		finalData.WriteString(spaces)
+		finalData.WriteString(scanner.Text())
+		finalData.WriteString("\n")
 	}
-	return finalData
+
+	// Check for scanning errors
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("error during scanning: %w", err)
+	}
+
+	return finalData.String(), nil
 }
