@@ -66,14 +66,14 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	// Handle error in json unmarshalling
 	err := json.Unmarshal([]byte(dependabotConfig), &updateDependabotConfigRequest)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal JSON from dependabotConfig: %v", err)
 	}
 
 	inputConfigFile := []byte(updateDependabotConfigRequest.Content)
 	configMetadata := dependabot.New()
 	err = configMetadata.Unmarshal(inputConfigFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal dependabot config: %v", err)
 	}
 
 	indentation := 3
@@ -93,10 +93,12 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		}
 		finalOutput.WriteString("version: 2\nupdates:")
 	} else {
-		finalOutput.WriteString("\n")
+		if !strings.HasSuffix(response.FinalOutput, "\n") {
+			finalOutput.WriteString("\n")
+		}
 		indentation, err = getIndentation(string(inputConfigFile))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get indentation: %v", err)
 		}
 	}
 
@@ -110,24 +112,20 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		}
 
 		if !updateAlreadyExist {
-			item := dependabot.Update{}
-			item.PackageEcosystem = Update.PackageEcosystem
-			item.Directory = Update.Directory
-
-			schedule := dependabot.Schedule{}
-			schedule.Interval = Update.Interval
-
-			item.Schedule = schedule
-			items := []dependabot.Update{}
-			items = append(items, item)
+			item := dependabot.Update{
+				PackageEcosystem: Update.PackageEcosystem,
+				Directory:        Update.Directory,
+				Schedule:         dependabot.Schedule{Interval: Update.Interval},
+			}
+			items := []dependabot.Update{item}
 			addedItem, err := yaml.Marshal(items)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to marshal update items: %v", err)
 			}
 
 			data, err := addIndentation(string(addedItem), indentation)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to add indentation: %v", err)
 			}
 			finalOutput.WriteString(data)
 			response.IsChanged = true
