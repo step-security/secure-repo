@@ -1,0 +1,6 @@
+inputs
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
