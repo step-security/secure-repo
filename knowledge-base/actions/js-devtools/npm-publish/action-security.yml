@@ -1,0 +1,6 @@
+name: NPM Publish
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
