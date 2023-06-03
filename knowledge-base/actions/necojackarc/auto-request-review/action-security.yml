@@ -1,0 +1,10 @@
+name: 'Auto Request Review'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to <reason_here> # specify why pull-requests is used.
+    contents: read
+    contents-reason: to <reason_here> # specify why contents is used.
