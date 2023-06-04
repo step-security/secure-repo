@@ -1,0 +1,4 @@
+name: Automated Version Bump
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
