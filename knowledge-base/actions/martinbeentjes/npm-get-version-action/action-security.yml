@@ -1,0 +1,2 @@
+name: 'Get current package version' # martinbeentjes/npm-get-version-action
+# GITHUB_TOKEN not used
