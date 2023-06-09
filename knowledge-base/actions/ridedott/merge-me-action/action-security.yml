@@ -1,0 +1,6 @@
+name: 'Merge me!'
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: false
+  permissions:
