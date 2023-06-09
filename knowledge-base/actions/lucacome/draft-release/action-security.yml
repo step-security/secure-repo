@@ -1,0 +1,6 @@
+name: 'Draft Release Notes'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
