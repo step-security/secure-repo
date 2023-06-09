@@ -1,0 +1,4 @@
+name: 'GitHub Pages'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
