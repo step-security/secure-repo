@@ -141,7 +141,6 @@ func UpdatePrecommitConfig(precommitConfig string, Hooks []Repo) (*UpdatePrecomm
 		response.FinalOutput = "repos:"
 	}
 
-	//Adding newline at the if new update is added in config file
 	newline := false
 
 	for _, Update := range Hooks {
@@ -154,6 +153,7 @@ func UpdatePrecommitConfig(precommitConfig string, Hooks []Repo) (*UpdatePrecomm
 				break
 			}
 		}
+		//Adding newline only if the new update does not already exist
 		if !repoAlreadyExist {
 			newline = true
 		}
