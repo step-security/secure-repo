@@ -141,6 +141,8 @@ func UpdatePrecommitConfig(precommitConfig string, Hooks []Repo) (*UpdatePrecomm
 		response.FinalOutput = "repos:"
 	}
 
+	newline := false
+
 	for _, Update := range Hooks {
 		repoAlreadyExist := false
 		for _, update := range configMetadata.Repos {
@@ -151,11 +153,18 @@ func UpdatePrecommitConfig(precommitConfig string, Hooks []Repo) (*UpdatePrecomm
 				break
 			}
 		}
+		//Adding newline only if the new update does not already exist
+		if !repoAlreadyExist {
+			newline = true
+		}
 		response.FinalOutput, err = addHook(Update, repoAlreadyExist, response.FinalOutput)
 		if err != nil {
 			return nil, err
 		}
 		response.IsChanged = true
+	}
+	if response.IsChanged && newline {
+		response.FinalOutput += "\n"
 	}
 
 	return response, nil
