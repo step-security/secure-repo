@@ -1,0 +1,4 @@
+name: 'Changelog checker'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
