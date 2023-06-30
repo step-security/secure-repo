@@ -1,0 +1,8 @@
+name: 'rust-clippy-check'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    checks: write
+    checks-reason: to <reason_here> # specify why checks is used.
