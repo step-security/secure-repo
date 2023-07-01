@@ -1,0 +1,8 @@
+name: Actions Ecosystem Add Labels
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to <reason_here> # specify why issues is used.
