@@ -137,8 +137,18 @@ func UpdatePrecommitConfig(precommitConfig string, Hooks []Repo) (*UpdatePrecomm
 	response.OriginalInput = updatePrecommitConfigRequest.Content
 	response.IsChanged = false
 
+	response.FinalOutput = strings.TrimSuffix(response.FinalOutput, "\n")
+	repoIndent := 0
+	repoGap := 1
+	hooksIndent := 2
+	hooksGap := 1
 	if updatePrecommitConfigRequest.Content == "" {
 		response.FinalOutput = "repos:"
+	} else {
+		repoIndent, repoGap, hooksIndent, hooksGap, err = getPrecommitIndentation(response.FinalOutput)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for _, Update := range Hooks {
@@ -151,17 +161,46 @@ func UpdatePrecommitConfig(precommitConfig string, Hooks []Repo) (*UpdatePrecomm
 				break
 			}
 		}
-		response.FinalOutput, err = addHook(Update, repoAlreadyExist, response.FinalOutput)
+		response.FinalOutput, err = addHook(Update, repoAlreadyExist, response.FinalOutput,
+			repoIndent, repoGap, hooksIndent, hooksGap)
 		if err != nil {
 			return nil, err
 		}
 		response.IsChanged = true
 	}
 
+	if !strings.HasSuffix(response.FinalOutput, "\n") {
+		response.FinalOutput = response.FinalOutput + "\n"
+	}
+
 	return response, nil
 }
 
-func addHook(Update Repo, repoAlreadyExist bool, inputYaml string) (string, error) {
+func getPrecommitIndentation(content string) (int, int, int, int, error) {
+	lines := strings.Split(content, "\n")
+
+	var repoIndent, repoGap, hooksIndent, hooksGap int
+	repoFound, hooksFound := false, false
+	for _, line := range lines {
+		if strings.Contains(line, "repo:") && !repoFound {
+			repoIndent = strings.Index(line, "-")
+			repoGap = strings.Index(line, "repo:") - repoIndent - 1
+			repoFound = true
+		} else if strings.Contains(line, "id:") && !hooksFound {
+			hooksIndent = strings.Index(line, "-")
+			hooksGap = strings.Index(line, "id:") - hooksIndent - 1
+			hooksFound = true
+		}
+
+		if repoFound && hooksFound {
+			break
+		}
+	}
+
+	return repoIndent, repoGap, hooksIndent, hooksGap, nil
+}
+
+func addHook(Update Repo, repoAlreadyExist bool, inputYaml string, repoIndent, repoGap, hooksIndent, hooksGap int) (string, error) {
 	t := yaml.Node{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &t)
@@ -169,18 +208,8 @@ func addHook(Update Repo, repoAlreadyExist bool, inputYaml string) (string, erro
 		return "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	spaces := ""
-	jobNode := permissions.IterateNode(&t, "hooks", "!!seq", 0)
-	if jobNode == nil {
-		spaces = "  "
-	} else {
-		for i := 0; i < jobNode.Column-1; i++ {
-			spaces += " "
-		}
-	}
-
 	if repoAlreadyExist {
-		jobNode = permissions.IterateNode(&t, Update.Repo, "!!str", 0)
+		jobNode := permissions.IterateNode(&t, Update.Repo, "!!str", 0)
 		if jobNode == nil {
 			return "", fmt.Errorf("Repo Name %s not found in the input yaml", Update.Repo)
 		}
@@ -193,7 +222,9 @@ func addHook(Update Repo, repoAlreadyExist bool, inputYaml string) (string, erro
 		}
 
 		for _, hook := range Update.Hooks {
-			output = append(output, spaces+fmt.Sprintf("- id: %s", hook.Id))
+			hookIndentStr := strings.Repeat(" ", hooksIndent)
+			hookGapStr := strings.Repeat(" ", hooksGap)
+			output = append(output, fmt.Sprintf("%s-%sid: %s", hookIndentStr, hookGapStr, hook.Id))
 		}
 
 		for i := jobNode.Line + 1; i < len(inputLines); i++ {
@@ -202,13 +233,22 @@ func addHook(Update Repo, repoAlreadyExist bool, inputYaml string) (string, erro
 		return strings.Join(output, "\n"), nil
 	} else {
 		inputLines := strings.Split(inputYaml, "\n")
-		inputLines = append(inputLines, fmt.Sprintf("- repo: %s", Update.Repo))
-		inputLines = append(inputLines, fmt.Sprintf("  rev: %s", Update.Rev))
-		inputLines = append(inputLines, fmt.Sprintf("  hooks:"))
 
+		repoIndentStr := strings.Repeat(" ", repoIndent)
+		repoGapStr := strings.Repeat(" ", repoGap)
+		inputLines = append(inputLines, fmt.Sprintf("%s-%srepo: %s", repoIndentStr, repoGapStr, Update.Repo))
+
+		revIndentStr := strings.Repeat(" ", repoIndent+repoGap+1)
+		inputLines = append(inputLines, fmt.Sprintf("%srev: %s", revIndentStr, Update.Rev))
+
+		inputLines = append(inputLines, fmt.Sprintf("%shooks:", revIndentStr))
+
+		hookIndentStr := strings.Repeat(" ", hooksIndent)
+		hookGapStr := strings.Repeat(" ", hooksGap)
 		for _, hook := range Update.Hooks {
-			inputLines = append(inputLines, spaces+fmt.Sprintf("- id: %s", hook.Id))
+			inputLines = append(inputLines, fmt.Sprintf("%s-%sid: %s", hookIndentStr, hookGapStr, hook.Id))
 		}
+
 		return strings.Join(inputLines, "\n"), nil
 	}
 }
