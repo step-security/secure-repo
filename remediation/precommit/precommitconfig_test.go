@@ -33,6 +33,11 @@ func TestUpdatePrecommitConfig(t *testing.T) {
 			Languages: []string{"Ruby", "Shell"},
 			isChanged: true,
 		},
+		{
+			fileName:  "style1.yml",
+			Languages: []string{"Ruby", "Shell"},
+			isChanged: true,
+		},
 	}
 
 	for _, test := range tests {
