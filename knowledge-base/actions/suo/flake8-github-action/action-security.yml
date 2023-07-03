@@ -1,0 +1,6 @@
+name: 'Flake8 action'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
+    checks: write
+    checks-reason: to <reason_here> # specify why checks is used.
