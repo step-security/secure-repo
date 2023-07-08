@@ -1,0 +1,2 @@
+name: 'MongoDB in GitHub Actions' # supercharge/mongodb-github-action
+# GITHUB_TOKEN not used
