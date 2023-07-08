@@ -1,0 +1,8 @@
+name: "CLA assistant lite"
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to <reason_here> # specify why pull-requests is used.
+    actions: read
+    actions-reason: to <reason_here> # specify why actions is used.
