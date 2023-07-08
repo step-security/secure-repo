@@ -1,0 +1,2 @@
+name: 'Setup Redis' # zhulik/redis-action
+# GITHUB_TOKEN not used
