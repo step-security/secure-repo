@@ -27,7 +27,7 @@ jobs:
         with:
           go-version: 1.17
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
+        uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_INT }}  
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_INT }}
