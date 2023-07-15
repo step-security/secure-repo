@@ -1,0 +1,8 @@
+name: "rust-cargo-make"
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to <reason_here> # specify why contents is used.
