@@ -1,0 +1,4 @@
+name: 'Podman Login'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
