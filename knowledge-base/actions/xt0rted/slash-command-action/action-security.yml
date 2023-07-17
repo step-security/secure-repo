@@ -1,0 +1,10 @@
+name: "Slash Commands"
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    undefined: write
+    undefined-reason: to <reason_here> # specify why undefined is used.
+    contents: read
+    contents-reason: to <reason_here> # specify why contents is used.
