@@ -1,0 +1,4 @@
+name: Saucectl Run Action
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
