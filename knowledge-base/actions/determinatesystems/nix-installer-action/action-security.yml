@@ -1,0 +1,6 @@
+name: The Determinate Nix Installer
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
