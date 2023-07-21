@@ -1,0 +1,2 @@
+name: "Upload GitHub Pages artifact" # actions/upload-pages-artifact
+# GITHUB_TOKEN not used
