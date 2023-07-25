@@ -1,0 +1,6 @@
+name: 'login-teams-membership'
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: false
+  permissions:
