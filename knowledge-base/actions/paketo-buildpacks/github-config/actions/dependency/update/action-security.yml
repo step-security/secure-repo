@@ -1,0 +1,2 @@
+name: 'Update buildpack.toml with new dependencies' # paketo-buildpacks/github-config/actions/dependency/update
+# GITHUB_TOKEN not used
