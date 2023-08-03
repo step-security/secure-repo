@@ -1,0 +1,2 @@
+name: 'Checkout branch' # paketo-buildpacks/github-config/actions/pull-request/checkout-branch
+# GITHUB_TOKEN not used
