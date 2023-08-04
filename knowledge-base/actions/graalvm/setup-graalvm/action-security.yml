@@ -1,0 +1,8 @@
+name: 'GitHub Action for GraalVM'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    issues: write
+    issues-reason: to <reason_here> # specify why issues is used.
