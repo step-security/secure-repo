@@ -1,0 +1,2 @@
+name: 'golang-govulncheck-action' # golang/govulncheck-action
+# GITHUB_TOKEN not used
