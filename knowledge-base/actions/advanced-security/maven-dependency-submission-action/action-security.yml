@@ -1,0 +1,6 @@
+name: Maven Dependency Tree Dependency Submission
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
