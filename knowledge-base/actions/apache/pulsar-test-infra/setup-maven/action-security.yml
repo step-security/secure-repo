@@ -1,0 +1,2 @@
+name: 'Setup Maven 3' # apache/pulsar-test-infra/setup-maven
+# GITHUB_TOKEN not used
