@@ -25,7 +25,7 @@ jobs:
             objects.githubusercontent.com:443
             golang.org:443
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Go
