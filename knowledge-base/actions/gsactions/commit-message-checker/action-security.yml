@@ -1,0 +1,6 @@
+name: 'GS Commit Message Checker'
+github-token:
+  action-input:
+    input: Token
+    is-default: false
+  permissions:
