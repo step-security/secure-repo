@@ -43,7 +43,7 @@ func Test_AddWorkflow(t *testing.T) {
 				DefaultBranch: "main",
 			},
 			expectedError:      false,
-			expectedOutputFile: "../../testfiles/addworkflow/expected-scorecards.yml",
+			expectedOutputFile: "../../testfiles/addworkflow/expected-scorecard.yml",
 		},
 	}
 

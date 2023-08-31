@@ -201,7 +201,7 @@ Secure-Repo has a [workflow-templates](https://github.com/step-security/secure-r
 
 Before the fix, you do not have a OpenSSF Scorecard workflow.
 
-After the fix, a `scorecards.yml` GitHub Actions workflow gets added to your project.
+After the fix, a `scorecard.yml` GitHub Actions workflow gets added to your project.
 
 **Pull request example**: https://github.com/microsoft/CLRInstrumentationEngine/pull/527
 

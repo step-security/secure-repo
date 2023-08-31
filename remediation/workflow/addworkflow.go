@@ -12,7 +12,7 @@ import (
 const (
 	CodeQLWorkflowFileName   = "codeql.yml"
 	DependencyReviewFileName = "dependency-review.yml"
-	ScorecardFileName        = "scorecards.yml"
+	ScorecardFileName        = "scorecard.yml"
 	CodeQL                   = "CodeQL"
 	DependencyReview         = "Dependency-review"
 	Scorecard                = "Scorecard"
