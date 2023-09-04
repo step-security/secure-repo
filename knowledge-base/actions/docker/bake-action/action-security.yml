@@ -1,0 +1,4 @@
+name: "Docker Buildx Bake"
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
