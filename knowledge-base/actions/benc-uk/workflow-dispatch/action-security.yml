@@ -1,0 +1,8 @@
+name: 'Workflow Dispatch'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: read
+    actions-reason: to <reason_here> # specify why actions is used.
