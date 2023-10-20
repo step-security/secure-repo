@@ -1,0 +1,10 @@
+name: 'Setup Git for Windows SDK'
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    actions: read
+    actions-reason: to <reason_here> # specify why actions is used.
+    contents: read
+    contents-reason: to <reason_here> # specify why contents is used.
