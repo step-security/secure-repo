@@ -1,0 +1,10 @@
+name: Backport merged pull requests to selected branches
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to <reason_here> # specify why pull-requests is used.
+    issues: write
+    issues-reason: to <reason_here> # specify why issues is used.
