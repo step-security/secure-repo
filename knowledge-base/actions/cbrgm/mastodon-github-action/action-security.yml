@@ -1,0 +1,4 @@
+name: 'mastodon-send'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
