@@ -1,0 +1,10 @@
+name: Changed Files
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    contents: read
+    contents-reason: to <reason_here> # specify why contents is used.
+    pull-requests: read
+    pull-requests-reason: to <reason_here> # specify why pull-requests is used.
