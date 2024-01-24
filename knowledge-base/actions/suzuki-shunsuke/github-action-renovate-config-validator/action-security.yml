@@ -1,0 +1,2 @@
+name: Validate Renovate Configuration with renovate-config-validator # suzuki-shunsuke/github-action-renovate-config-validator
+# GITHUB_TOKEN not used
