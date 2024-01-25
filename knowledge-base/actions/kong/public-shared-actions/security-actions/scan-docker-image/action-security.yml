@@ -1,0 +1,2 @@
+name: Scan Docker Image # Kong/public-shared-actions/security-actions/scan-docker-image
+# GITHUB_TOKEN not used
