@@ -1,0 +1,8 @@
+name: 'Notion x GitHub Action'
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    undefined: read
+    undefined-reason: to <reason_here> # specify why undefined is used.
