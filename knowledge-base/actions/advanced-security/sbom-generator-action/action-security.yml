@@ -1,0 +1,4 @@
+name: 'SBOM-generator-action'
+github-token:
+  environment-variable-name: <FigureOutYourself>
+  permissions:
