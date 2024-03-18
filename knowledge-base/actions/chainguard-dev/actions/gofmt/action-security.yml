@@ -1,0 +1,2 @@
+name: 'gofmt' # chainguard-dev/actions/gofmt
+# GITHUB_TOKEN not used
