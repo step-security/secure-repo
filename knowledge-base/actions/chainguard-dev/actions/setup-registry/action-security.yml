@@ -1,0 +1,2 @@
+name: 'Setup registry' # chainguard-dev/actions/setup-registry
+# GITHUB_TOKEN not used
