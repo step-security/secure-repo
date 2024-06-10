@@ -19,11 +19,11 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 #v4.1.6
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           fetch-depth: 0
       - name: Set up Go 
-        uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version: 1.17
       - name: Configure AWS Credentials
