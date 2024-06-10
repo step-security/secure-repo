@@ -9,18 +9,19 @@ on:
 
 permissions: # added using https://github.com/step-security/secure-repo
   contents: read
-concurrency:
-  group: ${{ github.workflow }}
+
 jobs:
   test:
     permissions:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v1
+      - uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
         with:
+          egress-policy: audit
           allowed-endpoints: >
             api.github.com:443
+            cli.codecov.io:443
             codecov.io:443
             uploader.codecov.io:443
             github.com:443
@@ -30,15 +31,17 @@ jobs:
             objects.githubusercontent.com:443
             golang.org:443
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Go
-        uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8 # v2.1.3
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version: 1.17
       - name: Run coverage
         run: go test ./...  -coverpkg=./... -race -coverprofile=coverage.txt -covermode=atomic
         env:
           PAT: ${{ secrets.GITHUB_TOKEN }}
-      - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # v2
+      - uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c # v4.4.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
