@@ -17,7 +17,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v1
+      - uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
         with:
           allowed-endpoints: >
             api.github.com:443
@@ -30,7 +30,7 @@ jobs:
             objects.githubusercontent.com:443
             golang.org:443
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 #v4.1.6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Go
