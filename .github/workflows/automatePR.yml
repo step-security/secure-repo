@@ -21,7 +21,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           repository: step-security/secure-repo
     
