@@ -38,6 +38,7 @@ const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base
 const errorAlreadyHasPermissions = "KnownIssue-5: Permissions were not added to the job since it already had permissions defined"
 const errorDockerAction = "KnownIssue-6: Action %s is a docker action which uses Github token. Docker actions that uses token are not supported"
 const errorReusableWorkflow = "KnownIssue-7: Action %s is a reusable workflow. Reusable workflows are not supported as of now."
+const errorGithubTokenInJobEnv = "KnownIssue-8: Permissions were not added to the jobs since it has GITHUB_TOKEN in job level env variable"
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
 // To avoid a typo while adding the permissions
@@ -76,6 +77,15 @@ func alreadyHasJobPermissions(job metadata.Job) bool {
 
 func alreadyHasWorkflowPermissions(workflow metadata.Workflow) bool {
 	return workflow.Permissions.IsSet
+}
+
+func githubTokenInJobLevelEnv(job metadata.Job) bool {
+	for _, envValue := range job.Env {
+		if strings.Contains(envValue, "secrets.GITHUB_TOKEN") || strings.Contains(envValue, "github.token") {
+			return true
+		}
+	}
+	return false
 }
 
 func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (string, error) {
@@ -174,6 +184,12 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			// We are not modifying permissions if already defined
 			fixWorkflowPermsReponse.HasErrors = true
 			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
+			continue
+		}
+
+		if githubTokenInJobLevelEnv(job) {
+			fixWorkflowPermsReponse.HasErrors = true
+			errors[jobName] = append(errors[jobName], errorGithubTokenInJobEnv)
 			continue
 		}
 
