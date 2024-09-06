@@ -22,11 +22,11 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@d0651293c4a5a52e711f25b41b05b2212f385d28
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           repository: step-security/secure-repo
 
