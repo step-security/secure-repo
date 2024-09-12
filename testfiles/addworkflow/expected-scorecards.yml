@@ -28,6 +28,11 @@ jobs:
       id-token: write
       contents: read
       actions: read
+      # To allow GraphQL ListCommits to work
+      issues: read
+      pull-requests: read
+      # To detect SAST tools
+      checks: read
 
     steps:
       - name: "Checkout code"
