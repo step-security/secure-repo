@@ -43,7 +43,7 @@ func PinAction(action, inputYaml string) (string, bool) {
 		return inputYaml, updated // Cannot pin local actions and docker actions
 	}
 
-	if isAbsolute(action) {
+	if isAbsolute(action) || IsImmutableAction(action) {
 		return inputYaml, updated
 	}
 	leftOfAt := strings.Split(action, "@")
