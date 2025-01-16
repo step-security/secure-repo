@@ -182,12 +182,6 @@ func TestKnowledgeBase(t *testing.T) {
 func doesActionRepoExist(filePath string) bool {
 	splitOnSlash := strings.Split(filePath, "/")
 
-	// Check if path has enough components
-	if len(splitOnSlash) < 6 {
-		log.Printf("error in doesActionRepoExist: invalid path format %s", filePath)
-		return false
-	}
-
 	owner := splitOnSlash[5]
 	repo := splitOnSlash[6]
 
