@@ -8,7 +8,7 @@ jobs:
     name: build, pack & publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1.2.0
+      - uses: actions/checkout@v1.2.0
 
       # - name: Setup dotnet
       #   uses: actions/setup-dotnet@v1
@@ -27,7 +27,7 @@ jobs:
     name: build, pack & publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1.2.0
+      - uses: actions/checkout@v1.2.0
 
       # - name: Setup dotnet
       #   uses: actions/setup-dotnet@v1

@@ -3,7 +3,9 @@ package pin
 import (
 	"io/ioutil"
 	"log"
+	"net/http"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -171,6 +173,78 @@ func TestPinActions(t *testing.T) {
 				  }
 			]`))
 
+	// mock ping response
+	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
+		httpmock.NewStringResponder(200, ``))
+
+	// Mock token endpoints
+	httpmock.RegisterResponder("GET", "https://ghcr.io/token",
+		func(req *http.Request) (*http.Response, error) {
+			scope := req.URL.Query().Get("scope")
+			switch scope {
+			// Following are the ones which simulate the image existance in ghcr
+			case "repository:actions/checkout:pull",
+				"repository:step-security/wait-for-secrets:pull",
+				"repository:actions/setup-node:pull",
+				"repository:peter-evans/close-issue:pull",
+				"repository:borales/actions-yarn:pull",
+				"repository:JS-DevTools/npm-publish:pull",
+				"repository:elgohr/Publish-Docker-Github-Action:pull",
+				"repository:brandedoutcast/publish-nuget:pull",
+				"repository:rohith/publish-nuget:pull":
+				return httpmock.NewJsonResponse(http.StatusOK, map[string]string{
+					"token":        "test-token",
+					"access_token": "test-token",
+				})
+			default:
+				return httpmock.NewJsonResponse(http.StatusForbidden, map[string]interface{}{
+					"errors": []map[string]string{
+						{
+							"code":    "DENIED",
+							"message": "requested access to the resource is denied",
+						},
+					},
+				})
+			}
+		})
+
+	// Mock manifest endpoints for specific versions and commit hashes
+	manifestResponders := []string{
+		// the following list will contain the list of actions with versions
+		// which are mocked to be immutable
+		"actions/checkout@v1.2.0",
+	}
+
+	for _, action := range manifestResponders {
+		actionPath := strings.Split(action, "@")[0]
+		version := strings.TrimPrefix(strings.Split(action, "@")[1], "v")
+		// Mock manifest response so that we can treat action as immutable
+		httpmock.RegisterResponder("GET", "https://ghcr.io/v2/"+actionPath+"/manifests/"+version,
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
+					"schemaVersion": 2,
+					"mediaType":     "application/vnd.github.actions.package.v1+json",
+					"artifactType":  "application/vnd.github.actions.package.v1+json",
+					"config": map[string]interface{}{
+						"mediaType": "application/vnd.github.actions.package.v1+json",
+					},
+				})
+			})
+	}
+
+	// Default manifest response for non-existent tags
+	httpmock.RegisterResponder("GET", `=~^https://ghcr\.io/v2/.*/manifests/.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewJsonResponse(http.StatusNotFound, map[string]interface{}{
+				"errors": []map[string]string{
+					{
+						"code":    "MANIFEST_UNKNOWN",
+						"message": "manifest unknown",
+					},
+				},
+			})
+		})
+
 	tests := []struct {
 		fileName    string
 		wantUpdated bool
@@ -184,6 +258,7 @@ func TestPinActions(t *testing.T) {
 		{fileName: "multipleactions.yml", wantUpdated: true},
 		{fileName: "actionwithcomment.yml", wantUpdated: true},
 		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true},
+		{fileName: "immutableaction-1.yml", wantUpdated: true},
 	}
 	for _, tt := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
