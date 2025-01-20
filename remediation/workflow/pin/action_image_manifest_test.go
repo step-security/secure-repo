@@ -1,25 +1,44 @@
 package pin
 
 import (
+	"crypto/tls"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
-var (
-	testFilesDir = "../../../testfiles/pinactions/immutableActionResponses/"
-)
+type customTransport struct {
+	base    http.RoundTripper
+	baseURL string
+}
 
-func createTestServer(t *testing.T) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.Contains(req.URL.Host, "ghcr.io") {
+		req2 := req.Clone(req.Context())
+		req2.URL.Scheme = "https"
+		req2.URL.Host = strings.TrimPrefix(t.baseURL, "https://")
+		return t.base.RoundTrip(req2)
+	}
+	return t.base.RoundTrip(req)
+}
+
+func createGhesTestServer(t *testing.T) *httptest.Server {
+	return httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 
+		if !strings.Contains(r.Host, "ghcr.io") {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		// Mock manifest endpoints
 		switch r.URL.Path {
+
+		case "/v2/": // simulate ping request
+			w.WriteHeader(http.StatusOK)
 
 		case "/token":
 			// for immutable actions, since image will be present in registry...it returns 200 OK with token
@@ -29,6 +48,7 @@ func createTestServer(t *testing.T) *httptest.Server {
 			case "repository:actions/checkout:pull":
 				fallthrough
 			case "repository:step-security/wait-for-secrets:pull":
+
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{"token": "test-token", "access_token": "test-token"}`))
 			default:
@@ -37,6 +57,8 @@ func createTestServer(t *testing.T) *httptest.Server {
 			}
 
 		case "/v2/actions/checkout/manifests/4.2.2":
+			fallthrough
+		case "/v2/actions/checkout/manifests/1.2.0":
 			fallthrough
 		case "/v2/step-security/wait-for-secrets/manifests/1.2.0":
 			w.Write(readHttpResponseForAction(t, r.URL.Path))
@@ -51,23 +73,29 @@ func createTestServer(t *testing.T) *httptest.Server {
 
 func Test_isImmutableAction(t *testing.T) {
 	// Create test server that mocks GitHub Container Registry
-	server := createTestServer(t)
+	server := createGhesTestServer(t)
 	defer server.Close()
 
 	// Create a custom client that redirects ghcr.io to our test server
 	originalClient := http.DefaultClient
 	http.DefaultClient = &http.Client{
-		Transport: &http.Transport{
-			Proxy: func(req *http.Request) (*url.URL, error) {
-				if strings.Contains(req.URL.Host, "ghcr.io") {
-					return url.Parse(server.URL)
-				}
-				return nil, nil
+		Transport: &customTransport{
+			base: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
 			},
+			baseURL: server.URL,
 		},
 	}
+
+	// update default transport
+	OriginalTransport := http.DefaultTransport
+	http.DefaultTransport = http.DefaultClient.Transport
+
 	defer func() {
 		http.DefaultClient = originalClient
+		http.DefaultTransport = OriginalTransport
 	}()
 
 	tests := []struct {
@@ -120,14 +148,15 @@ func Test_isImmutableAction(t *testing.T) {
 
 func readHttpResponseForAction(t *testing.T, actionPath string) []byte {
 	// remove v2 prefix from action path
-	actionPath = strings.TrimPrefix(actionPath, "v2/")
+	actionPath = strings.TrimPrefix(actionPath, "/v2/")
 
-	fileName := strings.ReplaceAll(actionPath, "/", "-")
-	respFilePath := testFilesDir + fileName
+	fileName := strings.ReplaceAll(actionPath, "/", "-") + ".json"
+	testFilesDir := "../../../testfiles/pinactions/immutableActionResponses/"
+	respFilePath := filepath.Join(testFilesDir, fileName)
 
 	resp, err := ioutil.ReadFile(respFilePath)
 	if err != nil {
-		t.Fatalf("error reading test file")
+		t.Fatalf("error reading test file:%v", err)
 	}
 
 	return resp

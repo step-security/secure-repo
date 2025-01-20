@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/google/go-github/v40/github"
@@ -74,8 +75,32 @@ func PinAction(action, inputYaml string) (string, bool) {
 	}
 
 	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
+
+	// if the action with version is immutable, then pin the action with version instead of sha
+	pinnedActionWithVersion := fmt.Sprintf("%s@%s", leftOfAt[0], tagOrBranch)
+	if semanticTagRegex.MatchString(tagOrBranch) && IsImmutableAction(pinnedActionWithVersion) {
+		pinnedAction = pinnedActionWithVersion
+	}
+
 	updated = !strings.EqualFold(action, pinnedAction)
-	inputYaml = strings.ReplaceAll(inputYaml, action, pinnedAction)
+
+	// strings.ReplaceAll is not suitable here because it would incorrectly replace substrings
+	// For example, if we want to replace "actions/checkout@v1" to "actions/checkout@v1.2.3", it would also incorrectly match and replace in "actions/checkout@v1.2.3"
+	// making new string to "actions/checkout@v1.2.3.2.3"
+	//
+	// Instead, we use a regex pattern that ensures we only replace complete action references:
+	// Pattern: (<action>@<version>)($|\s|"|')
+	// - Group 1 (<action>@<version>): Captures the exact action reference
+	// - Group 2 ($|\s|"|'): Captures the delimiter that follows (end of line, whitespace, or quotes)
+	//
+	// Examples:
+	// - "actions/checkout@v1.2.3" - No match (no delimiter after v1)
+	// - "actions/checkout@v1 "    - Matches (space delimiter)
+	// - "actions/checkout@v1""    - Matches (quote delimiter)
+	// - "actions/checkout@v1"     - Matches (quote delimiter)
+	// - "actions/checkout@v1\n"   - Matches (newline is considered whitespace \s)
+	actionRegex := regexp.MustCompile(`(` + regexp.QuoteMeta(action) + `)($|\s|"|')`)
+	inputYaml = actionRegex.ReplaceAllString(inputYaml, pinnedAction+"$2")
 	yamlWithPreviousActionCommentsRemoved, wasModified := removePreviousActionComments(pinnedAction, inputYaml)
 	if wasModified {
 		return yamlWithPreviousActionCommentsRemoved, updated
