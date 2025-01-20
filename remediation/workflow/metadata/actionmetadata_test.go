@@ -181,6 +181,7 @@ func TestKnowledgeBase(t *testing.T) {
 
 func doesActionRepoExist(filePath string) bool {
 	splitOnSlash := strings.Split(filePath, "/")
+
 	owner := splitOnSlash[5]
 	repo := splitOnSlash[6]
 

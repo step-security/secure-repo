@@ -1,0 +1,38 @@
+{
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "artifactType": "application/vnd.github.actions.package.v1+json",
+    "config": {
+        "mediaType": "application/vnd.oci.empty.v1+json",
+        "size": 2,
+        "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    "layers": [
+        {
+            "mediaType": "application/vnd.github.actions.package.layer.v1.tar+gzip",
+            "size": 424913,
+            "digest": "sha256:309d5e1a7604a5e688e2b55a6763e4109eb07349dca6d3c44e85c57ab2bb4f3f",
+            "annotations": {
+                "org.opencontainers.image.title": "actions-checkout_4.2.2.tar.gz"
+            }
+        },
+        {
+            "mediaType": "application/vnd.github.actions.package.layer.v1.zip",
+            "size": 546845,
+            "digest": "sha256:e9808fe811a75b46234757f9566987635166bca838090fcbc8021a0d45c737b3",
+            "annotations": {
+                "org.opencontainers.image.title": "actions-checkout_4.2.2.zip"
+            }
+        }
+    ],
+    "annotations": {
+        "org.opencontainers.image.created": "2024-10-23T14:46:13.071Z",
+        "action.tar.gz.digest": "sha256:309d5e1a7604a5e688e2b55a6763e4109eb07349dca6d3c44e85c57ab2bb4f3f",
+        "action.zip.digest": "sha256:e9808fe811a75b46234757f9566987635166bca838090fcbc8021a0d45c737b3",
+        "com.github.package.type": "actions_oci_pkg",
+        "com.github.package.version": "4.2.2",
+        "com.github.source.repo.id": "197814629",
+        "com.github.source.repo.owner.id": "44036562",
+        "com.github.source.commit": "11bd71901bbe5b1630ceea73d27597364c9af683"
+    }
+}
