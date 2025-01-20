@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"net/http"
+
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/sirupsen/logrus"
@@ -13,7 +15,7 @@ import (
 
 var (
 	githubImmutableActionArtifactType = "application/vnd.github.actions.package.v1+json"
-	tagRegex                          = regexp.MustCompile(`v[0-9]+\.[0-9]+\.[0-9]+$`)
+	semanticTagRegex                  = regexp.MustCompile(`v[0-9]+\.[0-9]+\.[0-9]+$`)
 )
 
 type ociManifest struct {
@@ -71,7 +73,7 @@ func getOCIImageArtifactTypeForGhAction(action string) (string, error) {
 	// use regexp to match tag version format and replace v in prefix
 	// as immutable actions image tag is in format 1.x.x (without v prefix)
 	// REF - https://github.com/actions/publish-immutable-action/issues/216#issuecomment-2549914784
-	if tagRegex.MatchString(parts[1]) {
+	if semanticTagRegex.MatchString(parts[1]) {
 		// v1.x.x -> 1.x.x
 		parts[1] = strings.TrimPrefix(parts[1], "v")
 	}
@@ -101,7 +103,7 @@ func getOCIManifestForImage(imageRef string) (string, error) {
 	}
 
 	// Get the image manifest
-	desc, err := remote.Get(ref)
+	desc, err := remote.Get(ref, remote.WithTransport(http.DefaultTransport))
 	if err != nil {
 		return "", fmt.Errorf("error getting manifest: %v", err)
 	}
