@@ -4,7 +4,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1.2.0
+    - uses: actions/checkout@v1
+    - uses: github/codeql-action/analyze@v3
     - uses: borales/actions-yarn@v2.3.0
       with:
         auth-token: ${{ secrets.GITHUB_TOKEN }}
