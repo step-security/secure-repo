@@ -69,6 +69,14 @@ func getOCIImageArtifactTypeForGhAction(action string) (string, error) {
 		return "", fmt.Errorf("invalid action format")
 	}
 
+	// For bundled actions like github/codeql-action/analyze@v3,
+	// we only need the repository part (github/codeql-action) to check for immutability
+	actionPath := parts[0]
+	if strings.Count(parts[0], "/") > 1 {
+		pathParts := strings.Split(parts[0], "/")
+		actionPath = strings.Join(pathParts[:2], "/")
+	}
+
 	// convert v1.x.x to 1.x.x which is
 	// use regexp to match tag version format and replace v in prefix
 	// as immutable actions image tag is in format 1.x.x (without v prefix)
@@ -79,7 +87,7 @@ func getOCIImageArtifactTypeForGhAction(action string) (string, error) {
 	}
 
 	// Convert GitHub action to GHCR image reference using proper OCI reference format
-	image := fmt.Sprintf("ghcr.io/%s:%s", parts[0], parts[1])
+	image := fmt.Sprintf("ghcr.io/%s:%s", actionPath, parts[1])
 	imageManifest, err := getOCIManifestForImage(image)
 	if err != nil {
 		return "", err

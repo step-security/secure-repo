@@ -173,6 +173,21 @@ func TestPinActions(t *testing.T) {
 				  }
 			]`))
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/commits/v3",
+		httpmock.NewStringResponder(200, `d68b2d4edb4189fd2a5366ac14e72027bd4b37dd`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/git/matching-refs/tags/v3.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+					"ref": "refs/tags/v3.28.2",
+					"object": {
+					  "sha": "d68b2d4edb4189fd2a5366ac14e72027bd4b37dd",
+					  "type": "commit"
+					}
+				  }
+			]`))
+
 	// mock ping response
 	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
 		httpmock.NewStringResponder(200, ``))
@@ -191,7 +206,8 @@ func TestPinActions(t *testing.T) {
 				"repository:JS-DevTools/npm-publish:pull",
 				"repository:elgohr/Publish-Docker-Github-Action:pull",
 				"repository:brandedoutcast/publish-nuget:pull",
-				"repository:rohith/publish-nuget:pull":
+				"repository:rohith/publish-nuget:pull",
+				"repository:github/codeql-action:pull":
 				return httpmock.NewJsonResponse(http.StatusOK, map[string]string{
 					"token":        "test-token",
 					"access_token": "test-token",
@@ -213,6 +229,7 @@ func TestPinActions(t *testing.T) {
 		// the following list will contain the list of actions with versions
 		// which are mocked to be immutable
 		"actions/checkout@v1.2.0",
+		"github/codeql-action@v3.28.2",
 	}
 
 	for _, action := range manifestResponders {
