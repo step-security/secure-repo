@@ -13,7 +13,7 @@ const (
 	HardenRunnerActionName        = "Harden Runner"
 )
 
-func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*permissions.SecureWorkflowReponse, error) {
+func SecureWorkflow(queryStringParams map[string]string, exemptedActions []string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*permissions.SecureWorkflowReponse, error) {
 	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
 	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
 	ignoreMissingKBs := false
@@ -68,7 +68,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if pinActions {
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions)
 		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker
 	}
