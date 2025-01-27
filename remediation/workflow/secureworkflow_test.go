@@ -148,7 +148,7 @@ func TestSecureWorkflow(t *testing.T) {
 		}
 		queryParams["addProjectComment"] = "false"
 
-		output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+		output, err := SecureWorkflow(queryParams, nil, string(input), &mockDynamoDBClient{})
 
 		if err != nil {
 			t.Errorf("Error not expected")

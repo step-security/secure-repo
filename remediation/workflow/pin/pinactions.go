@@ -13,9 +13,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func PinActions(inputYaml string) (string, bool, error) {
+func PinActions(inputYaml string, exemptedActions []string) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
+	exemptedActionsMap := make(map[string]bool)
+	for _, exemptedAction := range exemptedActions {
+		exemptedAction = strings.TrimRight(exemptedAction, "/")
+		exemptedActionsMap[exemptedAction] = true
+	}
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
 		return inputYaml, updated, fmt.Errorf("unable to parse yaml %v", err)
@@ -28,7 +33,7 @@ func PinActions(inputYaml string) (string, bool, error) {
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out)
+				out, localUpdated = PinAction(step.Uses, out, exemptedActionsMap)
 				updated = updated || localUpdated
 			}
 		}
@@ -37,7 +42,7 @@ func PinActions(inputYaml string) (string, bool, error) {
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string) (string, bool) {
+func PinAction(action, inputYaml string, exemptedActionsMap map[string]bool) (string, bool) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
@@ -49,6 +54,11 @@ func PinAction(action, inputYaml string) (string, bool) {
 	}
 	leftOfAt := strings.Split(action, "@")
 	tagOrBranch := leftOfAt[1]
+
+	// skip pinning for exempted actions
+	if exemptedActionsMap[leftOfAt[0]] {
+		return inputYaml, updated
+	}
 
 	splitOnSlash := strings.Split(leftOfAt[0], "/")
 	owner := splitOnSlash[0]

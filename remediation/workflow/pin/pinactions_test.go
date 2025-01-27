@@ -284,7 +284,7 @@ func TestPinActions(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, gotUpdated, err := PinActions(string(input))
+		output, gotUpdated, err := PinActions(string(input), nil)
 		if tt.wantUpdated != gotUpdated {
 			t.Errorf("test failed wantUpdated %v did not match gotUpdated %v", tt.wantUpdated, gotUpdated)
 		}
