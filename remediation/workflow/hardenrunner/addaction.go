@@ -47,7 +47,7 @@ func AddAction(inputYaml, action string, pinActions bool) (string, bool, error) 
 	}
 
 	if updated && pinActions {
-		out, _ = pin.PinAction(action, out)
+		out, _ = pin.PinAction(action, out, nil)
 	}
 
 	return out, updated, nil
