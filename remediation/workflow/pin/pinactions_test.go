@@ -263,8 +263,9 @@ func TestPinActions(t *testing.T) {
 		})
 
 	tests := []struct {
-		fileName    string
-		wantUpdated bool
+		fileName        string
+		wantUpdated     bool
+		exemptedActions []string
 	}{
 		{fileName: "alreadypinned.yml", wantUpdated: false},
 		{fileName: "branch.yml", wantUpdated: true},
@@ -276,6 +277,7 @@ func TestPinActions(t *testing.T) {
 		{fileName: "actionwithcomment.yml", wantUpdated: true},
 		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true},
 		{fileName: "immutableaction-1.yml", wantUpdated: true},
+		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*"}},
 	}
 	for _, tt := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
@@ -284,7 +286,7 @@ func TestPinActions(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, gotUpdated, err := PinActions(string(input), nil)
+		output, gotUpdated, err := PinActions(string(input), tt.exemptedActions)
 		if tt.wantUpdated != gotUpdated {
 			t.Errorf("test failed wantUpdated %v did not match gotUpdated %v", tt.wantUpdated, gotUpdated)
 		}
