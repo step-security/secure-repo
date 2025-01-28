@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -16,11 +17,6 @@ import (
 func PinActions(inputYaml string, exemptedActions []string) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
-	exemptedActionsMap := make(map[string]bool)
-	for _, exemptedAction := range exemptedActions {
-		exemptedAction = strings.TrimRight(exemptedAction, "/")
-		exemptedActionsMap[exemptedAction] = true
-	}
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
 		return inputYaml, updated, fmt.Errorf("unable to parse yaml %v", err)
@@ -33,7 +29,7 @@ func PinActions(inputYaml string, exemptedActions []string) (string, bool, error
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out, exemptedActionsMap)
+				out, localUpdated = PinAction(step.Uses, out, exemptedActions)
 				updated = updated || localUpdated
 			}
 		}
@@ -42,7 +38,7 @@ func PinActions(inputYaml string, exemptedActions []string) (string, bool, error
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string, exemptedActionsMap map[string]bool) (string, bool) {
+func PinAction(action, inputYaml string, exemptedActions []string) (string, bool) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
@@ -56,7 +52,7 @@ func PinAction(action, inputYaml string, exemptedActionsMap map[string]bool) (st
 	tagOrBranch := leftOfAt[1]
 
 	// skip pinning for exempted actions
-	if exemptedActionsMap[leftOfAt[0]] {
+	if actionExists(leftOfAt[0], exemptedActions) {
 		return inputYaml, updated
 	}
 
@@ -197,4 +193,21 @@ func getSemanticVersion(client *github.Client, owner, repo, tagOrBranch, commitS
 		}
 	}
 	return tagOrBranch, nil
+}
+
+// Function to check if an action matches any pattern in the list
+func actionExists(actionName string, patterns []string) bool {
+	for _, pattern := range patterns {
+		// Use filepath.Match to match the pattern
+		matched, err := filepath.Match(pattern, actionName)
+		if err != nil {
+			// Handle invalid patterns
+			fmt.Printf("Error matching pattern: %v\n", err)
+			continue
+		}
+		if matched {
+			return true
+		}
+	}
+	return false
 }
