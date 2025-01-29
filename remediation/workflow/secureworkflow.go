@@ -13,10 +13,21 @@ const (
 	HardenRunnerActionName        = "Harden Runner"
 )
 
-func SecureWorkflow(queryStringParams map[string]string, exemptedActions []string, pinToImmutable bool, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*permissions.SecureWorkflowReponse, error) {
+func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
 	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
 	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
 	ignoreMissingKBs := false
+	exemptedActions, pinToImmutable := []string{}, false
+	if len(params) > 0 {
+		if v, ok := params[0].([]string); ok {
+			exemptedActions = v
+		}
+	}
+	if len(params) > 1 {
+		if v, ok := params[1].(bool); ok {
+			pinToImmutable = v
+		}
+	}
 
 	if queryStringParams["pinActions"] == "false" {
 		pinActions = false
