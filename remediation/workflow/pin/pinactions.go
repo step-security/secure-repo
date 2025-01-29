@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func PinActions(inputYaml string, exemptedActions []string) (string, bool, error) {
+func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -29,7 +29,7 @@ func PinActions(inputYaml string, exemptedActions []string) (string, bool, error
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out, exemptedActions)
+				out, localUpdated = PinAction(step.Uses, out, exemptedActions, pinToImmutable)
 				updated = updated || localUpdated
 			}
 		}
@@ -38,14 +38,14 @@ func PinActions(inputYaml string, exemptedActions []string) (string, bool, error
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string, exemptedActions []string) (string, bool) {
+func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
 		return inputYaml, updated // Cannot pin local actions and docker actions
 	}
 
-	if isAbsolute(action) || IsImmutableAction(action) {
+	if isAbsolute(action) || (pinToImmutable && IsImmutableAction(action)) {
 		return inputYaml, updated
 	}
 	leftOfAt := strings.Split(action, "@")
@@ -84,7 +84,7 @@ func PinAction(action, inputYaml string, exemptedActions []string) (string, bool
 
 	// if the action with version is immutable, then pin the action with version instead of sha
 	pinnedActionWithVersion := fmt.Sprintf("%s@%s", leftOfAt[0], tagOrBranch)
-	if semanticTagRegex.MatchString(tagOrBranch) && IsImmutableAction(pinnedActionWithVersion) {
+	if pinToImmutable && semanticTagRegex.MatchString(tagOrBranch) && IsImmutableAction(pinnedActionWithVersion) {
 		pinnedAction = pinnedActionWithVersion
 	}
 
