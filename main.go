@@ -128,7 +128,7 @@ func (h Handler) Invoke(ctx context.Context, req []byte) ([]byte, error) {
 				inputYaml = httpRequest.Body
 			}
 
-			fixResponse, err := workflow.SecureWorkflow(httpRequest.QueryStringParameters, nil, false, inputYaml, dynamoDbSvc)
+			fixResponse, err := workflow.SecureWorkflow(httpRequest.QueryStringParameters, inputYaml, dynamoDbSvc)
 
 			if err != nil {
 				response = events.APIGatewayProxyResponse{
