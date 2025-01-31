@@ -188,6 +188,21 @@ func TestPinActions(t *testing.T) {
 				  }
 			]`))
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/commits/v3.28.2",
+		httpmock.NewStringResponder(200, `d68b2d4edb4189fd2a5366ac14e72027bd4b37dd`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/git/matching-refs/tags/v3.28.2.",
+		httpmock.NewStringResponder(200,
+			`[
+					{
+						"ref": "refs/tags/v3.28.2",
+						"object": {
+						  "sha": "d68b2d4edb4189fd2a5366ac14e72027bd4b37dd",
+						  "type": "commit"
+						}
+					  }
+				]`))
+
 	// mock ping response
 	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
 		httpmock.NewStringResponder(200, ``))
@@ -263,19 +278,23 @@ func TestPinActions(t *testing.T) {
 		})
 
 	tests := []struct {
-		fileName    string
-		wantUpdated bool
+		fileName        string
+		wantUpdated     bool
+		exemptedActions []string
+		pinToImmutable  bool
 	}{
-		{fileName: "alreadypinned.yml", wantUpdated: false},
-		{fileName: "branch.yml", wantUpdated: true},
-		{fileName: "localaction.yml", wantUpdated: true},
-		{fileName: "multiplejobs.yml", wantUpdated: true},
-		{fileName: "basic.yml", wantUpdated: true},
-		{fileName: "dockeraction.yml", wantUpdated: true},
-		{fileName: "multipleactions.yml", wantUpdated: true},
-		{fileName: "actionwithcomment.yml", wantUpdated: true},
-		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true},
-		{fileName: "immutableaction-1.yml", wantUpdated: true},
+		{fileName: "alreadypinned.yml", wantUpdated: false, pinToImmutable: true},
+		{fileName: "branch.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "localaction.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "multiplejobs.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "basic.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "dockeraction.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "multipleactions.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "actionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "immutableaction-1.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*"}, pinToImmutable: true},
+		{fileName: "donotpintoimmutable.yml", wantUpdated: true, pinToImmutable: false},
 	}
 	for _, tt := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
@@ -284,7 +303,7 @@ func TestPinActions(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, gotUpdated, err := PinActions(string(input))
+		output, gotUpdated, err := PinActions(string(input), tt.exemptedActions, tt.pinToImmutable)
 		if tt.wantUpdated != gotUpdated {
 			t.Errorf("test failed wantUpdated %v did not match gotUpdated %v", tt.wantUpdated, gotUpdated)
 		}

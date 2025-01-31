@@ -15,7 +15,7 @@ const (
 	HardenRunnerActionName = "Harden Runner"
 )
 
-func AddAction(inputYaml, action string, pinActions bool) (string, bool, error) {
+func AddAction(inputYaml, action string, pinActions, pinToImmutable bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -47,7 +47,7 @@ func AddAction(inputYaml, action string, pinActions bool) (string, bool, error) 
 	}
 
 	if updated && pinActions {
-		out, _ = pin.PinAction(action, out)
+		out, _ = pin.PinAction(action, out, nil, pinToImmutable)
 	}
 
 	return out, updated, nil

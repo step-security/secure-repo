@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func PinActions(inputYaml string) (string, bool, error) {
+func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -28,7 +29,7 @@ func PinActions(inputYaml string) (string, bool, error) {
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out)
+				out, localUpdated = PinAction(step.Uses, out, exemptedActions, pinToImmutable)
 				updated = updated || localUpdated
 			}
 		}
@@ -37,18 +38,23 @@ func PinActions(inputYaml string) (string, bool, error) {
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string) (string, bool) {
+func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
 		return inputYaml, updated // Cannot pin local actions and docker actions
 	}
 
-	if isAbsolute(action) || IsImmutableAction(action) {
+	if isAbsolute(action) || (pinToImmutable && IsImmutableAction(action)) {
 		return inputYaml, updated
 	}
 	leftOfAt := strings.Split(action, "@")
 	tagOrBranch := leftOfAt[1]
+
+	// skip pinning for exempted actions
+	if actionExists(leftOfAt[0], exemptedActions) {
+		return inputYaml, updated
+	}
 
 	splitOnSlash := strings.Split(leftOfAt[0], "/")
 	owner := splitOnSlash[0]
@@ -78,7 +84,7 @@ func PinAction(action, inputYaml string) (string, bool) {
 
 	// if the action with version is immutable, then pin the action with version instead of sha
 	pinnedActionWithVersion := fmt.Sprintf("%s@%s", leftOfAt[0], tagOrBranch)
-	if semanticTagRegex.MatchString(tagOrBranch) && IsImmutableAction(pinnedActionWithVersion) {
+	if pinToImmutable && semanticTagRegex.MatchString(tagOrBranch) && IsImmutableAction(pinnedActionWithVersion) {
 		pinnedAction = pinnedActionWithVersion
 	}
 
@@ -187,4 +193,21 @@ func getSemanticVersion(client *github.Client, owner, repo, tagOrBranch, commitS
 		}
 	}
 	return tagOrBranch, nil
+}
+
+// Function to check if an action matches any pattern in the list
+func actionExists(actionName string, patterns []string) bool {
+	for _, pattern := range patterns {
+		// Use filepath.Match to match the pattern
+		matched, err := filepath.Match(pattern, actionName)
+		if err != nil {
+			// Handle invalid patterns
+			fmt.Printf("Error matching pattern: %v\n", err)
+			continue
+		}
+		if matched {
+			return true
+		}
+	}
+	return false
 }
