@@ -14,7 +14,7 @@ jobs:
       statuses: write  # for github/super-linter to mark status of each linter run
     runs-on: ubuntu-latest  
     steps:
-      - name: Harden Runner
+      - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@v2
         with:
           egress-policy: audit

@@ -12,7 +12,7 @@ import (
 
 const (
 	HardenRunnerActionPath = "step-security/harden-runner"
-	HardenRunnerActionName = "Harden Runner"
+	HardenRunnerActionName = "Harden the runner (Audit all outbound calls)"
 )
 
 func AddAction(inputYaml, action string, pinActions, pinToImmutable bool) (string, bool, error) {
