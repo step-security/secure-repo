@@ -52,7 +52,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	tagOrBranch := leftOfAt[1]
 
 	// skip pinning for exempted actions
-	if actionExists(leftOfAt[0], exemptedActions) {
+	if ActionExists(leftOfAt[0], exemptedActions) {
 		return inputYaml, updated
 	}
 
@@ -196,7 +196,7 @@ func getSemanticVersion(client *github.Client, owner, repo, tagOrBranch, commitS
 }
 
 // Function to check if an action matches any pattern in the list
-func actionExists(actionName string, patterns []string) bool {
+func ActionExists(actionName string, patterns []string) bool {
 	for _, pattern := range patterns {
 		// Use filepath.Match to match the pattern
 		matched, err := filepath.Match(pattern, actionName)

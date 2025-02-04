@@ -85,6 +85,9 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if addHardenRunner {
+		if pin.ActionExists(HardenRunnerActionPath, exemptedActions) {
+			pinActions = false
+		}
 		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag, pinActions, pinToImmutable)
 	}
 
