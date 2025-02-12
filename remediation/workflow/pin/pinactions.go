@@ -17,6 +17,7 @@ import (
 func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
+	var allActions []string
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
 		return inputYaml, updated, fmt.Errorf("unable to parse yaml %v", err)
@@ -24,8 +25,17 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 
 	out := inputYaml
 
+	// get all jobs present in the workflow
+	for _, job := range workflow.Jobs {
+		for _, step := range job.Steps {
+			if strings.Contains(step.Uses, "@") && !strings.HasPrefix(step.Uses, "docker://") && !isAbsolute(step.Uses) {
+				allActions = append(allActions, step.Uses)
+			}
+		}
+	}
+
 	// get immutable map for the semantic versions of the actions present in the workflow
-	immutableMap := getSemanticActionsImmutableMap(workflow, pinToImmutable)
+	immutableMap := GetSemanticActionsImmutableMap(allActions, pinToImmutable)
 
 	for _, job := range workflow.Jobs {
 
@@ -217,23 +227,13 @@ func ActionExists(actionName string, patterns []string) bool {
 	return false
 }
 
-func getSemanticActionsImmutableMap(workflow metadata.Workflow, pinToImmutable bool) map[string]bool {
-	var allActions []string
+func GetSemanticActionsImmutableMap(allActions []string, pinToImmutable bool) map[string]bool {
 	var allSemanticActions []string
 	immutableMap := make(map[string]bool)
 
 	// return if pinToImmutable is set to false
 	if !pinToImmutable {
 		return immutableMap
-	}
-
-	// get all jobs present in the workflow
-	for _, job := range workflow.Jobs {
-		for _, step := range job.Steps {
-			if strings.Contains(step.Uses, "@") && !strings.HasPrefix(step.Uses, "docker://") && !isAbsolute(step.Uses) {
-				allActions = append(allActions, step.Uses)
-			}
-		}
 	}
 
 	PAT := os.Getenv("PAT")
