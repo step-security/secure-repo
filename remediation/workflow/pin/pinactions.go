@@ -17,6 +17,7 @@ import (
 func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
+	var allActions []string
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
 		return inputYaml, updated, fmt.Errorf("unable to parse yaml %v", err)
@@ -24,12 +25,24 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 
 	out := inputYaml
 
+	// get all jobs present in the workflow
+	for _, job := range workflow.Jobs {
+		for _, step := range job.Steps {
+			if strings.Contains(step.Uses, "@") && !strings.HasPrefix(step.Uses, "docker://") && !isAbsolute(step.Uses) {
+				allActions = append(allActions, step.Uses)
+			}
+		}
+	}
+
+	// get immutable map for the semantic versions of the actions present in the workflow
+	immutableMap := GetSemanticActionsImmutableMap(allActions, pinToImmutable)
+
 	for _, job := range workflow.Jobs {
 
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out, exemptedActions, pinToImmutable)
+				out, localUpdated = PinAction(step.Uses, out, exemptedActions, immutableMap)
 				updated = updated || localUpdated
 			}
 		}
@@ -38,14 +51,15 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool) {
+func PinAction(action, inputYaml string, exemptedActions []string, immutableMap map[string]bool) (string, bool) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
 		return inputYaml, updated // Cannot pin local actions and docker actions
 	}
 
-	if isAbsolute(action) || (pinToImmutable && IsImmutableAction(action)) {
+	// if already semantic than the action must be present in immutableMap
+	if isAbsolute(action) || immutableMap[action] {
 		return inputYaml, updated
 	}
 	leftOfAt := strings.Split(action, "@")
@@ -84,7 +98,8 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 
 	// if the action with version is immutable, then pin the action with version instead of sha
 	pinnedActionWithVersion := fmt.Sprintf("%s@%s", leftOfAt[0], tagOrBranch)
-	if pinToImmutable && semanticTagRegex.MatchString(tagOrBranch) && IsImmutableAction(pinnedActionWithVersion) {
+	// if found update pinned action with immutable pinned version
+	if semanticTagRegex.MatchString(tagOrBranch) && immutableMap[pinnedActionWithVersion] {
 		pinnedAction = pinnedActionWithVersion
 	}
 
@@ -210,4 +225,50 @@ func ActionExists(actionName string, patterns []string) bool {
 		}
 	}
 	return false
+}
+
+func GetSemanticActionsImmutableMap(allActions []string, pinToImmutable bool) map[string]bool {
+	var allSemanticActions []string
+	immutableMap := make(map[string]bool)
+
+	// return if pinToImmutable is set to false
+	if !pinToImmutable {
+		return immutableMap
+	}
+
+	PAT := os.Getenv("PAT")
+
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: PAT},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+
+	// get corresponding semantic actions for the actions present in the workflow
+	for _, action := range allActions {
+		leftOfAt := strings.Split(action, "@")
+		tagOrBranch := leftOfAt[1]
+
+		splitOnSlash := strings.Split(leftOfAt[0], "/")
+		owner := splitOnSlash[0]
+		repo := splitOnSlash[1]
+
+		commitSHA, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
+		if err != nil {
+			return immutableMap
+		}
+
+		tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
+		if err != nil {
+			return immutableMap
+		}
+
+		pinnedActionWithSemanticVersion := fmt.Sprintf("%s@%s", leftOfAt[0], tagOrBranch)
+
+		allSemanticActions = append(allSemanticActions, pinnedActionWithSemanticVersion)
+	}
+
+	return IsImmutableActionConcurrently(allSemanticActions)
 }
