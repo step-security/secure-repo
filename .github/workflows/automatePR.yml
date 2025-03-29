@@ -16,12 +16,17 @@ jobs:
       actions: write
     
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Harden Runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
         with:
-          repository: step-security/secure-workflows
+          egress-policy: audit
+
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          repository: step-security/secure-repo
     
       - name: Automate PR
-        uses: step-security/secure-workflows/Automate-PR@98ff385ea512d8ac7a1445f95e199f6864f439e1
+        uses: step-security/secure-repo/Automate-PR@98ff385ea512d8ac7a1445f95e199f6864f439e1
         with:
           github-token: ${{secrets.PAT }}
           issue-id: ${{ github.event.issue.number}}

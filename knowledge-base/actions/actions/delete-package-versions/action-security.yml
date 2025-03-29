@@ -1,0 +1,8 @@
+name: Delete Package Versions
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    packages: write
+    packages-reason: to delete packages

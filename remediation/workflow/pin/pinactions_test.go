@@ -3,7 +3,9 @@ package pin
 import (
 	"io/ioutil"
 	"log"
+	"net/http"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -171,17 +173,128 @@ func TestPinActions(t *testing.T) {
 				  }
 			]`))
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/commits/v3",
+		httpmock.NewStringResponder(200, `d68b2d4edb4189fd2a5366ac14e72027bd4b37dd`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/git/matching-refs/tags/v3.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+					"ref": "refs/tags/v3.28.2",
+					"object": {
+					  "sha": "d68b2d4edb4189fd2a5366ac14e72027bd4b37dd",
+					  "type": "commit"
+					}
+				  }
+			]`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/commits/v3.28.2",
+		httpmock.NewStringResponder(200, `d68b2d4edb4189fd2a5366ac14e72027bd4b37dd`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/codeql-action/git/matching-refs/tags/v3.28.2.",
+		httpmock.NewStringResponder(200,
+			`[
+					{
+						"ref": "refs/tags/v3.28.2",
+						"object": {
+						  "sha": "d68b2d4edb4189fd2a5366ac14e72027bd4b37dd",
+						  "type": "commit"
+						}
+					  }
+				]`))
+
+	// mock ping response
+	httpmock.RegisterResponder("GET", "https://ghcr.io/v2/",
+		httpmock.NewStringResponder(200, ``))
+
+	// Mock token endpoints
+	httpmock.RegisterResponder("GET", "https://ghcr.io/token",
+		func(req *http.Request) (*http.Response, error) {
+			scope := req.URL.Query().Get("scope")
+			switch scope {
+			// Following are the ones which simulate the image existance in ghcr
+			case "repository:actions/checkout:pull",
+				"repository:step-security/wait-for-secrets:pull",
+				"repository:actions/setup-node:pull",
+				"repository:peter-evans/close-issue:pull",
+				"repository:borales/actions-yarn:pull",
+				"repository:JS-DevTools/npm-publish:pull",
+				"repository:elgohr/Publish-Docker-Github-Action:pull",
+				"repository:brandedoutcast/publish-nuget:pull",
+				"repository:rohith/publish-nuget:pull",
+				"repository:github/codeql-action:pull":
+				return httpmock.NewJsonResponse(http.StatusOK, map[string]string{
+					"token":        "test-token",
+					"access_token": "test-token",
+				})
+			default:
+				return httpmock.NewJsonResponse(http.StatusForbidden, map[string]interface{}{
+					"errors": []map[string]string{
+						{
+							"code":    "DENIED",
+							"message": "requested access to the resource is denied",
+						},
+					},
+				})
+			}
+		})
+
+	// Mock manifest endpoints for specific versions and commit hashes
+	manifestResponders := []string{
+		// the following list will contain the list of actions with versions
+		// which are mocked to be immutable
+		"actions/checkout@v1.2.0",
+		"github/codeql-action@v3.28.2",
+	}
+
+	for _, action := range manifestResponders {
+		actionPath := strings.Split(action, "@")[0]
+		version := strings.TrimPrefix(strings.Split(action, "@")[1], "v")
+		// Mock manifest response so that we can treat action as immutable
+		httpmock.RegisterResponder("GET", "https://ghcr.io/v2/"+actionPath+"/manifests/"+version,
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
+					"schemaVersion": 2,
+					"mediaType":     "application/vnd.github.actions.package.v1+json",
+					"artifactType":  "application/vnd.github.actions.package.v1+json",
+					"config": map[string]interface{}{
+						"mediaType": "application/vnd.github.actions.package.v1+json",
+					},
+				})
+			})
+	}
+
+	// Default manifest response for non-existent tags
+	httpmock.RegisterResponder("GET", `=~^https://ghcr\.io/v2/.*/manifests/.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewJsonResponse(http.StatusNotFound, map[string]interface{}{
+				"errors": []map[string]string{
+					{
+						"code":    "MANIFEST_UNKNOWN",
+						"message": "manifest unknown",
+					},
+				},
+			})
+		})
+
 	tests := []struct {
-		fileName    string
-		wantUpdated bool
+		fileName        string
+		wantUpdated     bool
+		exemptedActions []string
+		pinToImmutable  bool
 	}{
-		{fileName: "alreadypinned.yml", wantUpdated: false},
-		{fileName: "branch.yml", wantUpdated: true},
-		{fileName: "localaction.yml", wantUpdated: true},
-		{fileName: "multiplejobs.yml", wantUpdated: true},
-		{fileName: "basic.yml", wantUpdated: true},
-		{fileName: "dockeraction.yml", wantUpdated: true},
-		{fileName: "multipleactions.yml", wantUpdated: true},
+		{fileName: "alreadypinned.yml", wantUpdated: false, pinToImmutable: true},
+		{fileName: "branch.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "localaction.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "multiplejobs.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "basic.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "dockeraction.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "multipleactions.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "actionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "immutableaction-1.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*"}, pinToImmutable: true},
+		{fileName: "donotpintoimmutable.yml", wantUpdated: true, pinToImmutable: false},
 	}
 	for _, tt := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
@@ -190,7 +303,7 @@ func TestPinActions(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		output, gotUpdated, err := PinActions(string(input))
+		output, gotUpdated, err := PinActions(string(input), tt.exemptedActions, tt.pinToImmutable)
 		if tt.wantUpdated != gotUpdated {
 			t.Errorf("test failed wantUpdated %v did not match gotUpdated %v", tt.wantUpdated, gotUpdated)
 		}

@@ -1,0 +1,28 @@
+name: "close issue"
+
+on:
+  push:
+
+jobs:
+  closeissue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Close Issue
+        uses: peter-evans/close-issue@v1 #Mock comment to remove
+        with:
+          issue-number: 1
+          comment: Auto-closing issue
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1 #Mock Comment
+      - uses: actions/setup-node@v1 #Mock Comment
+        with:
+          node-version: 10
+      - run: npm install
+      - run: npm test
+      - uses: JS-DevTools/npm-publish@v1 #Mock Comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          registry: https://npm.pkg.github.com

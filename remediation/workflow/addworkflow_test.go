@@ -14,13 +14,13 @@ func Test_AddWorkflow(t *testing.T) {
 		expectedOutputFile string
 	}{
 		{
-			workflowName: "codeql",
+			workflowName: "CodeQL",
 			workflowParameters: WorkflowParameters{
 				LanguagesToAdd: []string{"cpp", "go", "java"},
 				DefaultBranch:  "main",
 			},
 			expectedError:      false,
-			expectedOutputFile: "../../testfiles/expected-codeql.yml",
+			expectedOutputFile: "../../testfiles/addworkflow/expected-codeql.yml",
 		},
 		{
 			workflowName: "xyz",
@@ -30,6 +30,20 @@ func Test_AddWorkflow(t *testing.T) {
 			},
 			expectedError:      true,
 			expectedOutputFile: "",
+		},
+		{
+			workflowName:       "Dependency-review",
+			workflowParameters: WorkflowParameters{},
+			expectedError:      false,
+			expectedOutputFile: "../../testfiles/addworkflow/expected-dependency-review.yml",
+		},
+		{
+			workflowName: "Scorecard",
+			workflowParameters: WorkflowParameters{
+				DefaultBranch: "main",
+			},
+			expectedError:      false,
+			expectedOutputFile: "../../testfiles/addworkflow/expected-scorecards.yml",
 		},
 	}
 

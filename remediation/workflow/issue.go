@@ -4,74 +4,75 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/google/go-github/v40/github"
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"golang.org/x/oauth2"
 )
 
 const (
 	kblabel           = "knowledge-base"
 	stepsecurityowner = "step-security"
-	stepsecurityrepo  = "secure-workflows"
+	branch            = "main"
+	workflowFile      = "kbanalysis.yml"
+	stepsecurityrepo  = "secure-repo"
 	allIssues         = "all"
 	openIssues        = "open"
 )
 
-func CreateIssue(Action string) (int, error) {
+func CreatePR(Action string) error {
 	// is action
 	if len(Action) > 0 {
 		// is kb not found
 		_, err := metadata.GetActionKnowledgeBase(Action)
 
 		if err != nil {
-			// does issue already exist?
-			issue, err := getExistingIssue(Action)
-
-			if err != nil {
-				return 0, err
-			}
-
-			if issue == nil {
-				issue, err = createIssue(Action)
-
-				if err != nil {
-					fmt.Printf("[CreateIssue] error in creating issue for action %s: %v\n", Action, err)
-					return 0, err
-				}
-
-				fmt.Printf("[CreateIssue] Issue created for action %s: %d\n", Action, issue.Number)
-				return *issue.Number, nil
-			} else {
-				return *issue.Number, nil
-			}
+			err = dispatchWorkflow(Action)
+			return err
 		} else {
-			return 0, fmt.Errorf("action already has kb")
+			return fmt.Errorf("action already has kb")
 		}
 	}
 
-	return 0, fmt.Errorf("step is not an action")
+	return fmt.Errorf("step is not an action")
 }
 
-func createIssue(Action string) (*github.Issue, error) {
+type Repo struct {
+	owner string
+	repo  string
+}
+
+func getRepo(action string) Repo {
+	r := Repo{}
+
+	i := 0
+	for i < len(action) {
+		if action[i] == '/' {
+			r.owner = action[0:i]
+			break
+		}
+		i++
+	}
+	r.repo = action[i+1:]
+	return r
+}
+
+func dispatchWorkflow(action string) error {
 	PAT := os.Getenv("PAT")
 	if PAT == "" {
-		return nil, fmt.Errorf("[createIssue] PAT not set in env variable")
+		return fmt.Errorf("[dispatchWorkflow] PAT not set in env variable")
 	}
 	client := getClient(PAT)
-	title := fmt.Sprintf("[KB] Add GitHub token permissions for %s Action", Action)
-	labels := []string{kblabel}
-	bodyLines := []string{}
-	bodyLines = append(bodyLines, fmt.Sprintf("Knowledge Base is missing for %s.", Action))
-	body := strings.Join(bodyLines, "\r\n")
-	issue, _, err := client.Issues.Create(context.Background(), stepsecurityowner, stepsecurityrepo, &github.IssueRequest{Title: &title, Labels: &labels, Body: &body})
+	repos := getRepo(action)
+	inputs := make(map[string]interface{})
+	inputs["owner"] = repos.owner
+	inputs["repo"] = repos.repo
+	eventRequest := github.CreateWorkflowDispatchEventRequest{Ref: branch, Inputs: inputs}
 
-	if err != nil {
-		return nil, err
-	}
+	_, err := client.Actions.CreateWorkflowDispatchEventByFileName(context.Background(), stepsecurityowner, stepsecurityrepo, workflowFile, eventRequest)
 
-	return issue, nil
+	return err
+
 }
 
 func getClient(PAT string) *github.Client {
@@ -83,28 +84,4 @@ func getClient(PAT string) *github.Client {
 
 	client := github.NewClient(tc)
 	return client
-}
-
-func getExistingIssue(action string) (*github.Issue, error) {
-	PAT := os.Getenv("PAT")
-	if PAT == "" {
-		return nil, fmt.Errorf("[createIssue] PAT not set in env variable")
-	}
-
-	client := getClient(PAT)
-
-	issues, _, err := client.Issues.ListByRepo(context.Background(), stepsecurityowner, stepsecurityrepo,
-		&github.IssueListByRepoOptions{Labels: []string{kblabel}, State: openIssues, ListOptions: github.ListOptions{PerPage: 100}})
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, issue := range issues {
-		if strings.Contains(*issue.Title, action) {
-			return issue, nil
-		}
-	}
-
-	return nil, nil
 }

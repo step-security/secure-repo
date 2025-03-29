@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@544eadc6bf3d226fd7a7a9f0dc5b5bf7ca0675b9 # v1.2.0
+      uses: actions/checkout@v1.2.0
     - name: Integration test
       uses: docker://ghcr.io/step-security/integration-test/int:latest
       env:

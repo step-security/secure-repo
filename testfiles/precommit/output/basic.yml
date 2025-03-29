@@ -1,0 +1,24 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.3.0
+  hooks:
+    - id: end-of-file-fixer
+    - id: check-yaml
+    - id: check-json
+    - id: trailing-whitespace
+- repo: https://github.com/pre-commit/mirrors-eslint
+  rev: v8.23.0
+  hooks:
+    - id: eslint
+- repo: https://github.com/ejba/pre-commit-maven
+  rev: v0.3.3
+  hooks:
+    - id: maven-test
+- repo: https://github.com/zricethezav/gitleaks
+  rev: v8.12.0
+  hooks:
+    - id: gitleaks
+- repo: https://github.com/pocc/pre-commit-hooks
+  rev: v1.3.5
+  hooks:
+    - id: cpplint

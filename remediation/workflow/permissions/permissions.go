@@ -7,7 +7,7 @@ import (
 
 	"github.com/PaesslerAG/gval"
 	"github.com/generikvault/gvalstrings"
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"gopkg.in/yaml.v3"
 )
 
@@ -38,9 +38,10 @@ const errorMissingAction = "KnownIssue-4: Action %s is not in the knowledge base
 const errorAlreadyHasPermissions = "KnownIssue-5: Permissions were not added to the job since it already had permissions defined"
 const errorDockerAction = "KnownIssue-6: Action %s is a docker action which uses Github token. Docker actions that uses token are not supported"
 const errorReusableWorkflow = "KnownIssue-7: Action %s is a reusable workflow. Reusable workflows are not supported as of now."
+const errorGithubTokenInJobEnv = "KnownIssue-8: Permissions were not added to the jobs since it has GITHUB_TOKEN in job level env variable"
 const errorIncorrectYaml = "Unable to parse the YAML workflow file"
 
-//To avoid a typo while adding the permissions
+// To avoid a typo while adding the permissions
 const (
 	actions_read              = "actions: read"
 	actions_write             = "actions: write"
@@ -78,6 +79,15 @@ func alreadyHasWorkflowPermissions(workflow metadata.Workflow) bool {
 	return workflow.Permissions.IsSet
 }
 
+func githubTokenInJobLevelEnv(job metadata.Job) bool {
+	for _, envValue := range job.Env {
+		if strings.Contains(envValue, "secrets.GITHUB_TOKEN") || strings.Contains(envValue, "github.token") {
+			return true
+		}
+	}
+	return false
+}
+
 func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (string, error) {
 	workflow := metadata.Workflow{}
 
@@ -101,6 +111,9 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 	line := 0
 	column := 0
 	topNode := t.Content
+	if len(topNode) == 0 {
+		return inputYaml, fmt.Errorf("Workflow file provided is Empty")
+	}
 	for _, n := range topNode[0].Content {
 		if n.Value == "jobs" && n.Tag == "!!str" {
 			line = n.Line
@@ -125,7 +138,7 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 	}
 
 	if addProjectComment {
-		output = append(output, spaces+"permissions:  # added using https://github.com/step-security/secure-workflows")
+		output = append(output, spaces+"permissions:  # added using https://github.com/step-security/secure-repo")
 	} else {
 		output = append(output, spaces+"permissions:")
 	}
@@ -171,6 +184,12 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			// We are not modifying permissions if already defined
 			fixWorkflowPermsReponse.HasErrors = true
 			errors[jobName] = append(errors[jobName], errorAlreadyHasPermissions)
+			continue
+		}
+
+		if githubTokenInJobLevelEnv(job) {
+			fixWorkflowPermsReponse.HasErrors = true
+			errors[jobName] = append(errors[jobName], errorGithubTokenInJobEnv)
 			continue
 		}
 

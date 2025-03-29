@@ -2,9 +2,9 @@ package workflow
 
 import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/step-security/secure-workflows/remediation/workflow/hardenrunner"
-	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
-	"github.com/step-security/secure-workflows/remediation/workflow/pin"
+	"github.com/step-security/secure-repo/remediation/workflow/hardenrunner"
+	"github.com/step-security/secure-repo/remediation/workflow/permissions"
+	"github.com/step-security/secure-repo/remediation/workflow/pin"
 )
 
 const (
@@ -13,10 +13,21 @@ const (
 	HardenRunnerActionName        = "Harden Runner"
 )
 
-func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI) (*permissions.SecureWorkflowReponse, error) {
+func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
 	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
 	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
 	ignoreMissingKBs := false
+	exemptedActions, pinToImmutable := []string{}, false
+	if len(params) > 0 {
+		if v, ok := params[0].([]string); ok {
+			exemptedActions = v
+		}
+	}
+	if len(params) > 1 {
+		if v, ok := params[1].(bool); ok {
+			pinToImmutable = v
+		}
+	}
 
 	if queryStringParams["pinActions"] == "false" {
 		pinActions = false
@@ -68,13 +79,16 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if pinActions {
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable)
 		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker
 	}
 
 	if addHardenRunner {
-		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag, pinActions)
+		if pin.ActionExists(HardenRunnerActionPath, exemptedActions) {
+			pinActions = false
+		}
+		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag, pinActions, pinToImmutable)
 	}
 
 	// Setting appropriate flags

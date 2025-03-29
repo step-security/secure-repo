@@ -32,7 +32,7 @@ func TestAddAction(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error reading test file")
 			}
-			got, gotUpdated, err := AddAction(string(input), tt.args.action, false)
+			got, gotUpdated, err := AddAction(string(input), tt.args.action, false, false)
 
 			if gotUpdated != tt.wantUpdated {
 				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)

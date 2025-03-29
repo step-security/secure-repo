@@ -1,0 +1,9 @@
+name: 'Dependency Review'
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+   pull-requests: write
+   pull-requests-reason: to post comments on PRs #Checkout: https://github.com/actions/dependency-review-action/blob/e3fb5152be474702523c77d8f5ecd4c0a5bde872/action.yml#L44
+   pull-requests-if: ${{ contains(with, 'comment-summary-in-pr') && with['comment-summary-in-pr'] == 'true' }}

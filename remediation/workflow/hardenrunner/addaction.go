@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	metadata "github.com/step-security/secure-workflows/remediation/workflow/metadata"
-	"github.com/step-security/secure-workflows/remediation/workflow/permissions"
-	"github.com/step-security/secure-workflows/remediation/workflow/pin"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
+	"github.com/step-security/secure-repo/remediation/workflow/permissions"
+	"github.com/step-security/secure-repo/remediation/workflow/pin"
 	"gopkg.in/yaml.v3"
 )
 
 const (
 	HardenRunnerActionPath = "step-security/harden-runner"
-	HardenRunnerActionName = "Harden Runner"
+	HardenRunnerActionName = "Harden the runner (Audit all outbound calls)"
 )
 
-func AddAction(inputYaml, action string, pinActions bool) (string, bool, error) {
+func AddAction(inputYaml, action string, pinActions, pinToImmutable bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -47,7 +47,7 @@ func AddAction(inputYaml, action string, pinActions bool) (string, bool, error) 
 	}
 
 	if updated && pinActions {
-		out, _ = pin.PinAction(action, out)
+		out, _ = pin.PinAction(action, out, nil, pinToImmutable)
 	}
 
 	return out, updated, nil
@@ -83,7 +83,7 @@ func addAction(inputYaml, jobName, action string) (string, error) {
 	output = append(output, spaces+fmt.Sprintf("- name: %s", HardenRunnerActionName))
 	output = append(output, spaces+fmt.Sprintf("  uses: %s", action))
 	output = append(output, spaces+"  with:")
-	output = append(output, spaces+"    egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs")
+	output = append(output, spaces+"    egress-policy: audit")
 	output = append(output, "")
 
 	for i := jobNode.Line - 1; i < len(inputLines); i++ {

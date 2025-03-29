@@ -1,0 +1,2 @@
+name: "cargo-cache" # RustCrypto/actions/cargo-cache
+# GITHUB_TOKEN not used
