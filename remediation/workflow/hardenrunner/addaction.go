@@ -61,7 +61,9 @@ func addAction(inputYaml, jobName, action string) (string, error) {
 		return "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	jobNode := permissions.IterateNode(&t, jobName, "!!map", 0)
+	jobNode := permissions.IterateNode(&t, "jobs", "!!map", 0)
+
+	jobNode = permissions.IterateNode(&t, jobName, "!!map", jobNode.Line)
 
 	jobNode = permissions.IterateNode(&t, "steps", "!!seq", jobNode.Line)
 
