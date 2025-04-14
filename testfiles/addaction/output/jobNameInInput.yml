@@ -1,0 +1,75 @@
+name: coveo-example-library
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'coveo-example-library/**'
+      - '!**.lock'
+      - '!**.md'
+
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'coveo-example-library/**'
+      - '.github/workflows/coveo-example-library.yml'
+      - '!**.md'
+
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to pypi.org?"
+        required: false
+        default: 'false'
+
+jobs:
+  pyprojectci:
+    name: pyproject ci
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.10"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Run stew ci
+        uses: coveo/stew@main
+        with:
+          project-name: ${{ github.workflow }}
+          python-version: ${{ matrix.python-version }}
+          poetry-version: "<2"
+
+  publish:
+    name: Publish to pypi.org
+    runs-on: ubuntu-20.04
+    needs: pyprojectci
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
+
+      - name: Setup python 3.9
+        uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2.3.4
+        with:
+          python-version: 3.9
+
+      - name: Publish to pypi
+        uses: ./.github/workflows/actions/publish-to-pypi
+        with:
+          project-name: ${{ github.workflow }}
+          pypi-token: ${{ secrets.PYPI_TOKEN_COVEO_EXAMPLE_LIBRARY }}
+          pre-release: ${{ github.ref != 'refs/heads/main' }}
+          dry-run: true
