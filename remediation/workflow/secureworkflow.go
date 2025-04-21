@@ -85,10 +85,12 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if addHardenRunner {
+		// Always pin harden-runner unless exempted
+		pinHardenRunner := true
 		if pin.ActionExists(HardenRunnerActionPath, exemptedActions) {
-			pinActions = false
+			pinHardenRunner = false
 		}
-		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag, pinActions, pinToImmutable)
+		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag, pinHardenRunner, pinToImmutable)
 	}
 
 	// Setting appropriate flags
