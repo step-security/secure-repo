@@ -1,0 +1,6 @@
+name: Code-Suggester
+github-token:
+  environment-variable-name: ACCESS_TOKEN
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to review PRs
