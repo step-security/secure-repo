@@ -1,0 +1,9 @@
+name: "Close issues after no reply"
+github-token:
+    action-input: 
+      input: repo-token
+      is-default: false
+    permissions:
+      issues: write
+      issues-reason: to comment, update and close issues
+    #Reference: https://github.com/imhoffd/needs-reply/blob/71e8d5144caa0d4a1e292348bfafa3866d08c855/dist/index.js#L3521
