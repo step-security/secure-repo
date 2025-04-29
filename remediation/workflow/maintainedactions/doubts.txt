@@ -1,0 +1,6 @@
+1. How to handle the 'with' parameters in steps - should they be preserved when replacing actions?
+2. How to handle version numbers - should we preserve the exact version or update to latest?
+3. How to maintain the mapping between original and maintained actions:
+   - Should we load the JSON file every time or cache it?
+   - How to handle updates to the maintained actions list?
+   - How to ensure the UI stays in sync with the JSON file?

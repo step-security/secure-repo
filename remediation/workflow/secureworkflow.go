@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/step-security/secure-repo/remediation/workflow/hardenrunner"
+	"github.com/step-security/secure-repo/remediation/workflow/maintainedactions"
 	"github.com/step-security/secure-repo/remediation/workflow/permissions"
 	"github.com/step-security/secure-repo/remediation/workflow/pin"
 )
@@ -17,8 +18,8 @@ const (
 )
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
-	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
-	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
+	pinActions, addHardenRunner, addPermissions, addProjectComment, addMaintainedActions := true, true, true, true, true
+	pinnedActions, addedHardenRunner, addedPermissions, addedMaintainedActions := false, false, false, false
 	ignoreMissingKBs := false
 	enableLogging := false
 	exemptedActions, pinToImmutable := []string{}, false
@@ -109,6 +110,13 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addedPermissions = !secureWorkflowReponse.HasErrors
 	}
 
+	if addMaintainedActions {
+		secureWorkflowReponse.FinalOutput, addedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput)
+		if err != nil {
+			secureWorkflowReponse.HasErrors = true
+		}
+	}
+
 	if pinActions {
 		if enableLogging {
 			log.Printf("Pinning GitHub Actions")
@@ -144,14 +152,6 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.PinnedActions = pinnedActions
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
-
-	if enableLogging {
-		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, HasErrors: %v",
-			secureWorkflowReponse.PinnedActions,
-			secureWorkflowReponse.AddedHardenRunner,
-			secureWorkflowReponse.AddedPermissions,
-			secureWorkflowReponse.HasErrors)
-	}
-
+	secureWorkflowReponse.AddedMaintainedActions = addedMaintainedActions
 	return secureWorkflowReponse, nil
 }

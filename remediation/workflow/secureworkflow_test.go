@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,6 +10,27 @@ import (
 
 	"github.com/jarcoal/httpmock"
 )
+
+func compareStrings(a, b string) {
+	maxLen := len(a)
+	if len(b) > maxLen {
+		maxLen = len(b)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		var ca, cb byte = '-', '-'
+		if i < len(a) {
+			ca = a[i]
+		}
+		if i < len(b) {
+			cb = b[i]
+		}
+		if ca != cb {
+			fmt.Printf("Mismatch at byte %d: expected '%c' (0x%x), got '%c' (0x%x)\n",
+				i, ca, ca, cb, cb)
+		}
+	}
+}
 
 func TestSecureWorkflow(t *testing.T) {
 	const inputDirectory = "../../testfiles/secureworkflow/input"
@@ -107,12 +129,46 @@ func TestSecureWorkflow(t *testing.T) {
 			  ]`),
 	)
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/releases/latest",
+		httpmock.NewStringResponder(200, `{
+		"tag_name": "v5.5.5",
+		"name": "v5.5.5",
+		"body": "Release notes",
+		"created_at": "2023-01-01T00:00:00Z"
+	}`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v2.1.0",
+			"name": "v2.1.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/super-linter/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v4.9.0",
+			"name": "v4.9.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v2.1.0",
+			"name": "v2.1.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
+
 	tests := []struct {
-		fileName              string
-		wantPinnedActions     bool
-		wantAddedHardenRunner bool
-		wantAddedPermissions  bool
+		fileName                   string
+		wantPinnedActions          bool
+		wantAddedHardenRunner      bool
+		wantAddedPermissions       bool
+		wantAddedMaintainedActions bool
 	}{
+		{fileName: "oneJob.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantAddedMaintainedActions: true},
 		{fileName: "allscenarios.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: true},
 		{fileName: "missingaction.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false},
 		{fileName: "nohardenrunner.yml", wantPinnedActions: true, wantAddedHardenRunner: false, wantAddedPermissions: true},
@@ -145,6 +201,11 @@ func TestSecureWorkflow(t *testing.T) {
 		case "multiplejobperms.yml":
 			queryParams["addHardenRunner"] = "false"
 			queryParams["pinActions"] = "false"
+		case "oneJob.yml":
+			queryParams["addMaintainedActions"] = "true"
+			queryParams["addHardenRunner"] = "true"
+			queryParams["pinActions"] = "true"
+			queryParams["addPermissions"] = "false"
 		}
 		queryParams["addProjectComment"] = "false"
 
@@ -159,7 +220,6 @@ func TestSecureWorkflow(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		if output.FinalOutput != string(expectedOutput) {
 			t.Errorf("test failed %s did not match expected output\n%s", test.fileName, output.FinalOutput)
 		}
