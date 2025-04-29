@@ -1,7 +1,6 @@
 package workflow
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -10,27 +9,6 @@ import (
 
 	"github.com/jarcoal/httpmock"
 )
-
-func compareStrings(a, b string) {
-	maxLen := len(a)
-	if len(b) > maxLen {
-		maxLen = len(b)
-	}
-
-	for i := 0; i < maxLen; i++ {
-		var ca, cb byte = '-', '-'
-		if i < len(a) {
-			ca = a[i]
-		}
-		if i < len(b) {
-			cb = b[i]
-		}
-		if ca != cb {
-			fmt.Printf("Mismatch at byte %d: expected '%c' (0x%x), got '%c' (0x%x)\n",
-				i, ca, ca, cb, cb)
-		}
-	}
-}
 
 func TestSecureWorkflow(t *testing.T) {
 	const inputDirectory = "../../testfiles/secureworkflow/input"
