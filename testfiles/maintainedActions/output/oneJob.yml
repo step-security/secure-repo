@@ -1,0 +1,17 @@
+name: Test Workflow
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: step-security/action-semantic-pull-request@v5
+        with:
+          types: feat,fix,chore
+      - uses: step-security/skip-duplicate-actions@v5
+        with:
+          do_not_skip: '["release"]'
+      - uses: step-security/git-restore-mtime-action@v2
+        with:
+          pattern: '**/*'

@@ -35,7 +35,7 @@ type replacement struct {
 func LoadMaintainedActions() (map[string]string, error) {
 	// Read the JSON file
 	jsonPath := filepath.Join("maintainedactions", "maintainedActions.json")
-
+	// jsonPath := filepath.Join("maintainedActions.json")
 	data, err := ioutil.ReadFile(jsonPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read maintained actions file: %v", err)
@@ -110,17 +110,14 @@ func ReplaceActions(inputYaml string) (string, bool, error) {
 	}
 
 	inputLines := strings.Split(inputYaml, "\n")
-	inputLines, updated, err = replaceAction(&t, inputLines, replacements, updated)
-	if err != nil {
-		return "", updated, fmt.Errorf("unable to replace action: %v", err)
-	}
+	inputLines, updated = replaceAction(&t, inputLines, replacements, updated)
 
 	output := strings.Join(inputLines, "\n")
 
 	return output, updated, nil
 }
 
-func replaceAction(t *yaml.Node, inputLines []string, replacements []replacement, updated bool) ([]string, bool, error) {
+func replaceAction(t *yaml.Node, inputLines []string, replacements []replacement, updated bool) ([]string, bool) {
 	for _, r := range replacements {
 		jobsNode := permissions.IterateNode(t, "jobs", "!!map", 0)
 		jobNode := permissions.IterateNode(jobsNode, r.jobName, "!!map", 0)
@@ -146,5 +143,5 @@ func replaceAction(t *yaml.Node, inputLines []string, replacements []replacement
 		updated = true
 
 	}
-	return inputLines, updated, nil
+	return inputLines, updated
 }

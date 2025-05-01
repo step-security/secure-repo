@@ -139,6 +139,51 @@ func TestSecureWorkflow(t *testing.T) {
 			"created_at": "2023-01-01T00:00:00Z"
 		}`))
 
+	// Mock APIs for step-security/action-semantic-pull-request
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/commits/v5",
+		httpmock.NewStringResponder(200, `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/matching-refs/tags/v5.",
+		httpmock.NewStringResponder(200, `[
+			{
+				"ref": "refs/tags/v5.5.5",
+				"object": {
+					"sha": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0",
+					"type": "commit"
+				}
+			}
+		]`))
+
+	// Mock APIs for step-security/skip-duplicate-actions
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/commits/v2",
+		httpmock.NewStringResponder(200, `b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200, `[
+			{
+				"ref": "refs/tags/v2.1.0",
+				"object": {
+					"sha": "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1",
+					"type": "commit"
+				}
+			}
+		]`))
+
+	// Mock APIs for step-security/git-restore-mtime-action
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/commits/v2",
+		httpmock.NewStringResponder(200, `c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200, `[
+			{
+				"ref": "refs/tags/v2.1.0",
+				"object": {
+					"sha": "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2",
+					"type": "commit"
+				}
+			}
+		]`))
+
 	tests := []struct {
 		fileName                   string
 		wantPinnedActions          bool
@@ -198,6 +243,7 @@ func TestSecureWorkflow(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		if output.FinalOutput != string(expectedOutput) {
 			t.Errorf("test failed %s did not match expected output\n%s", test.fileName, output.FinalOutput)
 		}
@@ -213,6 +259,6 @@ func TestSecureWorkflow(t *testing.T) {
 		if output.PinnedActions != test.wantPinnedActions {
 			t.Errorf("test failed %s did not match expected PinnedActions value. Expected:%v Actual:%v", test.fileName, test.wantPinnedActions, output.PinnedActions)
 		}
-	}
 
+	}
 }

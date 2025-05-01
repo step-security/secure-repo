@@ -5,13 +5,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/action-semantic-pull-request@v5.5.5
+      - uses: step-security/action-semantic-pull-request@v5
         with:
           types: feat,fix,chore
-      - uses: step-security/skip-duplicate-actions@v5.3.2
+      - uses: step-security/skip-duplicate-actions@v5
         with:
           do_not_skip: '["release"]'
-      - uses: step-security/git-restore-mtime-action@v2.1.0
+      - uses: step-security/git-restore-mtime-action@v2
         with:
           pattern: '**/*'
 
