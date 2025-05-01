@@ -1,40 +1,66 @@
 package maintainedactions
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"os"
+	"strings"
+
+	"github.com/google/go-github/v40/github"
+	"golang.org/x/oauth2"
 )
 
 type Release struct {
 	TagName string `json:"tag_name"`
 }
 
+func getMajorVersion(version string) string {
+	hasVPrefix := strings.HasPrefix(version, "v")
+	version = strings.TrimPrefix(version, "v")
+	parts := strings.Split(version, ".")
+	if len(parts) > 0 {
+		if hasVPrefix {
+			return "v" + parts[0]
+		}
+		return parts[0]
+	}
+	if hasVPrefix {
+		return "v" + version
+	}
+	return version
+}
+
 func GetLatestRelease(ownerRepo string) (string, error) {
-	// Build the URL dynamically and add `/actions` at the end
-	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", ownerRepo)
-	fmt.Println("url ", url)
+	splitOnSlash := strings.Split(ownerRepo, "/")
+	if len(splitOnSlash) != 2 {
+		return "", fmt.Errorf("invalid owner/repo format: %s", ownerRepo)
+	}
+	owner := splitOnSlash[0]
+	repo := splitOnSlash[1]
 
-	resp, err := http.Get(url)
+	ctx := context.Background()
+
+	// First try without token
+	client := github.NewClient(nil)
+	release, _, err := client.Repositories.GetLatestRelease(ctx, owner, repo)
 	if err != nil {
-		return "", fmt.Errorf("error fetching release: %w", err)
-	}
-	defer resp.Body.Close()
+		// If failed, try with token
+		token := os.Getenv("PAT")
+		if token == "" {
+			return "", fmt.Errorf("failed to get latest release and no GITHUB_TOKEN available: %w", err)
+		}
 
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("non-200 response: %s", resp.Status)
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: token},
+		)
+		tc := oauth2.NewClient(ctx, ts)
+		client = github.NewClient(tc)
+
+		release, _, err = client.Repositories.GetLatestRelease(ctx, owner, repo)
+		if err != nil {
+			return "", fmt.Errorf("failed to get latest release with token: %w", err)
+		}
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading response: %w", err)
-	}
-
-	var release Release
-	if err := json.Unmarshal(body, &release); err != nil {
-		return "", fmt.Errorf("error parsing JSON: %w", err)
-	}
-
-	return release.TagName, nil
+	return getMajorVersion(release.GetTagName()), nil
 }

@@ -11,7 +11,7 @@ jobs:
       - uses: fkirc/skip-duplicate-actions@v5
         with:
           do_not_skip: '["release"]'
-      - uses: step-security/git-restore-mtime-action@v2.1.0
+      - uses: step-security/git-restore-mtime-action@v2
         with:
           pattern: '**/*'
 
