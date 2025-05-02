@@ -59,7 +59,7 @@ func LoadMaintainedActions() (map[string]string, error) {
 }
 
 // ReplaceActions replaces original actions with Step Security actions in a workflow
-func ReplaceActions(inputYaml string) (string, bool, error) {
+func ReplaceActions(inputYaml string, customerMaintainedActions []string) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	actionMap, err := LoadMaintainedActions()
@@ -83,6 +83,9 @@ func ReplaceActions(inputYaml string) (string, bool, error) {
 			// fmt.Println("step ", step.Uses)
 			actionName := strings.Split(step.Uses, "@")[0]
 			if newAction, ok := actionMap[actionName]; ok {
+				if isMaintained(newAction, customerMaintainedActions) {
+					continue
+				}
 				latestVersion, err := GetLatestRelease(newAction)
 				if err != nil {
 					return "", updated, fmt.Errorf("unable to get latest release: %v", err)
@@ -144,4 +147,13 @@ func replaceAction(t *yaml.Node, inputLines []string, replacements []replacement
 
 	}
 	return inputLines, updated
+}
+
+func isMaintained(actionName string, maintainedActions []string) bool {
+	for _, maintainedAction := range maintainedActions {
+		if maintainedAction == actionName {
+			return true
+		}
+	}
+	return false
 }

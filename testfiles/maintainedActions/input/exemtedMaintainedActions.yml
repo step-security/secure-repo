@@ -1,0 +1,35 @@
+name: Test Workflow
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: amannn/action-semantic-pull-request@v5
+        with:
+          types: feat,fix,chore
+      - uses: fkirc/skip-duplicate-actions@v5
+        with:
+          do_not_skip: '["release"]'
+      - uses: chetan/git-restore-mtime-action@v1
+        with:
+          pattern: '**/*'
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - uses: amannn/action-semantic-pull-request@v5
+        with:
+          types: feat,fix,chore

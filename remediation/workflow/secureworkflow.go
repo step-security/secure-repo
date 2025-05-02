@@ -18,7 +18,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	pinActions, addHardenRunner, addPermissions, addProjectComment, addMaintainedActions := true, true, true, true, true
 	pinnedActions, addedHardenRunner, addedPermissions, addedMaintainedActions := false, false, false, false
 	ignoreMissingKBs := false
-	exemptedActions, pinToImmutable := []string{}, false
+	exemptedActions, pinToImmutable, customerMaintainedActions := []string{}, false, []string{}
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
 			exemptedActions = v
@@ -27,6 +27,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	if len(params) > 1 {
 		if v, ok := params[1].(bool); ok {
 			pinToImmutable = v
+		}
+	}
+	if len(params) > 2 {
+		if v, ok := params[2].([]string); ok {
+			customerMaintainedActions = v
 		}
 	}
 
@@ -79,7 +84,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if addMaintainedActions {
-		secureWorkflowReponse.FinalOutput, addedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse.FinalOutput, addedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, customerMaintainedActions)
 		if err != nil {
 			secureWorkflowReponse.HasErrors = true
 		}
