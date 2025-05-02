@@ -12,18 +12,19 @@ import (
 )
 
 type SecureWorkflowReponse struct {
-	OriginalInput         string
-	FinalOutput           string
-	IsChanged             bool
-	HasErrors             bool
-	AlreadyHasPermissions bool
-	PinnedActions         bool
-	AddedHardenRunner     bool
-	AddedPermissions      bool
-	IncorrectYaml         bool
-	WorkflowFetchError    bool
-	JobErrors             []JobError
-	MissingActions        []string
+	OriginalInput          string
+	FinalOutput            string
+	IsChanged              bool
+	HasErrors              bool
+	AlreadyHasPermissions  bool
+	AddedMaintainedActions bool
+	PinnedActions          bool
+	AddedHardenRunner      bool
+	AddedPermissions       bool
+	IncorrectYaml          bool
+	WorkflowFetchError     bool
+	JobErrors              []JobError
+	MissingActions         []string
 }
 
 type JobError struct {
