@@ -1,32 +1,12 @@
 package maintainedactions
 
 import (
-	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
 )
-
-// WriteYAML writes the given string content to a YAML file with the specified filename.
-func WriteYAML(filename string, content string) error {
-	// Create or truncate the file
-	file, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("failed to create file %s: %w", filename, err)
-	}
-	defer file.Close()
-
-	// Write the string content to the file
-	_, err = file.WriteString(content)
-	if err != nil {
-		return fmt.Errorf("failed to write to file %s: %w", filename, err)
-	}
-
-	return nil
-}
 
 func TestReplaceActions(t *testing.T) {
 	const inputDirectory = "../../../testfiles/maintainedactions/input"
@@ -89,6 +69,12 @@ func TestReplaceActions(t *testing.T) {
 			wantUpdated: true,
 			wantErr:     false,
 		},
+		{
+			name:        "exemtedMaintainedActions.yml",
+			inputFile:   "exemtedMaintainedActions.yml",
+			outputFile:  "exemtedMaintainedActions.yml",
+			wantUpdated: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -100,11 +86,18 @@ func TestReplaceActions(t *testing.T) {
 			}
 
 			// Call ReplaceActions
-			got, updated, err := ReplaceActions(string(input))
+			var got string
+			var updated bool
+			var replaceErr error
+			if tt.inputFile == "exemtedMaintainedActions.yml" {
+				got, updated, replaceErr = ReplaceActions(string(input), []string{"step-security/git-restore-mtime-action"})
+			} else {
+				got, updated, replaceErr = ReplaceActions(string(input), []string{})
+			}
 
 			// Check error
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ReplaceActions() error = %v, wantErr %v", err, tt.wantErr)
+			if (replaceErr != nil) != tt.wantErr {
+				t.Errorf("ReplaceActions() error = %v, wantErr %v", replaceErr, tt.wantErr)
 				return
 			}
 
@@ -121,7 +114,7 @@ func TestReplaceActions(t *testing.T) {
 
 			// Compare output with expected
 			if got != string(expectedOutput) {
-				WriteYAML(tt.outputFile+"second", got)
+				// WriteYAML(tt.outputFile+"second", got)
 				t.Errorf("ReplaceActions() = %v, want %v", got, string(expectedOutput))
 			}
 		})
