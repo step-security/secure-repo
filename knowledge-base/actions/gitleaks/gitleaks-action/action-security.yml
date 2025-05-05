@@ -1,0 +1,10 @@
+name: Gitleaks
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to comment on PR with leaked secrets
+    contents: read
+    contents-reason: to read comments
+
+#Reference: https://github.com/gitleaks/gitleaks-action/blob/d858f0e53c0be207bc6f2c5d5218913c1862b881/src/gitleaks.js#L154
