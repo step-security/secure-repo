@@ -57,7 +57,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4
+        uses: aws-actions/aws-cloudformation-github-deploy@a4dc90cda3c9eb7c34b2b5eda5594d06384d80a6
         with:
           name: secure-workflow-api-ecr
           template: cloudformation/ecr.yml
@@ -78,7 +78,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4
+        uses: aws-actions/aws-cloudformation-github-deploy@a4dc90cda3c9eb7c34b2b5eda5594d06384d80a6
         with:
           name: secure-workflow-api
           template: cloudformation/resources.yml
