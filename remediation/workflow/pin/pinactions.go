@@ -105,7 +105,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	// - "actions/checkout@v1""    - Matches (quote delimiter)
 	// - "actions/checkout@v1"     - Matches (quote delimiter)
 	// - "actions/checkout@v1\n"   - Matches (newline is considered whitespace \s)
-	actionRegex := regexp.MustCompile(`(` + regexp.QuoteMeta(action) + `)($|\s|"|')`)
+	actionRegex := regexp.MustCompile(`((?:["'])?` + regexp.QuoteMeta(action) + `(?:["'])?)($|\s|"|')`)
 	inputYaml = actionRegex.ReplaceAllString(inputYaml, pinnedAction+"$2")
 	yamlWithPreviousActionCommentsRemoved, wasModified := removePreviousActionComments(pinnedAction, inputYaml)
 	if wasModified {

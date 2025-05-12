@@ -295,6 +295,7 @@ func TestPinActions(t *testing.T) {
 		{fileName: "immutableaction-1.yml", wantUpdated: true, pinToImmutable: true},
 		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*"}, pinToImmutable: true},
 		{fileName: "donotpintoimmutable.yml", wantUpdated: true, pinToImmutable: false},
+		{fileName: "invertedcommas.yml", wantUpdated: true, pinToImmutable: false},
 	}
 	for _, tt := range tests {
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
