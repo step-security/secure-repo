@@ -47,7 +47,8 @@ func AddAction(inputYaml, action string, pinActions, pinToImmutable bool) (strin
 	}
 
 	if updated && pinActions {
-		out, _ = pin.PinAction(action, out, nil, pinToImmutable)
+		immutableMap := pin.GetSemanticActionsImmutableMap([]string{action}, pinToImmutable)
+		out, _ = pin.PinAction(action, out, nil, immutableMap)
 	}
 
 	return out, updated, nil

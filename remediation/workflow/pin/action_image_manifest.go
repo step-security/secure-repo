@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 
 	"net/http"
 
@@ -20,6 +21,44 @@ var (
 
 type ociManifest struct {
 	ArtifactType string `json:"artifactType"`
+}
+
+// immutableResult holds the result for an image reference.
+type immutableResult struct {
+	action      string
+	isImmutable bool
+}
+
+// Run isImmutableAction concurrently for all the actions simultaneously
+// Individual runs takes up to 600 ms with concurrency it can be achieved under 1000 ms for all actions present
+func IsImmutableActionConcurrently(actions []string) map[string]bool {
+	var wg sync.WaitGroup
+	// Buffered channel to hold one result per image.
+	resultChan := make(chan immutableResult, len(actions))
+
+	for _, action := range actions {
+		wg.Add(1)
+		go func(a string) {
+			defer wg.Done()
+			isImmutable := IsImmutableAction(a)
+			resultChan <- immutableResult{
+				action:      a,
+				isImmutable: isImmutable,
+			}
+		}(action)
+	}
+
+	// Wait for all goroutines to finish.
+	wg.Wait()
+	close(resultChan)
+
+	// Collect the results.
+	results := make(map[string]bool)
+	for res := range resultChan {
+		results[res.action] = res.isImmutable
+	}
+
+	return results
 }
 
 // isImmutableAction checks if the action is an immutable action or not
