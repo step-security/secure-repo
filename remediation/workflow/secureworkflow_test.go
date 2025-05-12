@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/step-security/secure-repo/remediation/workflow/maintainedactions"
+	"github.com/step-security/secure-repo/remediation/workflow/permissions"
 )
 
 func TestSecureWorkflow(t *testing.T) {
@@ -202,7 +204,9 @@ func TestSecureWorkflow(t *testing.T) {
 		{fileName: "error.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: false},
 	}
 	for _, test := range tests {
-		input, err := ioutil.ReadFile(path.Join(inputDirectory, test.fileName))
+		var err error
+		var input []byte
+		input, err = ioutil.ReadFile(path.Join(inputDirectory, test.fileName))
 
 		if err != nil {
 			log.Fatal(err)
@@ -232,7 +236,18 @@ func TestSecureWorkflow(t *testing.T) {
 		}
 		queryParams["addProjectComment"] = "false"
 
-		output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+		var output *permissions.SecureWorkflowReponse
+		var actionMap map[string]string
+		if test.fileName == "oneJob.yml" {
+			actionMap, err = maintainedactions.LoadMaintainedActions("maintainedactions/maintainedActions.json")
+			if err != nil {
+				t.Errorf("unable to load the file %s", err)
+			}
+			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, []string{}, false, actionMap)
+
+		} else {
+			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+		}
 
 		if err != nil {
 			t.Errorf("Error not expected")
