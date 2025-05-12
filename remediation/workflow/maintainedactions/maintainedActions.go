@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 
 	"github.com/step-security/secure-repo/remediation/workflow/metadata"
@@ -32,10 +31,8 @@ type replacement struct {
 }
 
 // LoadMaintainedActions loads the maintained actions from the JSON file
-func LoadMaintainedActions() (map[string]string, error) {
+func LoadMaintainedActions(jsonPath string) (map[string]string, error) {
 	// Read the JSON file
-	jsonPath := filepath.Join("maintainedactions", "maintainedActions.json")
-	// jsonPath := filepath.Join("maintainedActions.json")
 	data, err := ioutil.ReadFile(jsonPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read maintained actions file: %v", err)
@@ -59,14 +56,13 @@ func LoadMaintainedActions() (map[string]string, error) {
 }
 
 // ReplaceActions replaces original actions with Step Security actions in a workflow
-func ReplaceActions(inputYaml string, customerMaintainedActions []string) (string, bool, error) {
+func ReplaceActions(inputYaml string, customerMaintainedActions map[string]string) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
-	actionMap, err := LoadMaintainedActions()
-	if err != nil {
-		return "", updated, fmt.Errorf("unable to load maintained actions: %v", err)
-	}
-	err = yaml.Unmarshal([]byte(inputYaml), &workflow)
+
+	actionMap := customerMaintainedActions
+
+	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
 		return "", updated, fmt.Errorf("unable to parse yaml: %v", err)
 	}
@@ -83,9 +79,6 @@ func ReplaceActions(inputYaml string, customerMaintainedActions []string) (strin
 			// fmt.Println("step ", step.Uses)
 			actionName := strings.Split(step.Uses, "@")[0]
 			if newAction, ok := actionMap[actionName]; ok {
-				if isMaintained(newAction, customerMaintainedActions) {
-					continue
-				}
 				latestVersion, err := GetLatestRelease(newAction)
 				if err != nil {
 					return "", updated, fmt.Errorf("unable to get latest release: %v", err)
@@ -147,13 +140,4 @@ func replaceAction(t *yaml.Node, inputLines []string, replacements []replacement
 
 	}
 	return inputLines, updated
-}
-
-func isMaintained(actionName string, maintainedActions []string) bool {
-	for _, maintainedAction := range maintainedActions {
-		if maintainedAction == actionName {
-			return true
-		}
-	}
-	return false
 }

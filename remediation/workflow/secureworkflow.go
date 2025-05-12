@@ -1,7 +1,6 @@
 package workflow
 
 import (
-	"encoding/json"
 	"log"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
@@ -18,10 +17,10 @@ const (
 )
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
-	pinActions, addHardenRunner, addPermissions, addProjectComment, addMaintainedActions := true, true, true, true, true
-	pinnedActions, addedHardenRunner, addedPermissions, addedMaintainedActions := false, false, false, false
+	pinActions, addHardenRunner, addPermissions, addProjectComment, replaceMaintainedActions := true, true, true, true, false
+	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions := false, false, false, false
 	ignoreMissingKBs := false
-	exemptedActions, pinToImmutable, customerMaintainedActions := []string{}, false, []string{}
+	exemptedActions, pinToImmutable, customerMaintainedActions := []string{}, false, map[string]string{}
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
 			exemptedActions = v
@@ -33,7 +32,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		}
 	}
 	if len(params) > 2 {
-		if v, ok := params[2].([]string); ok {
+		if v, ok := params[2].(map[string]string); ok {
 			customerMaintainedActions = v
 		}
 	}
@@ -58,17 +57,8 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addProjectComment = false
 	}
 
-	if queryStringParams["enableLogging"] == "true" {
-		enableLogging = true
-	}
-
-	if enableLogging {
-		// Log query parameters
-		paramsJSON, _ := json.MarshalIndent(queryStringParams, "", "  ")
-		log.Printf("SecureWorkflow called with query parameters: %s", paramsJSON)
-
-		// Log input YAML (complete)
-		log.Printf("Input YAML: %s", inputYaml)
+	if len(customerMaintainedActions) > 0 {
+		replaceMaintainedActions = true
 	}
 
 	secureWorkflowReponse := &permissions.SecureWorkflowReponse{FinalOutput: inputYaml, OriginalInput: inputYaml}
@@ -114,8 +104,8 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addedPermissions = !secureWorkflowReponse.HasErrors
 	}
 
-	if addMaintainedActions {
-		secureWorkflowReponse.FinalOutput, addedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, customerMaintainedActions)
+	if replaceMaintainedActions {
+		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, customerMaintainedActions)
 		if err != nil {
 			secureWorkflowReponse.HasErrors = true
 		}
@@ -156,6 +146,6 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.PinnedActions = pinnedActions
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
-	secureWorkflowReponse.AddedMaintainedActions = addedMaintainedActions
+	secureWorkflowReponse.AddedMaintainedActions = replacedMaintainedActions
 	return secureWorkflowReponse, nil
 }

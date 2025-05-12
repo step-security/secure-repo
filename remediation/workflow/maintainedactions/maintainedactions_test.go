@@ -69,12 +69,6 @@ func TestReplaceActions(t *testing.T) {
 			wantUpdated: true,
 			wantErr:     false,
 		},
-		{
-			name:        "exemtedMaintainedActions.yml",
-			inputFile:   "exemtedMaintainedActions.yml",
-			outputFile:  "exemtedMaintainedActions.yml",
-			wantUpdated: true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -84,16 +78,12 @@ func TestReplaceActions(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error reading input file: %v", err)
 			}
-
-			// Call ReplaceActions
-			var got string
-			var updated bool
-			var replaceErr error
-			if tt.inputFile == "exemtedMaintainedActions.yml" {
-				got, updated, replaceErr = ReplaceActions(string(input), []string{"step-security/git-restore-mtime-action"})
-			} else {
-				got, updated, replaceErr = ReplaceActions(string(input), []string{})
+			actionMap, err := LoadMaintainedActions("maintainedActions.json")
+			if err != nil {
+				t.Errorf("ReplaceActions() unable to json file %v", err)
+				return
 			}
+			got, updated, replaceErr := ReplaceActions(string(input), actionMap)
 
 			// Check error
 			if (replaceErr != nil) != tt.wantErr {
