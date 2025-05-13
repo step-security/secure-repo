@@ -21,8 +21,8 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	pinActions, addHardenRunner, addPermissions, addProjectComment, replaceMaintainedActions := true, true, true, true, false
 	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions := false, false, false, false
 	ignoreMissingKBs := false
-  enableLogging := false
-	exemptedActions, pinToImmutable, customerMaintainedActions := []string{}, false, map[string]string{}
+	enableLogging := false
+	exemptedActions, pinToImmutable, maintainedActionsMap := []string{}, false, map[string]string{}
 
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
@@ -36,7 +36,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 	if len(params) > 2 {
 		if v, ok := params[2].(map[string]string); ok {
-			customerMaintainedActions = v
+			maintainedActionsMap = v
 		}
 	}
 
@@ -60,9 +60,10 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addProjectComment = false
 	}
 
-	if len(customerMaintainedActions) > 0 {
+	if len(maintainedActionsMap) > 0 {
 		replaceMaintainedActions = true
-    
+	}
+
 	if queryStringParams["enableLogging"] == "true" {
 		enableLogging = true
 	}
@@ -120,7 +121,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if replaceMaintainedActions {
-		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, customerMaintainedActions)
+		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, maintainedActionsMap)
 		if err != nil {
 			secureWorkflowReponse.HasErrors = true
 		}
