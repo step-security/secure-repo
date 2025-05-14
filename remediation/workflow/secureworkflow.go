@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/step-security/secure-repo/remediation/workflow/hardenrunner"
+	"github.com/step-security/secure-repo/remediation/workflow/maintainedactions"
 	"github.com/step-security/secure-repo/remediation/workflow/permissions"
 	"github.com/step-security/secure-repo/remediation/workflow/pin"
 )
@@ -17,11 +18,12 @@ const (
 )
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
-	pinActions, addHardenRunner, addPermissions, addProjectComment := true, true, true, true
-	pinnedActions, addedHardenRunner, addedPermissions := false, false, false
+	pinActions, addHardenRunner, addPermissions, addProjectComment, replaceMaintainedActions := true, true, true, true, false
+	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions := false, false, false, false
 	ignoreMissingKBs := false
 	enableLogging := false
-	exemptedActions, pinToImmutable := []string{}, false
+	exemptedActions, pinToImmutable, maintainedActionsMap := []string{}, false, map[string]string{}
+
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
 			exemptedActions = v
@@ -30,6 +32,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	if len(params) > 1 {
 		if v, ok := params[1].(bool); ok {
 			pinToImmutable = v
+		}
+	}
+	if len(params) > 2 {
+		if v, ok := params[2].(map[string]string); ok {
+			maintainedActionsMap = v
 		}
 	}
 
@@ -51,6 +58,10 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if queryStringParams["addProjectComment"] == "false" {
 		addProjectComment = false
+	}
+
+	if len(maintainedActionsMap) > 0 {
+		replaceMaintainedActions = true
 	}
 
 	if queryStringParams["enableLogging"] == "true" {
@@ -109,6 +120,13 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		addedPermissions = !secureWorkflowReponse.HasErrors
 	}
 
+	if replaceMaintainedActions {
+		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, maintainedActionsMap)
+		if err != nil {
+			secureWorkflowReponse.HasErrors = true
+		}
+	}
+
 	if pinActions {
 		if enableLogging {
 			log.Printf("Pinning GitHub Actions")
@@ -144,6 +162,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.PinnedActions = pinnedActions
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
+	secureWorkflowReponse.AddedMaintainedActions = replacedMaintainedActions
 
 	if enableLogging {
 		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, HasErrors: %v",
