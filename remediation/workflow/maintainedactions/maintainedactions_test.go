@@ -9,8 +9,8 @@ import (
 )
 
 func TestReplaceActions(t *testing.T) {
-	const inputDirectory = "../../../testfiles/maintainedactions/input"
-	const outputDirectory = "../../../testfiles/maintainedactions/output"
+	const inputDirectory = "../../../testfiles/maintainedActions/input"
+	const outputDirectory = "../../../testfiles/maintainedActions/output"
 
 	// Activate httpmock
 	httpmock.Activate()
