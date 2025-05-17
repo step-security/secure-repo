@@ -18,6 +18,11 @@ func TestAddJobLevelPermissions(t *testing.T) {
 	}
 
 	for _, f := range files {
+
+		if f.Name() == "empty-top-level-permissions.yml" {
+			continue
+		}
+
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
 
 		if err != nil {
@@ -26,7 +31,7 @@ func TestAddJobLevelPermissions(t *testing.T) {
 
 		os.Setenv("KBFolder", "../../../knowledge-base/actions")
 
-		fixWorkflowPermsResponse, err := AddJobLevelPermissions(string(input))
+		fixWorkflowPermsResponse, err := AddJobLevelPermissions(string(input), false)
 		output := fixWorkflowPermsResponse.FinalOutput
 		jobErrors := fixWorkflowPermsResponse.JobErrors
 
@@ -65,6 +70,47 @@ func TestAddJobLevelPermissions(t *testing.T) {
 		if output != string(expectedOutput) {
 			t.Errorf("test failed %s did not match expected output\n%s", f.Name(), output)
 		}
+	}
+}
+
+func TestAddJobLevelPermissionsWithEmptyTopLevel(t *testing.T) {
+	const inputDirectory = "../../../testfiles/joblevelpermskb/input"
+	const outputDirectory = "../../../testfiles/joblevelpermskb/output"
+
+	// Test the empty-top-level-permissions.yml file
+	input, err := ioutil.ReadFile(path.Join(inputDirectory, "empty-top-level-permissions.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, "empty-top-level-permissions.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	os.Setenv("KBFolder", "../../../knowledge-base/actions")
+
+	// Test with addEmptyTopLevelPermissions = true
+	fixWorkflowPermsResponse, err := AddJobLevelPermissions(string(input), true)
+	if err != nil {
+		t.Errorf("Unexpected error with addEmptyTopLevelPermissions=true: %v", err)
+	}
+
+	if fixWorkflowPermsResponse.FinalOutput != string(expectedOutput) {
+		t.Errorf("test failed with addEmptyTopLevelPermissions=true for empty-top-level-permissions.yml\nExpected:\n%s\n\nGot:\n%s",
+			string(expectedOutput), fixWorkflowPermsResponse.FinalOutput)
+	}
+
+	// Test with addEmptyTopLevelPermissions = false (should skip contents: read)
+	fixWorkflowPermsResponse2, err2 := AddJobLevelPermissions(string(input), false)
+	if err2 != nil {
+		t.Errorf("Unexpected error with addEmptyTopLevelPermissions=false: %v", err2)
+	}
+
+	// With false, contents: read should be skipped at job level
+	if fixWorkflowPermsResponse2.FinalOutput != string(input) {
+		t.Errorf("test failed with addEmptyTopLevelPermissions=false for empty-top-level-permissions.yml\nExpected:\n%s\n\nGot:\n%s",
+			string(input), fixWorkflowPermsResponse2.FinalOutput)
 	}
 }
 
@@ -112,6 +158,10 @@ func TestAddWorkflowLevelPermissions(t *testing.T) {
 			continue
 		}
 
+		if f.Name() == "empty-permissions.yml" {
+			continue
+		}
+
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, f.Name()))
 
 		if err != nil {
@@ -125,7 +175,7 @@ func TestAddWorkflowLevelPermissions(t *testing.T) {
 			addProjectComment = true
 		}
 
-		output, err := AddWorkflowLevelPermissions(string(input), addProjectComment)
+		output, err := AddWorkflowLevelPermissions(string(input), addProjectComment, false)
 
 		if err != nil {
 			t.Errorf("Error not expected")
@@ -142,4 +192,42 @@ func TestAddWorkflowLevelPermissions(t *testing.T) {
 		}
 	}
 
+}
+
+func TestAddWorkflowLevelPermissionsWithEmpty(t *testing.T) {
+	const inputDirectory = "../../../testfiles/toplevelperms/input"
+	const outputDirectory = "../../../testfiles/toplevelperms/output"
+
+	// Test the empty-permissions.yml file
+	input, err := ioutil.ReadFile(path.Join(inputDirectory, "empty-permissions.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, "empty-permissions.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Test with addEmptyTopLevelPermissions = true
+	output, err := AddWorkflowLevelPermissions(string(input), false, true)
+	if err != nil {
+		t.Errorf("Unexpected error with addEmptyTopLevelPermissions=true: %v", err)
+	}
+
+	if output != string(expectedOutput) {
+		t.Errorf("test failed with addEmptyTopLevelPermissions=true for empty-permissions.yml\nExpected:\n%s\n\nGot:\n%s",
+			string(expectedOutput), output)
+	}
+
+	// Test with addEmptyTopLevelPermissions = false (should add contents: read)
+	output2, err2 := AddWorkflowLevelPermissions(string(input), false, false)
+	if err2 != nil {
+		t.Errorf("Unexpected error with addEmptyTopLevelPermissions=false: %v", err2)
+	}
+
+	// With false, should add contents: read instead of empty permissions
+	if !strings.Contains(output2, "contents: read") || strings.Contains(output2, "permissions: {}") {
+		t.Errorf("test failed with addEmptyTopLevelPermissions=false for empty-permissions.yml - should contain 'contents: read' but not 'permissions: {}'\nGot:\n%s", output2)
+	}
 }
