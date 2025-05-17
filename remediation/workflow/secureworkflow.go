@@ -22,6 +22,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions := false, false, false, false
 	ignoreMissingKBs := false
 	enableLogging := false
+	addEmptyTopLevelPermissions := false
 	exemptedActions, pinToImmutable, maintainedActionsMap := []string{}, false, map[string]string{}
 
 	if len(params) > 0 {
@@ -68,6 +69,10 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		enableLogging = true
 	}
 
+	if queryStringParams["addEmptyTopLevelPermissions"] == "true" {
+		addEmptyTopLevelPermissions = true
+	}
+
 	if enableLogging {
 		// Log query parameters
 		paramsJSON, _ := json.MarshalIndent(queryStringParams, "", "  ")
@@ -83,7 +88,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		if enableLogging {
 			log.Printf("Adding job level permissions")
 		}
-		secureWorkflowReponse, err = permissions.AddJobLevelPermissions(secureWorkflowReponse.FinalOutput)
+		secureWorkflowReponse, err = permissions.AddJobLevelPermissions(secureWorkflowReponse.FinalOutput, addEmptyTopLevelPermissions)
 		secureWorkflowReponse.OriginalInput = inputYaml
 		if err != nil {
 			if enableLogging {
@@ -95,7 +100,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 				if enableLogging {
 					log.Printf("Adding workflow level permissions")
 				}
-				secureWorkflowReponse.FinalOutput, err = permissions.AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput, addProjectComment)
+				secureWorkflowReponse.FinalOutput, err = permissions.AddWorkflowLevelPermissions(secureWorkflowReponse.FinalOutput, addProjectComment, addEmptyTopLevelPermissions)
 				if err != nil {
 					if enableLogging {
 						log.Printf("Error adding workflow level permissions: %v", err)
