@@ -1,0 +1,13 @@
+name: "checkout only workflow"
+
+on:
+  push:
+  
+
+jobs:
+  checkout-job:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3

@@ -89,7 +89,7 @@ func githubTokenInJobLevelEnv(job metadata.Job) bool {
 	return false
 }
 
-func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (string, error) {
+func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool, addEmptyTopLevelPermissions bool) (string, error) {
 	workflow := metadata.Workflow{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -138,13 +138,20 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 		spaces += " "
 	}
 
-	if addProjectComment {
-		output = append(output, spaces+"permissions:  # added using https://github.com/step-security/secure-repo")
+	if addEmptyTopLevelPermissions {
+		if addProjectComment {
+			output = append(output, spaces+"permissions: {}  # added using https://github.com/step-security/secure-repo")
+		} else {
+			output = append(output, spaces+"permissions: {}")
+		}
 	} else {
-		output = append(output, spaces+"permissions:")
+		if addProjectComment {
+			output = append(output, spaces+"permissions:  # added using https://github.com/step-security/secure-repo")
+		} else {
+			output = append(output, spaces+"permissions:")
+		}
+		output = append(output, spaces+"  contents: read")
 	}
-
-	output = append(output, spaces+"  contents: read")
 	output = append(output, "")
 
 	for i := line - 1; i < len(inputLines); i++ {
@@ -154,7 +161,7 @@ func AddWorkflowLevelPermissions(inputYaml string, addProjectComment bool) (stri
 	return strings.Join(output, "\n"), nil
 }
 
-func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
+func AddJobLevelPermissions(inputYaml string, addEmptyTopLevelPermissions bool) (*SecureWorkflowReponse, error) {
 
 	workflow := metadata.Workflow{}
 	errors := make(map[string][]string)
@@ -216,7 +223,7 @@ func AddJobLevelPermissions(inputYaml string) (*SecureWorkflowReponse, error) {
 			if strings.Compare(inputYaml, fixWorkflowPermsReponse.FinalOutput) != 0 {
 				fixWorkflowPermsReponse.IsChanged = true
 
-				if len(perms) == 1 && strings.Contains(perms[0], contents_read) {
+				if len(perms) == 1 && strings.Contains(perms[0], contents_read) && !addEmptyTopLevelPermissions {
 					// Don't add contents: read, because it will get defined at workflow level
 					continue
 				} else {

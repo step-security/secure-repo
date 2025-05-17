@@ -1,0 +1,9 @@
+name: "simple workflow"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Run test
+      run: echo "test"
