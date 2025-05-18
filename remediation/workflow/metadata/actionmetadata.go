@@ -31,8 +31,15 @@ type Job struct {
 	Permissions Permissions `yaml:"permissions"`
 	Uses        string      `yaml:"uses"`
 	Env         Env         `yaml:"env"`
+	Container   Container   `yaml:"container"`
 	// RunsOn      []string    `yaml:"runs-on"`
 	Steps []Step `yaml:"steps"`
+}
+
+type Container struct {
+	Image   string            `yaml:"image"`
+	Options string            `yaml:"options"`
+	Env     Env               `yaml:"env"`
 }
 
 type Jobs map[string]Job
