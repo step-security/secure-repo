@@ -278,6 +278,95 @@ func TestSecureWorkflow(t *testing.T) {
 	}
 }
 
+func TestSecureWorkflowContainerJob(t *testing.T) {
+	const inputDirectory = "../../testfiles/secureworkflow/input"
+	const outputDirectory = "../../testfiles/secureworkflow/output"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// Mock APIs for actions/checkout
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/commits/v3",
+		httpmock.NewStringResponder(200, `c85c95e3d7251135ab7dc9ce3241c5835cc595a9`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/git/matching-refs/tags/v3.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+				  "ref": "refs/tags/v3.5.3",
+				  "object": {
+					"sha": "c85c95e3d7251135ab7dc9ce3241c5835cc595a9",
+					"type": "commit"
+				  }
+				}
+			  ]`),
+	)
+
+	// Mock APIs for step-security/harden-runner
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/commits/v2",
+		httpmock.NewStringResponder(200, `17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+				  "ref": "refs/tags/v2.8.1",
+				  "object": {
+					"sha": "17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6",
+					"type": "commit"
+				  }
+				}
+			  ]`),
+	)
+
+	var err error
+	var input []byte
+	input, err = ioutil.ReadFile(path.Join(inputDirectory, "container-job.yml"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	os.Setenv("KBFolder", "../../knowledge-base/actions")
+
+	// Test with skipHardenRunnerForContainers = true
+	queryParams := make(map[string]string)
+	queryParams["skipHardenRunnerForContainers"] = "true"
+	queryParams["addProjectComment"] = "false"
+
+	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+
+	if err != nil {
+		t.Errorf("Error not expected")
+	}
+
+	// Verify that harden runner was not added
+	if output.AddedHardenRunner {
+		t.Errorf("Harden runner should not be added for container job with skipHardenRunnerForContainers=true")
+	}
+
+	// Verify that the output matches expected output file
+	expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, "container-job.yml"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if output.FinalOutput != string(expectedOutput) {
+		t.Errorf("test failed container-job.yml did not match expected output\nExpected:\n%s\n\nGot:\n%s",
+			string(expectedOutput), output.FinalOutput)
+	}
+
+	// Verify permissions were added
+	if !output.AddedPermissions {
+		t.Errorf("Permissions should be added even for container jobs")
+	}
+
+	// Verify actions were pinned
+	if !output.PinnedActions {
+		t.Errorf("Actions should be pinned even for container jobs")
+	}
+}
+
 func TestSecureWorkflowEmptyPermissions(t *testing.T) {
 	const inputDirectory = "../../testfiles/secureworkflow/input"
 	const outputDirectory = "../../testfiles/secureworkflow/output"
