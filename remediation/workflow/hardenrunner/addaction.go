@@ -15,7 +15,7 @@ const (
 	HardenRunnerActionName = "Harden the runner (Audit all outbound calls)"
 )
 
-func AddAction(inputYaml, action string, pinActions, pinToImmutable bool) (string, bool, error) {
+func AddAction(inputYaml, action string, pinActions, pinToImmutable bool, skipContainerJobs bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -27,6 +27,10 @@ func AddAction(inputYaml, action string, pinActions, pinToImmutable bool) (strin
 	for jobName, job := range workflow.Jobs {
 		// Skip adding action for reusable jobs
 		if metadata.IsCallingReusableWorkflow(job) {
+			continue
+		}
+		// Skip adding action for jobs running in containers if skipContainerJobs is true
+		if skipContainerJobs && job.Container.Image != "" {
 			continue
 		}
 		alreadyPresent := false

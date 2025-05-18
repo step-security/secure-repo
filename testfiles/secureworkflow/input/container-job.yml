@@ -1,0 +1,20 @@
+name: "Container job workflow"
+
+on:
+  push:
+  
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: cgr.dev/chainguard/wolfi-base@sha256:91ed94ec4e72368a9b5113f2ffb1d8e783a91db489011a89d9fad3e3816a75ba
+      options: >-
+        --health-cmd pg_isready
+        --health-interval 10s
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Run tests
+      run: npm test
