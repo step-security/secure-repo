@@ -1,0 +1,26 @@
+name: Test Workflow
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: amannn/action-semantic-pull-request@v5
+        with:
+          types: feat,fix,chore
+      - uses: fkirc/skip-duplicate-actions@v5
+        with:
+          do_not_skip: '["release"]'
+      - uses: chetan/git-restore-mtime-action@v1
+        with:
+          pattern: '**/*'
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: github/super-linter@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISABLE_ERRORS: true

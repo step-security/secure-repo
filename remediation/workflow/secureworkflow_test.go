@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/step-security/secure-repo/remediation/workflow/maintainedactions"
+	"github.com/step-security/secure-repo/remediation/workflow/permissions"
 )
 
 func TestSecureWorkflow(t *testing.T) {
@@ -107,12 +109,91 @@ func TestSecureWorkflow(t *testing.T) {
 			  ]`),
 	)
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/releases/latest",
+		httpmock.NewStringResponder(200, `{
+		"tag_name": "v5.5.5",
+		"name": "v5.5.5",
+		"body": "Release notes",
+		"created_at": "2023-01-01T00:00:00Z"
+	}`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v2.1.0",
+			"name": "v2.1.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/super-linter/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v4.9.0",
+			"name": "v4.9.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v2.1.0",
+			"name": "v2.1.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
+
+	// Mock APIs for step-security/action-semantic-pull-request
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/commits/v5",
+		httpmock.NewStringResponder(200, `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/matching-refs/tags/v5.",
+		httpmock.NewStringResponder(200, `[
+			{
+				"ref": "refs/tags/v5.5.5",
+				"object": {
+					"sha": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0",
+					"type": "commit"
+				}
+			}
+		]`))
+
+	// Mock APIs for step-security/skip-duplicate-actions
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/commits/v2",
+		httpmock.NewStringResponder(200, `b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200, `[
+			{
+				"ref": "refs/tags/v2.1.0",
+				"object": {
+					"sha": "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1",
+					"type": "commit"
+				}
+			}
+		]`))
+
+	// Mock APIs for step-security/git-restore-mtime-action
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/commits/v2",
+		httpmock.NewStringResponder(200, `c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200, `[
+			{
+				"ref": "refs/tags/v2.1.0",
+				"object": {
+					"sha": "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2",
+					"type": "commit"
+				}
+			}
+		]`))
+
 	tests := []struct {
-		fileName              string
-		wantPinnedActions     bool
-		wantAddedHardenRunner bool
-		wantAddedPermissions  bool
+		fileName                   string
+		wantPinnedActions          bool
+		wantAddedHardenRunner      bool
+		wantAddedPermissions       bool
+		wantAddedMaintainedActions bool
 	}{
+		{fileName: "oneJob.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantAddedMaintainedActions: true},
 		{fileName: "allscenarios.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: true},
 		{fileName: "missingaction.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false},
 		{fileName: "nohardenrunner.yml", wantPinnedActions: true, wantAddedHardenRunner: false, wantAddedPermissions: true},
@@ -123,7 +204,9 @@ func TestSecureWorkflow(t *testing.T) {
 		{fileName: "error.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: false},
 	}
 	for _, test := range tests {
-		input, err := ioutil.ReadFile(path.Join(inputDirectory, test.fileName))
+		var err error
+		var input []byte
+		input, err = ioutil.ReadFile(path.Join(inputDirectory, test.fileName))
 
 		if err != nil {
 			log.Fatal(err)
@@ -145,10 +228,26 @@ func TestSecureWorkflow(t *testing.T) {
 		case "multiplejobperms.yml":
 			queryParams["addHardenRunner"] = "false"
 			queryParams["pinActions"] = "false"
+		case "oneJob.yml":
+			queryParams["addMaintainedActions"] = "true"
+			queryParams["addHardenRunner"] = "true"
+			queryParams["pinActions"] = "true"
+			queryParams["addPermissions"] = "false"
 		}
 		queryParams["addProjectComment"] = "false"
 
-		output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+		var output *permissions.SecureWorkflowReponse
+		var actionMap map[string]string
+		if test.fileName == "oneJob.yml" {
+			actionMap, err = maintainedactions.LoadMaintainedActions("maintainedactions/maintainedActions.json")
+			if err != nil {
+				t.Errorf("unable to load the file %s", err)
+			}
+			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, []string{}, false, actionMap)
+
+		} else {
+			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+		}
 
 		if err != nil {
 			t.Errorf("Error not expected")
@@ -175,6 +274,6 @@ func TestSecureWorkflow(t *testing.T) {
 		if output.PinnedActions != test.wantPinnedActions {
 			t.Errorf("test failed %s did not match expected PinnedActions value. Expected:%v Actual:%v", test.fileName, test.wantPinnedActions, output.PinnedActions)
 		}
-	}
 
+	}
 }
