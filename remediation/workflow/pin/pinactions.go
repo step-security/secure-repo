@@ -80,37 +80,67 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 		return inputYaml, updated
 	}
 
-	pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
+	// pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
+	// build separately so we can quote only the ref, not the comment
+	pinnedRef := fmt.Sprintf("%s@%s", leftOfAt[0], commitSHA)
+	comment := fmt.Sprintf(" # %s", tagOrBranch)
+	fullPinned := pinnedRef + comment
 
 	// if the action with version is immutable, then pin the action with version instead of sha
 	pinnedActionWithVersion := fmt.Sprintf("%s@%s", leftOfAt[0], tagOrBranch)
 	if pinToImmutable && semanticTagRegex.MatchString(tagOrBranch) && IsImmutableAction(pinnedActionWithVersion) {
-		pinnedAction = pinnedActionWithVersion
+		// strings.ReplaceAll is not suitable here because it would incorrectly replace substrings
+		// For example, if we want to replace "actions/checkout@v1" to "actions/checkout@v1.2.3", it would also incorrectly match and replace in "actions/checkout@v1.2.3"
+		// making new string to "actions/checkout@v1.2.3.2.3"
+		//
+		// Instead, we use a regex pattern that ensures we only replace complete action references:
+		// Pattern: (<action>@<version>)($|\s|"|')
+		// - Group 1 (<action>@<version>): Captures the exact action reference
+		// - Group 2 ($|\s|"|'): Captures the delimiter that follows (end of line, whitespace, or quotes)
+		//
+		// Examples:
+		// - "actions/checkout@v1.2.3" - No match (no delimiter after v1)
+		// - "actions/checkout@v1 "    - Matches (space delimiter)
+		// - "actions/checkout@v1""    - Matches (quote delimiter)
+		// - "actions/checkout@v1"     - Matches (quote delimiter)
+		// - "actions/checkout@v1\n"   - Matches (newline is considered whitespace \s)
+
+		actionRegex := regexp.MustCompile(`(` + regexp.QuoteMeta(action) + `)($|\s|"|')`)
+		inputYaml = actionRegex.ReplaceAllString(inputYaml, pinnedActionWithVersion+"$2")
+
+		inputYaml, _ = removePreviousActionComments(pinnedActionWithVersion, inputYaml)
+		return inputYaml, !strings.EqualFold(action, pinnedActionWithVersion)
 	}
 
-	updated = !strings.EqualFold(action, pinnedAction)
+	updated = !strings.EqualFold(action, fullPinned)
 
-	// strings.ReplaceAll is not suitable here because it would incorrectly replace substrings
-	// For example, if we want to replace "actions/checkout@v1" to "actions/checkout@v1.2.3", it would also incorrectly match and replace in "actions/checkout@v1.2.3"
-	// making new string to "actions/checkout@v1.2.3.2.3"
-	//
-	// Instead, we use a regex pattern that ensures we only replace complete action references:
-	// Pattern: (<action>@<version>)($|\s|"|')
-	// - Group 1 (<action>@<version>): Captures the exact action reference
-	// - Group 2 ($|\s|"|'): Captures the delimiter that follows (end of line, whitespace, or quotes)
-	//
-	// Examples:
-	// - "actions/checkout@v1.2.3" - No match (no delimiter after v1)
-	// - "actions/checkout@v1 "    - Matches (space delimiter)
-	// - "actions/checkout@v1""    - Matches (quote delimiter)
-	// - "actions/checkout@v1"     - Matches (quote delimiter)
-	// - "actions/checkout@v1\n"   - Matches (newline is considered whitespace \s)
-	actionRegex := regexp.MustCompile(`((?:["'])?` + regexp.QuoteMeta(action) + `(?:["'])?)($|\s|"|')`)
-	inputYaml = actionRegex.ReplaceAllString(inputYaml, pinnedAction+"$2")
-	yamlWithPreviousActionCommentsRemoved, wasModified := removePreviousActionComments(pinnedAction, inputYaml)
-	if wasModified {
-		return yamlWithPreviousActionCommentsRemoved, updated
-	}
+	// 1) Double-quoted form:  "owner/repo@oldRef"
+	doubleQuotedPattern := `"` + regexp.QuoteMeta(action) + `"` + `($|\s|"|')`
+	doubleQuotedRe := regexp.MustCompile(doubleQuotedPattern)
+	inputYaml = doubleQuotedRe.ReplaceAllString(
+		inputYaml,
+		fmt.Sprintf(`"%s"%s$1`, pinnedRef, comment),
+	)
+	inputYaml, _ = removePreviousActionComments(fmt.Sprintf(`"%s"%s`, pinnedRef, comment), inputYaml)
+
+	// 2) Single-quoted form:  'owner/repo@oldRef'
+	singleQuotedPattern := `'` + regexp.QuoteMeta(action) + `'` + `($|\s|"|')`
+	singleQuotedRe := regexp.MustCompile(singleQuotedPattern)
+	inputYaml = singleQuotedRe.ReplaceAllString(
+		inputYaml,
+		fmt.Sprintf(`'%s'%s$1`, pinnedRef, comment),
+	)
+	inputYaml, _ = removePreviousActionComments(fmt.Sprintf(`'%s'%s`, pinnedRef, comment), inputYaml)
+
+	// 3) Unquoted form:  owner/repo@oldRef
+	unqPattern := `\b` + regexp.QuoteMeta(action) + `\b` + `($|\s|"|')`
+	unqRe := regexp.MustCompile(unqPattern)
+	inputYaml = unqRe.ReplaceAllString(
+		inputYaml,
+		fullPinned+`$1`,
+	)
+	inputYaml, _ = removePreviousActionComments(fullPinned, inputYaml)
+
 	return inputYaml, updated
 }
 
