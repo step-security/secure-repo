@@ -33,7 +33,7 @@ func TestAddAction(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error reading test file")
 			}
-			got, gotUpdated, err := AddAction(string(input), tt.args.action, false, false)
+			got, gotUpdated, err := AddAction(string(input), tt.args.action, false, false, false)
 
 			if gotUpdated != tt.wantUpdated {
 				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
@@ -51,5 +51,28 @@ func TestAddAction(t *testing.T) {
 				t.Errorf("AddAction() = %v, want %v", got, string(output))
 			}
 		})
+	}
+}
+
+func TestAddActionWithContainer(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+	
+	// Test container job with skipContainerJobs = true
+	input, err := ioutil.ReadFile(path.Join(inputDirectory, "container-job.yml"))
+	if err != nil {
+		t.Fatalf("error reading test file")
+	}
+	
+	// Test: Skip container jobs when skipContainerJobs = true
+	got, gotUpdated, err := AddAction(string(input), "step-security/harden-runner@v2", false, false, true)
+	if err != nil {
+		t.Errorf("AddAction() with skipContainerJobs=true error = %v", err)
+	}
+	if gotUpdated {
+		t.Errorf("AddAction() with skipContainerJobs=true should not update container job")
+	}
+	if got != string(input) {
+		t.Errorf("AddAction() with skipContainerJobs=true should not modify the yaml")
 	}
 }
