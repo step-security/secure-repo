@@ -277,3 +277,103 @@ func TestSecureWorkflow(t *testing.T) {
 
 	}
 }
+
+func TestSecureWorkflowEmptyPermissions(t *testing.T) {
+	const inputDirectory = "../../testfiles/secureworkflow/input"
+	const outputDirectory = "../../testfiles/secureworkflow/output"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// Mock APIs for actions/checkout
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/commits/v2",
+		httpmock.NewStringResponder(200, `ee0669bd1cc54295c223e0bb666b733df41de1c5`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+				  "ref": "refs/tags/v2.7.0",
+				  "object": {
+					"sha": "ee0669bd1cc54295c223e0bb666b733df41de1c5",
+					"type": "commit"
+				  }
+				}
+			  ]`),
+	)
+
+	// Mock APIs for actions/setup-node
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/setup-node/commits/v1",
+		httpmock.NewStringResponder(200, `f1f314fca9dfce2769ece7d933488f076716723e`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/setup-node/git/matching-refs/tags/v1.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+				  "ref": "refs/tags/v1.4.6",
+				  "object": {
+					"sha": "f1f314fca9dfce2769ece7d933488f076716723e",
+					"type": "commit"
+				  }
+				}
+			  ]`),
+	)
+
+	// Mock APIs for step-security/harden-runner
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/commits/v2",
+		httpmock.NewStringResponder(200, `17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+				  "ref": "refs/tags/v2.8.1",
+				  "object": {
+					"sha": "17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6",
+					"type": "commit"
+				  }
+				}
+			  ]`),
+	)
+
+	var err error
+	var input []byte
+	input, err = ioutil.ReadFile(path.Join(inputDirectory, "empty-permissions.yml"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	os.Setenv("KBFolder", "../../knowledge-base/actions")
+
+	queryParams := make(map[string]string)
+	queryParams["addEmptyTopLevelPermissions"] = "true"
+	queryParams["addProjectComment"] = "false"
+
+	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+
+	if err != nil {
+		t.Errorf("Error not expected")
+	}
+
+	expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, "empty-permissions.yml"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if output.FinalOutput != string(expectedOutput) {
+		// Write the actual output to a file for debugging
+		debugFile := path.Join(outputDirectory, "empty-permissions-debug.yml")
+		err := ioutil.WriteFile(debugFile, []byte(output.FinalOutput), 0644)
+		if err != nil {
+			t.Logf("Failed to write debug file: %v", err)
+		} else {
+			t.Logf("Actual output written to: %s", debugFile)
+		}
+
+		t.Errorf("test failed empty-permissions.yml did not match expected output\nExpected:\n%s\n\nGot:\n%s",
+			string(expectedOutput), output.FinalOutput)
+	}
+
+}
