@@ -333,6 +333,7 @@ func TestSecureWorkflowContainerJob(t *testing.T) {
 	queryParams := make(map[string]string)
 	queryParams["skipHardenRunnerForContainers"] = "true"
 	queryParams["addProjectComment"] = "false"
+	queryParams["addPermissions"] = "true"
 
 	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
 
