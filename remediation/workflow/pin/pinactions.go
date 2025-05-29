@@ -156,11 +156,12 @@ func removePreviousActionComments(pinnedAction, inputYaml string) (string, bool)
 		inputYaml = stringParts[0]
 		for idx := 1; idx < len(stringParts); idx++ {
 			trimmedString := strings.SplitN(stringParts[idx], "\n", 2)
+			inputYaml = inputYaml + pinnedAction
 			if len(trimmedString) > 1 {
 				if strings.Contains(trimmedString[0], "#") {
 					updated = true
 				}
-				inputYaml = inputYaml + pinnedAction + "\n" + trimmedString[1]
+				inputYaml = inputYaml + "\n" + trimmedString[1]
 			}
 		}
 	}
