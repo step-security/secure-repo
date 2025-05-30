@@ -17,15 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0
         with:
           egress-policy: audit
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
       - name: Set up Go
-        uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with:
           go-version: 1.17
       
@@ -33,7 +33,7 @@ jobs:
         env: 
           PAT: ${{ secrets.PAT }} 
       
-      - uses: step-security/wait-for-secrets@5809f7d044804a5a1d43217fa8f3e855939fc9ef
+      - uses: step-security/wait-for-secrets@084b3ae774c0e0003a9307ae4f487c10f1f998fe
         id: wait-for-secrets
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -49,7 +49,7 @@ jobs:
               description: 'Session token for secure-repo prod'
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df
         with:
           aws-access-key-id: ${{ steps.wait-for-secrets.outputs.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ steps.wait-for-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
@@ -57,7 +57,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4
+        uses: aws-actions/aws-cloudformation-github-deploy@33527b83bddcf6b3f0b135d9550bde8475325c73
         with:
           name: secure-workflow-api-ecr
           template: cloudformation/ecr.yml
@@ -66,7 +66,7 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@aaf69d68aa3fb14c1d5a6be9ac61fe15b48453a2
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076
 
       - name: Build, tag, and push image to Amazon ECR
         env:
@@ -78,7 +78,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@72bea2c93ca6be253b71b5966ecde13f9e8af2d4
+        uses: aws-actions/aws-cloudformation-github-deploy@33527b83bddcf6b3f0b135d9550bde8475325c73
         with:
           name: secure-workflow-api
           template: cloudformation/resources.yml
