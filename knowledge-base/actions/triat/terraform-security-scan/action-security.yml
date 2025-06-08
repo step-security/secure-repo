@@ -1,0 +1,8 @@
+name: 'Terraform security scan'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to add comment on PRs #Checkout: https://github.com/triat/terraform-security-scan#example-usage
+    
+#Fixes #700
