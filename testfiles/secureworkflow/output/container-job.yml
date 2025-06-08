@@ -9,6 +9,9 @@ permissions:
 
 jobs:
   test:
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      packages: read  # for container job
     runs-on: ubuntu-latest
     container:
       image: cgr.dev/chainguard/wolfi-base@sha256:91ed94ec4e72368a9b5113f2ffb1d8e783a91db489011a89d9fad3e3816a75ba

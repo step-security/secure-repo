@@ -209,6 +209,7 @@ func AddJobLevelPermissions(inputYaml string, addEmptyTopLevelPermissions bool) 
 
 		jobState := &JobState{}
 		jobState.WorkflowEnv = workflow.Env
+		jobState.IsContainerJob = (job.Container.Image != "")
 		perms, err := jobState.getPermissions(job.Steps)
 
 		if err != nil {
@@ -369,6 +370,8 @@ type JobState struct {
 	MissingActions    []string
 	Errors            []error
 	ActionPermissions *metadata.ActionPermissions
+
+	IsContainerJob bool // true if the job is running in a container
 }
 
 func evaluateEnvironmentVariables(step metadata.Step) string {
@@ -518,6 +521,11 @@ func (jobState *JobState) getPermissionsForRunStep(step metadata.Step) ([]Permis
 
 func (jobState *JobState) getPermissions(steps []metadata.Step) ([]string, error) {
 	permissions := []string{}
+
+	// If the job is a container job, we need to add packages: read permission
+	if jobState.IsContainerJob {
+		permissions = append(permissions, fmt.Sprintf("%s  # for container job", packages_read))
+	}
 
 	for _, step := range steps {
 
