@@ -105,7 +105,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	for _, Update := range updateDependabotConfigRequest.Ecosystems {
 		updateAlreadyExist := false
 		for _, update := range configMetadata.Updates {
-			if update.PackageEcosystem == Update.PackageEcosystem && update.Directory == Update.Directory {
+			if update.PackageEcosystem == Update.PackageEcosystem && (update.Directory == Update.Directory || update.Directory == Update.Directory+"/") {
 				updateAlreadyExist = true
 				break
 			}
