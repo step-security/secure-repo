@@ -34,3 +34,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISABLE_ERRORS: true
+      - uses: step-security/actions-cache/restore@d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2c3 # v1.0.0
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+    
