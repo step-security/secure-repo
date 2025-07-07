@@ -41,6 +41,14 @@ func TestReplaceActions(t *testing.T) {
 			"created_at": "2023-01-01T00:00:00Z"
 		}`))
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/releases/latest",
+		httpmock.NewStringResponder(200, `{
+				"tag_name": "v1.0.0",
+				"name": "v1.0.0",
+				"body": "Release notes",
+				"created_at": "2023-01-01T00:00:00Z"
+			}`))
+
 	tests := []struct {
 		name        string
 		inputFile   string

@@ -15,3 +15,9 @@ jobs:
       - uses: step-security/git-restore-mtime-action@v2
         with:
           pattern: '**/*'
+      - uses: step-security/actions-cache/restore@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
