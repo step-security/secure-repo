@@ -493,5 +493,14 @@
       },
       "score": 10,
       "image": "https://avatars.githubusercontent.com/u/88700172?v=4"
+    },
+    {
+      "name": "step-security/actions-cache/restore",
+      "description": "GitHub Action to restore cache",
+      "forkedFrom": {
+        "name": "tespkg/actions-cache/restore"
+      },
+      "score": 10,
+      "image": "https://avatars.githubusercontent.com/u/88700172?v=4"
     }
 ]
