@@ -32,7 +32,7 @@ func getMajorVersion(version string) string {
 
 func GetLatestRelease(ownerRepo string) (string, error) {
 	splitOnSlash := strings.Split(ownerRepo, "/")
-	if len(splitOnSlash) != 2 {
+	if len(splitOnSlash) < 2 {
 		return "", fmt.Errorf("invalid owner/repo format: %s", ownerRepo)
 	}
 	owner := splitOnSlash[0]
