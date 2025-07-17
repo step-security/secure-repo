@@ -1,0 +1,2 @@
+name: 'Pull Request Labeling' # angular/dev-infra/github-actions/pull-request-labeling
+# GITHUB_TOKEN not used
