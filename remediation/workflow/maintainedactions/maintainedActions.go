@@ -81,7 +81,7 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 			if newAction, ok := actionMap[actionName]; ok {
 				latestVersion, err := GetLatestRelease(newAction)
 				if err != nil {
-					return "", updated, fmt.Errorf("unable to get latest release: %v", err)
+					return inputYaml, updated, fmt.Errorf("unable to get latest release: %v", err)
 				}
 				replacements = append(replacements, replacement{
 					jobName:        jobName,

@@ -186,6 +186,28 @@ func TestSecureWorkflow(t *testing.T) {
 			}
 		]`))
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/commits/v1",
+		httpmock.NewStringResponder(200, `d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2c3`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/matching-refs/tags/v1.",
+		httpmock.NewStringResponder(200, `[
+			{
+				"ref": "refs/tags/v1.0.0",
+				"object": {
+					"sha": "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2c3",
+					"type": "commit"
+				}
+			}
+		]`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v1.0.0",
+			"name": "v1.0.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
+
 	tests := []struct {
 		fileName                   string
 		wantPinnedActions          bool
@@ -244,7 +266,6 @@ func TestSecureWorkflow(t *testing.T) {
 				t.Errorf("unable to load the file %s", err)
 			}
 			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, []string{}, false, actionMap)
-
 		} else {
 			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
 		}
@@ -273,6 +294,10 @@ func TestSecureWorkflow(t *testing.T) {
 
 		if output.PinnedActions != test.wantPinnedActions {
 			t.Errorf("test failed %s did not match expected PinnedActions value. Expected:%v Actual:%v", test.fileName, test.wantPinnedActions, output.PinnedActions)
+		}
+
+		if output.AddedMaintainedActions != test.wantAddedMaintainedActions {
+			t.Errorf("test failed %s did not match expected AddedMaintainedActions value. Expected:%v Actual:%v", test.fileName, test.wantAddedMaintainedActions, output.AddedMaintainedActions)
 		}
 
 	}

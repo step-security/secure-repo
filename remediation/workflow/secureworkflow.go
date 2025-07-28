@@ -133,6 +133,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	if replaceMaintainedActions {
 		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, maintainedActionsMap)
 		if err != nil {
+			log.Printf("Error replacing maintained actions: %v", err)
 			secureWorkflowReponse.HasErrors = true
 		}
 	}
