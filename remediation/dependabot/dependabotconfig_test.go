@@ -48,6 +48,11 @@ func TestConfigDependabotFile(t *testing.T) {
 			Ecosystems: []Ecosystem{{"npm", "/sample", "daily"}},
 			isChanged:  true,
 		},
+		{
+			fileName:   "extra-slash.yml",
+			Ecosystems: []Ecosystem{{"npm", "/sample", "daily"}},
+			isChanged:  false,
+		},
 	}
 
 	for _, test := range tests {
