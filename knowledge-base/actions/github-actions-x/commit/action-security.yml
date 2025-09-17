@@ -1,0 +1,8 @@
+name: 'Git Commit and Push'
+github-token:
+  environment-variable-name: github-token
+  permissions:
+    contents: write
+    contents-reason: to add commits #Checkout: https://github.com/github-actions-x/commit/blob/master/action.yml#L9
+
+#Fixes #697
