@@ -239,10 +239,10 @@ func TestPinActions(t *testing.T) {
 			}
 		})
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/peter-evans-vamshi/close-issue/commits/v1",
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/peter-evans-test/close-issue/commits/v1",
 		httpmock.NewStringResponder(200, `a700eac5bf2a1c7a8cb6da0c13f93ed96fd53dbe`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/peter-evans-vamshi/close-issue/git/matching-refs/tags/v1.",
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/peter-evans-test/close-issue/git/matching-refs/tags/v1.",
 		httpmock.NewStringResponder(200,
 			`[
 				{
@@ -328,7 +328,8 @@ func TestPinActions(t *testing.T) {
 
 		if tt.fileName == "pinusingmap.yml" {
 			actionCommitMap = map[string]string{
-				"peter-evans-vamshi/close-issue@v1": "peter-evans-vamshi/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
+				"peter-evans-test/close-issue@v1": "peter-evans-test/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
+				"peter-check/close-issue@v1.2.3":  "peter-check/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53tom",
 			}
 		}
 
