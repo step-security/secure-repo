@@ -10,13 +10,19 @@ jobs:
 
     steps:
     - name: Close Issue
-      uses: peter-evans-vamshi/close-issue@v1
+      uses: peter-evans-test/close-issue@v1
       with:
        issue-number: 1
        comment: Auto-closing issue
 
     - name: Close Issue
       uses: peter-evans/close-issue@v1
+      with:
+       issue-number: 1
+       comment: Auto-closing issue
+
+    - name: Close Issue
+      uses: peter-check/close-issue@v1.2.3
       with:
        issue-number: 1
        comment: Auto-closing issue
