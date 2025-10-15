@@ -18,13 +18,13 @@ const (
 )
 
 func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
-	pinActions, addHardenRunner, addPermissions, addProjectComment, replaceMaintainedActions := true, true, true, true, false
-	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions := false, false, false, false
+	pinActions, addHardenRunner, addPermissions, addProjectComment, replaceMaintainedActions, useActionCommitMap := true, true, true, true, false, false
+	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions, usedActionCommitMap := false, false, false, false, false
 	ignoreMissingKBs := false
 	enableLogging := false
 	addEmptyTopLevelPermissions := false
 	skipHardenRunnerForContainers := false
-	exemptedActions, pinToImmutable, maintainedActionsMap := []string{}, false, map[string]string{}
+	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap := []string{}, false, map[string]string{}, map[string]string{}
 
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
@@ -39,6 +39,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	if len(params) > 2 {
 		if v, ok := params[2].(map[string]string); ok {
 			maintainedActionsMap = v
+		}
+	}
+	if len(params) > 3 {
+		if v, ok := params[3].(map[string]string); ok {
+			actionCommitMap = v
 		}
 	}
 
@@ -138,12 +143,22 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		}
 	}
 
+	if useActionCommitMap {
+		if enableLogging {
+			log.Printf("Using action commit map")
+		}
+		secureWorkflowReponse.FinalOutput, usedActionCommitMap, err = pin.PinActions(secureWorkflowReponse.FinalOutput, []string{}, false, actionCommitMap)
+		if err != nil {
+			log.Printf("Error pinning actions using commit map: %v", err)
+			secureWorkflowReponse.HasErrors = true
+		}
+	}
 	if pinActions {
 		if enableLogging {
 			log.Printf("Pinning GitHub Actions")
 		}
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable)
+		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, nil)
 		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker
 		if enableLogging {
@@ -174,12 +189,15 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
 	secureWorkflowReponse.AddedMaintainedActions = replacedMaintainedActions
+	secureWorkflowReponse.UsedActionCommitMap = usedActionCommitMap
 
 	if enableLogging {
-		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, HasErrors: %v",
+		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, AddedMaintainedActions: %v, UsedActionCommitMap: %v, HasErrors: %v",
 			secureWorkflowReponse.PinnedActions,
 			secureWorkflowReponse.AddedHardenRunner,
 			secureWorkflowReponse.AddedPermissions,
+			secureWorkflowReponse.AddedMaintainedActions,
+			secureWorkflowReponse.UsedActionCommitMap,
 			secureWorkflowReponse.HasErrors)
 	}
 
