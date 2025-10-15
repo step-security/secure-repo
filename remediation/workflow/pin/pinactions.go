@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool, error) {
+func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -29,7 +29,7 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out, exemptedActions, pinToImmutable)
+				out, localUpdated = PinAction(step.Uses, out, exemptedActions, pinToImmutable, actionCommitMap)
 				updated = updated || localUpdated
 			}
 		}
@@ -38,7 +38,7 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool) {
+func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
@@ -69,15 +69,29 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
+	var commitSHA string
+	var err error
 
-	commitSHA, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
-	if err != nil {
-		return inputYaml, updated
-	}
+	if actionCommitMap != nil && actionCommitMap[action] != "" {
+		actionWithCommit := actionCommitMap[action]
+		commitSHA = strings.Split(actionWithCommit, "@")[1]
 
-	tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
-	if err != nil {
-		return inputYaml, updated
+		if !semanticTagRegex.MatchString(tagOrBranch) {
+			tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
+			if err != nil {
+				return inputYaml, updated
+			}
+		}
+	} else {
+		commitSHA, _, err = client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
+		if err != nil {
+			return inputYaml, updated
+		}
+		tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
+		if err != nil {
+			return inputYaml, updated
+		}
+
 	}
 
 	// pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
