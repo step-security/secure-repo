@@ -25,7 +25,6 @@ type SecureWorkflowReponse struct {
 	WorkflowFetchError     bool
 	JobErrors              []JobError
 	MissingActions         []string
-	UsedActionCommitMap    bool
 }
 
 type JobError struct {
