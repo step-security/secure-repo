@@ -72,17 +72,24 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	var commitSHA string
 	var err error
 
-	if actionCommitMap != nil && actionCommitMap[action] != "" {
-		actionWithCommit := actionCommitMap[action]
-		commitSHA = strings.Split(actionWithCommit, "@")[1]
+	if actionCommitMap != nil {
+		// Check case-insensitively by iterating through the map
+		for mapAction, actionWithCommit := range actionCommitMap {
+			if strings.EqualFold(action, mapAction) && actionWithCommit != "" {
+				commitSHA = strings.Split(actionWithCommit, "@")[1]
 
-		if !semanticTagRegex.MatchString(tagOrBranch) {
-			tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
-			if err != nil {
-				return inputYaml, updated
+				if !semanticTagRegex.MatchString(tagOrBranch) {
+					tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
+					if err != nil {
+						return inputYaml, updated
+					}
+				}
+				break
 			}
 		}
-	} else {
+	}
+
+	if commitSHA == "" {
 		commitSHA, _, err = client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
 		if err != nil {
 			return inputYaml, updated
