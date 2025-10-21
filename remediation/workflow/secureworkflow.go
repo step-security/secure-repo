@@ -24,7 +24,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	enableLogging := false
 	addEmptyTopLevelPermissions := false
 	skipHardenRunnerForContainers := false
-	exemptedActions, pinToImmutable, maintainedActionsMap := []string{}, false, map[string]string{}
+	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap := []string{}, false, map[string]string{}, map[string]string{}
 
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
@@ -39,6 +39,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	if len(params) > 2 {
 		if v, ok := params[2].(map[string]string); ok {
 			maintainedActionsMap = v
+		}
+	}
+	if len(params) > 3 {
+		if v, ok := params[3].(map[string]string); ok {
+			actionCommitMap = v
 		}
 	}
 
@@ -143,7 +148,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			log.Printf("Pinning GitHub Actions")
 		}
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable)
+		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap)
 		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker
 		if enableLogging {
@@ -176,10 +181,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.AddedMaintainedActions = replacedMaintainedActions
 
 	if enableLogging {
-		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, HasErrors: %v",
+		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, AddedMaintainedActions: %v, HasErrors: %v",
 			secureWorkflowReponse.PinnedActions,
 			secureWorkflowReponse.AddedHardenRunner,
 			secureWorkflowReponse.AddedPermissions,
+			secureWorkflowReponse.AddedMaintainedActions,
 			secureWorkflowReponse.HasErrors)
 	}
 
