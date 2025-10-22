@@ -76,7 +76,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 		// Check case-insensitively by iterating through the map
 		for mapAction, actionWithCommit := range actionCommitMap {
 			if strings.EqualFold(action, mapAction) && actionWithCommit != "" {
-				commitSHA = strings.Split(actionWithCommit, "@")[1]
+				commitSHA = actionWithCommit
 
 				if !semanticTagRegex.MatchString(tagOrBranch) {
 					tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)

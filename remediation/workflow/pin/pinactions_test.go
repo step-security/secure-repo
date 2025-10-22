@@ -328,8 +328,8 @@ func TestPinActions(t *testing.T) {
 
 		if tt.fileName == "pinusingmap.yml" {
 			actionCommitMap = map[string]string{
-				"peter-evans-test/close-issue@v1": "peter-evans-test/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
-				"peter-check/close-issue@v1.2.3":  "peter-check/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53tom",
+				"peter-evans-test/close-issue@v1": "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
+				"peter-check/close-issue@v1.2.3":  "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53tom",
 			}
 		}
 
