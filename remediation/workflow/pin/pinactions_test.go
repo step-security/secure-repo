@@ -239,6 +239,21 @@ func TestPinActions(t *testing.T) {
 			}
 		})
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/peter-evans-test/close-issue/commits/v1",
+		httpmock.NewStringResponder(200, `a700eac5bf2a1c7a8cb6da0c13f93ed96fd53dbe`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/peter-evans-test/close-issue/git/matching-refs/tags/v1.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+					"ref": "refs/tags/v1.0.4",
+					"object": {
+					"sha": "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
+					"type": "commit"
+					}
+				}
+			]`))
+
 	// Mock manifest endpoints for specific versions and commit hashes
 	manifestResponders := []string{
 		// the following list will contain the list of actions with versions
@@ -296,15 +311,29 @@ func TestPinActions(t *testing.T) {
 		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*"}, pinToImmutable: true},
 		{fileName: "donotpintoimmutable.yml", wantUpdated: true, pinToImmutable: false},
 		{fileName: "invertedcommas.yml", wantUpdated: true, pinToImmutable: false},
+		{fileName: "pinusingmap.yml", wantUpdated: true, pinToImmutable: true},
 	}
 	for _, tt := range tests {
+
+		var output string
+		var gotUpdated bool
+		var err error
+		var actionCommitMap map[string]string
+
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		output, gotUpdated, err := PinActions(string(input), tt.exemptedActions, tt.pinToImmutable)
+		if tt.fileName == "pinusingmap.yml" {
+			actionCommitMap = map[string]string{
+				"peter-evans-test/close-issue@v1": "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
+				"peter-check/close-issue@v1.2.3":  "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53tom",
+			}
+		}
+
+		output, gotUpdated, err = PinActions(string(input), tt.exemptedActions, tt.pinToImmutable, actionCommitMap)
 		if tt.wantUpdated != gotUpdated {
 			t.Errorf("test failed wantUpdated %v did not match gotUpdated %v", tt.wantUpdated, gotUpdated)
 		}
