@@ -145,8 +145,10 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		pinnedAction, pinnedDocker := false, false
 		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable)
 		if err != nil {
-			log.Printf("Error pinning actions: %v", err)
-			return nil, err
+			if enableLogging {
+				log.Printf("Error pinning actions: %v", err)
+			}
+			return secureWorkflowReponse, err
 		}
 		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker

@@ -29,7 +29,10 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out, exemptedActions, pinToImmutable)
+				out, localUpdated, err = PinAction(step.Uses, out, exemptedActions, pinToImmutable)
+				if err != nil {
+					return out, updated, err
+				}
 				updated = updated || localUpdated
 			}
 		}
@@ -38,22 +41,22 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool) {
+func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool, error) {
 
 	updated := false
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
-		return inputYaml, updated // Cannot pin local actions and docker actions
+		return inputYaml, updated, nil // Cannot pin local actions and docker actions
 	}
 
 	if isAbsolute(action) || (pinToImmutable && IsImmutableAction(action)) {
-		return inputYaml, updated
+		return inputYaml, updated, nil
 	}
 	leftOfAt := strings.Split(action, "@")
 	tagOrBranch := leftOfAt[1]
 
 	// skip pinning for exempted actions
 	if ActionExists(leftOfAt[0], exemptedActions) {
-		return inputYaml, updated
+		return inputYaml, updated, nil
 	}
 
 	splitOnSlash := strings.Split(leftOfAt[0], "/")
@@ -75,13 +78,10 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 
 	commitSHA, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
 	if err != nil {
-		return inputYaml, updated
+		return inputYaml, updated, fmt.Errorf("unable to get commit sha %v", err)
 	}
 
-	tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
-	if err != nil {
-		return inputYaml, updated
-	}
+	tagOrBranch, _ = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
 
 	// pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
 	// build separately so we can quote only the ref, not the comment
@@ -112,7 +112,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 		inputYaml = actionRegex.ReplaceAllString(inputYaml, pinnedActionWithVersion+"$2")
 
 		inputYaml, _ = removePreviousActionComments(pinnedActionWithVersion, inputYaml)
-		return inputYaml, !strings.EqualFold(action, pinnedActionWithVersion)
+		return inputYaml, !strings.EqualFold(action, pinnedActionWithVersion), nil
 	}
 
 	updated = !strings.EqualFold(action, fullPinned)
@@ -144,7 +144,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	)
 	inputYaml, _ = removePreviousActionComments(fullPinned, inputYaml)
 
-	return inputYaml, updated
+	return inputYaml, updated, nil
 }
 
 // It may be that there was already a comment next to the action
