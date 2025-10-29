@@ -51,7 +51,7 @@ func AddAction(inputYaml, action string, pinActions, pinToImmutable bool, skipCo
 	}
 
 	if updated && pinActions {
-		out, _ = pin.PinAction(action, out, nil, pinToImmutable, nil)
+		out, _, _ = pin.PinAction(action, out, nil, pinToImmutable, nil)
 	}
 
 	return out, updated, nil
