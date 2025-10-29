@@ -63,7 +63,11 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	owner := splitOnSlash[0]
 	repo := splitOnSlash[1]
 
-	PAT := os.Getenv("PAT")
+	// use secure repo token
+	PAT := os.Getenv("SECURE_REPO_PAT")
+	if PAT == "" {
+		PAT = os.Getenv("PAT")
+	}
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
