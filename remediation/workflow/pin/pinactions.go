@@ -3,6 +3,7 @@ package pin
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -67,6 +68,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	PAT := os.Getenv("SECURE_REPO_PAT")
 	if PAT == "" {
 		PAT = os.Getenv("PAT")
+		log.Println("SECURE_REPO_PAT is not set, using PAT")
 	}
 
 	ctx := context.Background()
