@@ -216,7 +216,7 @@ func TestSecureWorkflow(t *testing.T) {
 		wantAddedMaintainedActions bool
 		wantError                  bool
 	}{
-		{fileName: "replaceactions.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantAddedMaintainedActions: true, wantError: false},
+		{fileName: "oneJob.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantAddedMaintainedActions: true, wantError: false},
 		{fileName: "allscenarios.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: true, wantError: false},
 		{fileName: "nohardenrunner.yml", wantPinnedActions: true, wantAddedHardenRunner: false, wantAddedPermissions: true, wantError: false},
 		{fileName: "noperms.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantError: false},
