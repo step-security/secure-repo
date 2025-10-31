@@ -214,15 +214,17 @@ func TestSecureWorkflow(t *testing.T) {
 		wantAddedHardenRunner      bool
 		wantAddedPermissions       bool
 		wantAddedMaintainedActions bool
+		wantError                  bool
 	}{
-		{fileName: "replaceactions.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantAddedMaintainedActions: true},
-		{fileName: "allscenarios.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: true},
-		{fileName: "nohardenrunner.yml", wantPinnedActions: true, wantAddedHardenRunner: false, wantAddedPermissions: true},
-		{fileName: "noperms.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false},
-		{fileName: "nopin.yml", wantPinnedActions: false, wantAddedHardenRunner: true, wantAddedPermissions: true},
-		{fileName: "allperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true},
-		{fileName: "multiplejobperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true},
-		{fileName: "error.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: false},
+		{fileName: "replaceactions.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantAddedMaintainedActions: true, wantError: false},
+		{fileName: "allscenarios.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: true, wantError: false},
+		{fileName: "nohardenrunner.yml", wantPinnedActions: true, wantAddedHardenRunner: false, wantAddedPermissions: true, wantError: false},
+		{fileName: "noperms.yml", wantPinnedActions: true, wantAddedHardenRunner: true, wantAddedPermissions: false, wantError: false},
+		{fileName: "nopin.yml", wantPinnedActions: false, wantAddedHardenRunner: true, wantAddedPermissions: true, wantError: false},
+		{fileName: "allperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true, wantError: false},
+		{fileName: "multiplejobperms.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: true, wantError: false},
+		{fileName: "error.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: false, wantError: false},
+		{fileName: "missingaction.yml", wantPinnedActions: false, wantAddedHardenRunner: false, wantAddedPermissions: false, wantError: true},
 	}
 	for _, test := range tests {
 		var err error
@@ -267,6 +269,14 @@ func TestSecureWorkflow(t *testing.T) {
 			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, []string{"actions/*"}, false, actionMap)
 		} else {
 			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+		}
+
+		if test.wantError {
+			if err == nil {
+				t.Errorf("test failed %s expected an error but got none", test.fileName)
+			}
+			// Skip further validation if we expected an error
+			continue
 		}
 
 		if err != nil {
