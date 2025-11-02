@@ -69,6 +69,8 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	if PAT == "" {
 		PAT = os.Getenv("PAT")
 		log.Println("SECURE_REPO_PAT is not set, using PAT")
+	} else {
+		log.Println("SECURE_REPO_PAT is set")
 	}
 
 	ctx := context.Background()
