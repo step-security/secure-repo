@@ -43,8 +43,8 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool,
 }
 
 func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
-
 	updated := false
+
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
 		return inputYaml, updated, nil // Cannot pin local actions and docker actions
 	}
@@ -273,4 +273,8 @@ func ActionExists(actionName string, patterns []string) bool {
 		}
 	}
 	return false
+}
+
+func UsingSecureRepoPAT() bool {
+	return os.Getenv("SECURE_REPO_PAT") != ""
 }

@@ -185,14 +185,16 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
 	secureWorkflowReponse.AddedMaintainedActions = replacedMaintainedActions
+	secureWorkflowReponse.UsingSecureRepoPAT = pin.UsingSecureRepoPAT()
 
 	if enableLogging {
-		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, AddedMaintainedActions: %v, HasErrors: %v",
+		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, AddedMaintainedActions: %v, HasErrors: %v, UsingSecureRepoPAT: %v",
 			secureWorkflowReponse.PinnedActions,
 			secureWorkflowReponse.AddedHardenRunner,
 			secureWorkflowReponse.AddedPermissions,
 			secureWorkflowReponse.AddedMaintainedActions,
-			secureWorkflowReponse.HasErrors)
+			secureWorkflowReponse.HasErrors,
+			secureWorkflowReponse.UsingSecureRepoPAT)
 	}
 
 	return secureWorkflowReponse, nil

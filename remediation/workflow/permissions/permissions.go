@@ -25,6 +25,7 @@ type SecureWorkflowReponse struct {
 	WorkflowFetchError     bool
 	JobErrors              []JobError
 	MissingActions         []string
+	UsingSecureRepoPAT     bool
 }
 
 type JobError struct {
