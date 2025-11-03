@@ -3,24 +3,19 @@ package pin
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/google/go-github/v40/github"
-	"github.com/sirupsen/logrus"
 	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )
 
-type StepSecurityAppLogger struct {
-	RequestID string `json:"request_id,omitempty"`
-	*logrus.Logger
-}
-
-func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string, logger *StepSecurityAppLogger) (string, bool, error) {
+func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -35,7 +30,7 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool,
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated, err = PinAction(step.Uses, out, exemptedActions, pinToImmutable, actionCommitMap, logger)
+				out, localUpdated, err = PinAction(step.Uses, out, exemptedActions, pinToImmutable, actionCommitMap)
 				if err != nil {
 					return out, updated, err
 				}
@@ -47,9 +42,9 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool,
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string, logger *StepSecurityAppLogger) (string, bool, error) {
-
+func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
 	updated := false
+
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
 		return inputYaml, updated, nil // Cannot pin local actions and docker actions
 	}
@@ -73,17 +68,9 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	PAT := os.Getenv("SECURE_REPO_PAT")
 	if PAT == "" {
 		PAT = os.Getenv("PAT")
-		if logger != nil {
-			logger.Logf(logrus.InfoLevel, "SECURE_REPO_PAT is not set, using PAT")
-		} else {
-			logrus.Info("SECURE_REPO_PAT is not set, using PAT")
-		}
+		log.Println("SECURE_REPO_PAT is not set, using PAT")
 	} else {
-		if logger != nil {
-			logger.Logf(logrus.InfoLevel, "SECURE_REPO_PAT is set")
-		} else {
-			logrus.Info("SECURE_REPO_PAT is set")
-		}
+		log.Println("SECURE_REPO_PAT is set")
 	}
 
 	ctx := context.Background()
@@ -286,4 +273,8 @@ func ActionExists(actionName string, patterns []string) bool {
 		}
 	}
 	return false
+}
+
+func UsingSecureRepoPAT() bool {
+	return os.Getenv("SECURE_REPO_PAT") != ""
 }

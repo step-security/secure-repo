@@ -266,9 +266,9 @@ func TestSecureWorkflow(t *testing.T) {
 			if err != nil {
 				t.Errorf("unable to load the file %s", err)
 			}
-			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, nil, []string{"actions/*"}, false, actionMap)
+			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, []string{"actions/*"}, false, actionMap)
 		} else {
-			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, nil)
+			output, err = SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
 		}
 
 		if test.wantError {
@@ -369,7 +369,7 @@ func TestSecureWorkflowContainerJob(t *testing.T) {
 	queryParams["skipHardenRunnerForContainers"] = "true"
 	queryParams["addProjectComment"] = "false"
 
-	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, nil)
+	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
 
 	if err != nil {
 		t.Errorf("Error not expected")
@@ -474,7 +474,7 @@ func TestSecureWorkflowEmptyPermissions(t *testing.T) {
 	queryParams["addEmptyTopLevelPermissions"] = "true"
 	queryParams["addProjectComment"] = "false"
 
-	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{}, nil)
+	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
 
 	if err != nil {
 		t.Errorf("Error not expected")
