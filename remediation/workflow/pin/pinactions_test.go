@@ -333,7 +333,7 @@ func TestPinActions(t *testing.T) {
 			}
 		}
 
-		output, gotUpdated, err = PinActions(string(input), tt.exemptedActions, tt.pinToImmutable, actionCommitMap, nil)
+		output, gotUpdated, err = PinActions(string(input), tt.exemptedActions, tt.pinToImmutable, actionCommitMap)
 		if tt.wantUpdated != gotUpdated {
 			t.Errorf("test failed wantUpdated %v did not match gotUpdated %v", tt.wantUpdated, gotUpdated)
 		}
