@@ -17,7 +17,7 @@ const (
 	HardenRunnerActionName        = "Harden Runner"
 )
 
-func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
+func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc dynamodbiface.DynamoDBAPI, logger *pin.StepSecurityAppLogger, params ...interface{}) (*permissions.SecureWorkflowReponse, error) {
 	pinActions, addHardenRunner, addPermissions, addProjectComment, replaceMaintainedActions := true, true, true, true, false
 	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions := false, false, false, false
 	ignoreMissingKBs := false
@@ -148,7 +148,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			log.Printf("Pinning GitHub Actions")
 		}
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap)
+		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap, logger)
 		if err != nil {
 			if enableLogging {
 				log.Printf("Error pinning actions: %v", err)
