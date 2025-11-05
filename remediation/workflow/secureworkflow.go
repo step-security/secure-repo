@@ -148,7 +148,13 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			log.Printf("Pinning GitHub Actions")
 		}
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, _ = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap)
+		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap)
+		if err != nil {
+			if enableLogging {
+				log.Printf("Error pinning actions: %v", err)
+			}
+			return secureWorkflowReponse, err
+		}
 		secureWorkflowReponse.FinalOutput, pinnedDocker, _ = pin.PinDocker(secureWorkflowReponse.FinalOutput)
 		pinnedActions = pinnedAction || pinnedDocker
 		if enableLogging {
@@ -179,14 +185,16 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	secureWorkflowReponse.AddedHardenRunner = addedHardenRunner
 	secureWorkflowReponse.AddedPermissions = addedPermissions
 	secureWorkflowReponse.AddedMaintainedActions = replacedMaintainedActions
+	secureWorkflowReponse.UsingSecureRepoPAT = pin.UsingSecureRepoPAT()
 
 	if enableLogging {
-		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, AddedMaintainedActions: %v, HasErrors: %v",
+		log.Printf("SecureWorkflow complete - PinnedActions: %v, AddedHardenRunner: %v, AddedPermissions: %v, AddedMaintainedActions: %v, HasErrors: %v, UsingSecureRepoPAT: %v",
 			secureWorkflowReponse.PinnedActions,
 			secureWorkflowReponse.AddedHardenRunner,
 			secureWorkflowReponse.AddedPermissions,
 			secureWorkflowReponse.AddedMaintainedActions,
-			secureWorkflowReponse.HasErrors)
+			secureWorkflowReponse.HasErrors,
+			secureWorkflowReponse.UsingSecureRepoPAT)
 	}
 
 	return secureWorkflowReponse, nil
