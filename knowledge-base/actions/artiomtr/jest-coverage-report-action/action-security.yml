@@ -1,0 +1,11 @@
+name: "jest coverage report "
+github-token:
+  action-input:
+    input: github-token
+    is-default: true
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to check code coverage of pr
+    issues: write 
+    issues-reason: to comment the codecoverage to pr
+    #Reference: https://github.com/ArtiomTr/jest-coverage-report-action/blob/e1023a86c8d1ba542bfaa9a18a9efe55ef494c8a/src/typings/Options.ts
