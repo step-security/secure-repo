@@ -1,0 +1,12 @@
+name: 'Welcome bot on new pull requests'
+github-token:
+  action-input:
+    input: access-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to Comment on the pull request
+    pull-requests: read
+    pull-requests-reason: to check if it is first pull request
+
+#Reference - https://github.com/Deborah-Digges/new-pull-request-comment-action/blob/224c179a9e23f65ec50ff3240b8716369dc415d7/src/index.js#L45
