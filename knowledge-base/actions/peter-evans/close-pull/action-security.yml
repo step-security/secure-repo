@@ -1,0 +1,13 @@
+name: "Close Pull"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to close a pull request
+    contents: write
+    contents-reason: to delete a branch of the PR
+    issues: write
+    issues-reason: to comment on PR
+    #Reference: https://github.com/peter-evans/close-pull/blob/cd1af3be40e42b1c6cb814502bee104471c8980b/src/main.ts
