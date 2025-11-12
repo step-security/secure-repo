@@ -1,0 +1,9 @@
+name: "Coveralls Python"
+github-token:
+  action-input:
+    input: github-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to create issues in the repository
+    #Reference: https://github.com/AndreMiras/coveralls-python-action/blob/5edca599434006460612ac39adf7b534d7422d89/src/entrypoint.py#L137

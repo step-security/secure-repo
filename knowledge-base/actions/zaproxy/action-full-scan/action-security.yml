@@ -1,0 +1,9 @@
+name: "OWASP ZAP Full Scan"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to create issues in the repository
+    #Reference: https://github.com/zaproxy/action-full-scan/blob/6eade0f93b10fad8cfb4e63b979703a2cbd0cc98/index.js#L17
