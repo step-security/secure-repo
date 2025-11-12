@@ -1,0 +1,8 @@
+name: "repo2docker Action"
+github-token:
+  environment-variable-name: TOKEN
+  permissions:
+    deployment: write
+    deployment-reason: to create new deployment
+    #Reference:https://github.com/jupyterhub/repo2docker-action/blob/86cbba650927d185d7cee256eb48d0a7eeb38906/action_files/create_deployment.py#L16
+    

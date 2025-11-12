@@ -1,0 +1,11 @@
+name: "Setup Arduino CLI"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+  contents: read
+  contents-reason: to download and release
+#Reference: https://github.com/arduino/setup-arduino-cli/blob/28207372640f389771230f880c288f4caad7a9bc/src/installer.ts#L60
+#Reference: https://github.com/arduino/setup-arduino-cli/blob/28207372640f389771230f880c288f4caad7a9bc/__tests__/main.test.ts#L64
+
