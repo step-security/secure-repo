@@ -1,0 +1,11 @@
+name: "Pull Request Labeler"
+github-token:
+  action-input:
+    input: repo-token
+    is-default: true
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to get changed files from PR
+    actions: write
+    actions-reason: to add label to PR
+    #Reference: https://github.com/DataDog/labeler/blob/1a043751b2faccb4f9078d542928e4c0d3f0e2e5/src/main.ts#L8

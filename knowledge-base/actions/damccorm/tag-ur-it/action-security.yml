@@ -1,0 +1,10 @@
+name: "tag-ur-it"
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to tag issues with labels and assignees
+    #Reference: https://github.com/damccorm/tag-ur-it/blob/7c0e852a6bd84e9c7f842ef4f0ee67335b005a49/README.md
+    #https://github.com/damccorm/tag-ur-it/blob/7c0e852a6bd84e9c7f842ef4f0ee67335b005a49/src/index.ts
