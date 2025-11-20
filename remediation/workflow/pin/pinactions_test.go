@@ -308,7 +308,7 @@ func TestPinActions(t *testing.T) {
 		{fileName: "actionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
 		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
 		{fileName: "immutableaction-1.yml", wantUpdated: true, pinToImmutable: true},
-		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*"}, pinToImmutable: true},
+		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*", "praveen/*"}, pinToImmutable: true},
 		{fileName: "donotpintoimmutable.yml", wantUpdated: true, pinToImmutable: false},
 		{fileName: "invertedcommas.yml", wantUpdated: true, pinToImmutable: false},
 		{fileName: "pinusingmap.yml", wantUpdated: true, pinToImmutable: true},
@@ -372,5 +372,25 @@ func Test_isAbsolute(t *testing.T) {
 				t.Errorf("isAbsolute() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestActionExists(t *testing.T) {
+	result := ActionExists("actions/checkout", []string{"actions/checkout"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned false for actions/checkout")
+	}
+
+	result = ActionExists("actions/checkout", []string{"actions/*"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned false for actions/checkout")
+	}
+
+	result = ActionExists("actions/checkout/something", []string{"actions/*"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned true for actions/checkout/something")
 	}
 }
