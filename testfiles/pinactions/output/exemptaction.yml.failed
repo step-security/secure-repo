@@ -18,7 +18,7 @@ jobs:
       # Publish
       - name: publish on version change
         id: publish_nuget
-        uses: brandedoutcast/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc # v2.5.5
+        uses: brandedoutcast/publish-nuget@v2
         with:
           PROJECT_FILE_PATH: Core/Core.csproj
           NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
@@ -61,7 +61,7 @@ jobs:
 
       - name: publish on version change 2
         id: publish_nuget
-        uses: smith/seperate/from-version@v2
+        uses: smith/publish/from-version@v2
         with:
           PROJECT_FILE_PATH: Core/Core.csproj
           NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
