@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -229,8 +228,15 @@ func getSemanticVersion(client *github.Client, owner, repo, tagOrBranch, commitS
 // Function to check if an action matches any pattern in the list
 func ActionExists(actionName string, patterns []string) bool {
 	for _, pattern := range patterns {
-		// Use filepath.Match to match the pattern
-		matched, err := filepath.Match(pattern, actionName)
+		// Convert glob pattern to regex for path matching
+		// Replace * with [^/]* to match within a path segment
+		// Replace **/ with .* to match across path segments
+		regexPattern := strings.ReplaceAll(pattern, "**", "§§")
+		regexPattern = strings.ReplaceAll(regexPattern, "*", "[^/]*")
+		regexPattern = strings.ReplaceAll(regexPattern, "§§", ".*")
+		regexPattern = "^" + regexPattern + "($|/)"
+
+		matched, err := regexp.MatchString(regexPattern, actionName)
 		if err != nil {
 			// Handle invalid patterns
 			fmt.Printf("Error matching pattern: %v\n", err)
