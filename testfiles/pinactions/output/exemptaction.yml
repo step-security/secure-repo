@@ -66,3 +66,11 @@ jobs:
           PROJECT_FILE_PATH: Core/Core.csproj
           NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
           NUGET_SOURCE: https://nuget.pkg.github.com/OWNER/index.json
+
+      - name: publish on version change 2
+        id: publish_nuget
+        uses: starc/swing/from-version/@v2
+        with:
+          PROJECT_FILE_PATH: Core/Core.csproj
+          NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+          NUGET_SOURCE: https://nuget.pkg.github.com/OWNER/index.json
