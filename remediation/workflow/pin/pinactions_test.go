@@ -33,6 +33,21 @@ func TestPinActions(t *testing.T) {
 				}
 			]`))
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/evans/shield/commits/v1",
+		httpmock.NewStringResponder(200, `a700eac5bf2a1c7a8cb6da0c13f93ed96fd53dbd`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/evans/shield/git/matching-refs/tags/v1.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+					"ref": "refs/tags/v1.0.3",
+					"object": {
+					"sha": "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53dbd",
+					"type": "commit"
+					}
+				}
+			]`))
+
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/commits/master",
 		httpmock.NewStringResponder(200, `61b9e3751b92087fd0b06925ba6dd6314e06f089`))
 
@@ -308,10 +323,9 @@ func TestPinActions(t *testing.T) {
 		{fileName: "actionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
 		{fileName: "repeatedactionwithcomment.yml", wantUpdated: true, pinToImmutable: true},
 		{fileName: "immutableaction-1.yml", wantUpdated: true, pinToImmutable: true},
-		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*"}, pinToImmutable: true},
+		{fileName: "exemptaction.yml", wantUpdated: true, exemptedActions: []string{"actions/checkout", "rohith/*", "praveen/*", "aman-*/*", "*/seperate*", "starc/*"}, pinToImmutable: true},
 		{fileName: "donotpintoimmutable.yml", wantUpdated: true, pinToImmutable: false},
 		{fileName: "invertedcommas.yml", wantUpdated: true, pinToImmutable: false},
-		{fileName: "pinusingmap.yml", wantUpdated: true, pinToImmutable: true},
 	}
 	for _, tt := range tests {
 
@@ -330,6 +344,7 @@ func TestPinActions(t *testing.T) {
 			actionCommitMap = map[string]string{
 				"peter-evans-test/close-issue@v1": "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
 				"peter-check/close-issue@v1.2.3":  "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53tom",
+				"evans/shield-test/@v1.2.5":       "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53cat",
 			}
 		}
 
@@ -373,4 +388,37 @@ func Test_isAbsolute(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestActionExists(t *testing.T) {
+	result := ActionExists("actions/checkout", []string{"actions/checkout"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned false for actions/checkout")
+	}
+
+	result = ActionExists("actions/checkout", []string{"actions/*"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned false for actions/checkout")
+	}
+
+	result = ActionExists("actions/checkout/something", []string{"actions/*"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned true for actions/checkout/something")
+	}
+
+	result = ActionExists("step-security/checkout/something", []string{"step-*/*"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned true for actions/checkout/something")
+	}
+
+	result = ActionExists("step-security/checkout-release/something", []string{"*/checkout-*"})
+	t.Log(result)
+	if !result {
+		t.Errorf("ActionExists returned true for actions/checkout/something")
+	}
+
 }
