@@ -3,6 +3,7 @@ package pin
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -13,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool, error) {
+func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -28,7 +29,10 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated = PinAction(step.Uses, out, exemptedActions, pinToImmutable)
+				out, localUpdated, err = PinAction(step.Uses, out, exemptedActions, pinToImmutable, actionCommitMap)
+				if err != nil {
+					return out, updated, err
+				}
 				updated = updated || localUpdated
 			}
 		}
@@ -37,29 +41,36 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool)
 	return out, updated, nil
 }
 
-func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool) (string, bool) {
-
+func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
 	updated := false
+
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
-		return inputYaml, updated // Cannot pin local actions and docker actions
+		return inputYaml, updated, nil // Cannot pin local actions and docker actions
 	}
 
 	if isAbsolute(action) || (pinToImmutable && IsImmutableAction(action)) {
-		return inputYaml, updated
+		return inputYaml, updated, nil
 	}
 	leftOfAt := strings.Split(action, "@")
 	tagOrBranch := leftOfAt[1]
 
 	// skip pinning for exempted actions
 	if ActionExists(leftOfAt[0], exemptedActions) {
-		return inputYaml, updated
+		return inputYaml, updated, nil
 	}
 
 	splitOnSlash := strings.Split(leftOfAt[0], "/")
 	owner := splitOnSlash[0]
 	repo := splitOnSlash[1]
 
-	PAT := os.Getenv("PAT")
+	// use secure repo token
+	PAT := os.Getenv("SECURE_REPO_PAT")
+	if PAT == "" {
+		PAT = os.Getenv("PAT")
+		log.Println("SECURE_REPO_PAT is not set, using PAT")
+	} else {
+		log.Println("SECURE_REPO_PAT is set")
+	}
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -68,15 +79,36 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
+	var commitSHA string
+	var err error
 
-	commitSHA, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
-	if err != nil {
-		return inputYaml, updated
+	if actionCommitMap != nil {
+		// Check case-insensitively by iterating through the map
+		for mapAction, actionWithCommit := range actionCommitMap {
+			if strings.EqualFold(action, mapAction) && actionWithCommit != "" {
+				commitSHA = actionWithCommit
+
+				if !semanticTagRegex.MatchString(tagOrBranch) {
+					tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
+					if err != nil {
+						return inputYaml, updated, err
+					}
+				}
+				break
+			}
+		}
 	}
 
-	tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
-	if err != nil {
-		return inputYaml, updated
+	if commitSHA == "" {
+		commitSHA, _, err = client.Repositories.GetCommitSHA1(ctx, owner, repo, tagOrBranch, "")
+		if err != nil {
+			return inputYaml, updated, err
+		}
+		tagOrBranch, err = getSemanticVersion(client, owner, repo, tagOrBranch, commitSHA)
+		if err != nil {
+			return inputYaml, updated, err
+		}
+
 	}
 
 	// pinnedAction := fmt.Sprintf("%s@%s # %s", leftOfAt[0], commitSHA, tagOrBranch)
@@ -108,7 +140,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 		inputYaml = actionRegex.ReplaceAllString(inputYaml, pinnedActionWithVersion+"$2")
 
 		inputYaml, _ = removePreviousActionComments(pinnedActionWithVersion, inputYaml)
-		return inputYaml, !strings.EqualFold(action, pinnedActionWithVersion)
+		return inputYaml, !strings.EqualFold(action, pinnedActionWithVersion), nil
 	}
 
 	updated = !strings.EqualFold(action, fullPinned)
@@ -140,7 +172,7 @@ func PinAction(action, inputYaml string, exemptedActions []string, pinToImmutabl
 	)
 	inputYaml, _ = removePreviousActionComments(fullPinned, inputYaml)
 
-	return inputYaml, updated
+	return inputYaml, updated, nil
 }
 
 // It may be that there was already a comment next to the action
@@ -247,4 +279,8 @@ func ActionExists(actionName string, patterns []string) bool {
 		}
 	}
 	return false
+}
+
+func UsingSecureRepoPAT() bool {
+	return os.Getenv("SECURE_REPO_PAT") != ""
 }
