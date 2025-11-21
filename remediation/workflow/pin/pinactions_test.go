@@ -344,6 +344,7 @@ func TestPinActions(t *testing.T) {
 			actionCommitMap = map[string]string{
 				"peter-evans-test/close-issue@v1": "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
 				"peter-check/close-issue@v1.2.3":  "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53tom",
+				"evans/shield-test/@v1.2.5":       "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53cat",
 			}
 		}
 

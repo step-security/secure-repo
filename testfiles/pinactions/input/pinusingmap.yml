@@ -26,3 +26,9 @@ jobs:
       with:
        issue-number: 1
        comment: Auto-closing issue
+
+    - name: test case
+      uses: evans/shield-test/@v1.2.5
+      with:
+       issue-number: 1
+       comment: Auto-closing issue
