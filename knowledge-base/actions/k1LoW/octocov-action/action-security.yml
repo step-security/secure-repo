@@ -1,0 +1,12 @@
+name: 'GitHub Action for octocov'
+github-token:
+  action-input:
+    input: repo_token
+    is-default: true
+  permissions:
+    # To comment on PRs
+    pull-requests: write
+    # To retrieve test step time in GitHub Action
+    contents: read
+    # To retrieve previous report for default branch, which is saved as GitHub Action Artifacts
+    actions: read
