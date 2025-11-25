@@ -1,0 +1,149 @@
+name: 'Create Component Version Composite Action'
+description: 'Create Component Version, Add Version Link, Add Version Files, Add Version Properties'
+branding:
+  icon: 'arrow-up-right'
+  color: 'purple'
+inputs:
+  component:
+    description: 'Component Name/ID'
+    required: true
+  versionname:
+    description: 'Component Version Name'
+    required: true
+  description:
+    description: 'Component version description'
+    required: false
+    default: 'Created by following GitHub action: Create Component Version Composite Action'
+  linkName:
+    description: 'Name of link to add to component version'
+    required: false
+    default: 'GitHub Composition Action Link Name'
+  link:
+    description: 'Value of the link to add to component version'
+    required: false
+  base:
+    description: 'Local base directory containing files to upload if file upload is required'
+    required: false
+  offset:
+    description: 'Target path offset (the directory in the version files to which these files should be added)'
+    required: false
+  include:
+    description: 'An include file pattern for selecting files to add (may be repeated)'
+    required: false
+  exclude:
+    description: 'An exclude file pattern for excluding files (may be repeated). Overrides includes.'
+    required: false
+  saveExecuteBits:
+    description: 'Saves execute bits for files.'
+    required: false
+    type: boolean
+  versionProperties:
+    description: 'Properties to set on the component version.  Each property must name name:value:secure.  If you have multiple properties, then they should be separated by a new line character'
+    required: false
+  urlType:
+    description: 'URL protocol to use to connect to DevOps Deploy hostname'
+    required: false
+    default: 'https:'
+  hostname:
+    description: 'DevOps Deploy hostname'
+    required: true
+  port:
+    description: 'port'
+    required: true
+    default: '8443'
+  username:
+    description: 'DevOps Deploy username'
+    required: false
+  password:
+    description: 'DevOps Deploy password'
+    required: false
+    secret: true
+  authToken:
+    description: 'DevOps Deploy authentication token'
+    required: false
+    secret: true
+runs:
+  using: "composite"
+
+  steps:
+    # Download udclient package and command shell scripts from composite action github repository
+    - uses: actions/checkout@v4
+      with:
+        repository: jwcarmichael12/test-composite-action
+        sparse-checkout: |
+          artifacts/devops-deploy-client.zip
+          scripts/addVersionFiles.sh
+          scripts/addVersionProperties.sh
+        sparse-checkout-cone-mode: false
+        path: deploy
+
+    # Setup java environment needed to run the udclient
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'adopt-openj9' # See 'Supported distributions' for available options
+        java-version: '11'
+
+    # Expand the udclient package to access the executable
+    - name: Install udclient
+      id: udclient-install
+      run: unzip deploy/artifacts/devops-deploy-client.zip
+      shell: bash
+
+    # Setup global environment variables used by udclient
+    - name: Set global environment variables.
+      id: set-env-variables
+      run: |
+        if [ ! -z ${{ inputs.authtoken }} ]; then echo "DS_AUTH_TOKEN=${{ inputs.authtoken }}" >> $GITHUB_ENV; fi &&
+        if [ ! -z ${{ inputs.username }} ]; then echo "DS_USERNAME=${{ inputs.username }}" >> $GITHUB_ENV; fi &&
+        if [ ! -z ${{ inputs.password }} ]; then echo "DS_PASSWORD=${{ inputs.password }}" >> $GITHUB_ENV; fi &&
+        echo "DS_WEB_URL=${{ inputs.urlType }}//${{ inputs.hostname }}:${{ inputs.port }}" >> $GITHUB_ENV
+      shell: bash
+
+    # Create component version
+    - name: Create component version
+      id: create-component-version
+      run: udclient/udclient createVersion -component "${{ inputs.component }}" -name "${{ inputs.versionname }}"  -description "${{ inputs.description }}" --importing true
+      shell: bash
+
+    # Add Version Link if one is specified
+    - name: Add component version link
+      id: add-version-link
+      if: inputs.linkName && inputs.link
+      run: udclient/udclient addVersionLink -component "${{ inputs.component }}" -version "${{ inputs.versionname }}" -linkName "${{ inputs.linkName }}" -link "${{ inputs.link }}"
+      shell: bash
+
+    # Add Version Files if specified
+    - name: Add component version files
+      id: add-version-files
+      if: ${{ inputs.base }}
+      run: |
+        deploy/scripts/addVersionFiles.sh
+      shell: bash
+      env:
+        FILES_CMD: "udclient/udclient"
+        FILES_COMPONENTNAME: "${{ inputs.component }}"
+        FILES_VERSIONNAME: "${{ inputs.versionname }}"
+        FILES_BASE: "${{ inputs.base }}"
+        FILES_OFFSET: "${{ inputs.offset }}"
+        FILES_INCLUDE: "${{ inputs.include }}"
+        FILES_EXCLUDE: "${{ inputs.exclude }}"
+        FILES_SAVEEXECUTEBITS: ${{ inputs.saveExecuteBits }}
+
+    # Add Version Properties if specified
+    - name: Add component version properties
+      id: add-version-properties
+      if: ${{ inputs.versionProperties }}
+      run: |
+        deploy/scripts/addVersionProperties.sh
+      shell: bash
+      env:
+        VERSION_PROPERTIES_CMD: "udclient/udclient"
+        VERSION_PROPERTIES_COMPONENTNAME: "${{ inputs.component }}"
+        VERSION_PROPERTIES_VERSIONNAME: "${{ inputs.versionname }}"
+        VERSION_PROPERTIES: "${{ inputs.versionProperties }}"
+
+    # Tell devops deploy server that component version creation is complete
+    - name: Finish Importing
+      id: finish-importing
+      run: udclient/udclient finishedImporting -component "${{ inputs.component }}" -version "${{ inputs.versionname }}"
+      shell: bash
