@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"path"
 	"strings"
 	"testing"
@@ -366,7 +365,6 @@ func TestPinActions(t *testing.T) {
 		var gotUpdated bool
 		var err error
 		var actionCommitMap map[string]string
-		outputFilePath := path.Join(outputDirectory, tt.fileName+"output")
 
 		input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.fileName))
 
@@ -403,7 +401,6 @@ func TestPinActions(t *testing.T) {
 		}
 
 		if output != string(expectedOutput) {
-			os.WriteFile(outputFilePath, []byte(output), 0644)
 			t.Errorf("test failed %s did not match expected output\n%s", tt.fileName, output)
 		}
 	}
