@@ -38,6 +38,20 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool,
 		}
 	}
 
+	// For composite actions
+	if workflow.Runs.Using == "composite" {
+		for _, run := range workflow.Runs.Steps {
+			if len(run.Uses) > 0 {
+				localUpdated := false
+				out, localUpdated, err = PinAction(run.Uses, out, exemptedActions, pinToImmutable, actionCommitMap)
+				if err != nil {
+					return out, updated, err
+				}
+				updated = updated || localUpdated
+			}
+		}
+	}
+
 	return out, updated, nil
 }
 

@@ -173,6 +173,36 @@ func TestPinActions(t *testing.T) {
 				}
 			]`))
 
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/setup-java/commits/v4",
+		httpmock.NewStringResponder(200, `c12b8546b67672ee38ac87bea491ac94a587f7cc`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/setup-java/git/matching-refs/tags/v4.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+					"ref": "refs/tags/v4.5.5",
+					"object": {
+					  "sha": "c12b8546b67672ee38ac87bea491ac94a587f7cc",
+					  "type": "commit"
+					}
+				  }
+			]`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/commits/v4",
+		httpmock.NewStringResponder(200, `c12b8546b67672ee38ac87bea491ac94a587f7ch`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/git/matching-refs/tags/v4.",
+		httpmock.NewStringResponder(200,
+			`[
+				{
+					"ref": "refs/tags/v4.5.6",
+					"object": {
+					  "sha": "c12b8546b67672ee38ac87bea491ac94a587f7sh",
+					  "type": "commit"
+					}
+				  }
+			]`))
+
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/rohith/publish-nuget/commits/v2",
 		httpmock.NewStringResponder(200, `c12b8546b67672ee38ac87bea491ac94a587f7cc`))
 
@@ -327,6 +357,7 @@ func TestPinActions(t *testing.T) {
 		{fileName: "donotpintoimmutable.yml", wantUpdated: true, pinToImmutable: false},
 		{fileName: "invertedcommas.yml", wantUpdated: true, pinToImmutable: false},
 		{fileName: "pinusingmap.yml", wantUpdated: true, pinToImmutable: true},
+		{fileName: "action.yml", wantUpdated: true, pinToImmutable: false},
 	}
 	for _, tt := range tests {
 
@@ -346,6 +377,12 @@ func TestPinActions(t *testing.T) {
 				"peter-evans-test/close-issue@v1": "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53vam",
 				"peter-check/close-issue@v1.2.3":  "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53tom",
 				"evans/shield-test/@v1.2.5":       "a700eac5bf2a1c7a8cb6da0c13f93ed96fd53cat",
+			}
+		}
+
+		if tt.fileName == "action.yml" {
+			actionCommitMap = map[string]string{
+				"actions/checkout@v4": "c12b8546b67672ee38ac87bea491ac94a587f7sh",
 			}
 		}
 

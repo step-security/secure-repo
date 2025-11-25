@@ -20,6 +20,7 @@ type Workflow struct {
 	//On   string `yaml:"on"`
 	Env  Env  `yaml:"env"`
 	Jobs Jobs `yaml:"jobs"`
+	Runs Runs `yaml:"runs"`
 }
 type Step struct {
 	Run  string `yaml:"run"`
@@ -33,6 +34,11 @@ type Job struct {
 	Env         Env         `yaml:"env"`
 	Container   Container   `yaml:"container"`
 	// RunsOn      []string    `yaml:"runs-on"`
+	Steps []Step `yaml:"steps"`
+}
+
+type Runs struct {
+	Using string `yaml:"using"`
 	Steps []Step `yaml:"steps"`
 }
 
