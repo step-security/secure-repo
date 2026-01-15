@@ -1,0 +1,11 @@
+FROM --platform=linux/x86_64 amazonlinux:2023 as build_env
+
+FROM --platform=linux/x86_64 amazonlinux:2 as base
+
+FROM python:3.7
+
+RUN apt-get update && apt-get install -y vim
+
+WORKDIR /app
+
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023

@@ -53,6 +53,12 @@ func SecureDockerFile(inputDockerFile string, opts ...DockerfileConfig) (*Secure
 			var image string
 			var tag string
 			isPinned := false
+
+			// Check if image is exempted (skip pinning)
+			if len(exemptedImages) > 0 && pin.ActionExists(temp, exemptedImages) {
+				continue
+			}
+
 			if strings.Contains(temp, ":") && !strings.Contains(temp, "sha256") {
 				// case activates if image like: python:3.7
 				split := strings.Split(temp, ":")
@@ -74,11 +80,6 @@ func SecureDockerFile(inputDockerFile string, opts ...DockerfileConfig) (*Secure
 			if strings.Count(temp, ":") == 1 && strings.Contains(temp, "sha256") {
 				// is already pinned
 				isPinned = true
-			}
-
-			// Check if image is exempted (skip pinning)
-			if len(exemptedImages) > 0 && pin.ActionExists(image, exemptedImages) {
-				continue
 			}
 
 			if !isPinned {

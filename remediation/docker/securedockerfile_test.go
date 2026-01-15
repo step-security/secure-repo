@@ -39,6 +39,14 @@ func TestSecureDockerFile(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/library/python/manifests/3.7", httpmock.NewStringResponder(200, resp))
 
+	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/library/amazonlinux/manifests/2", httpmock.NewStringResponder(200, resp))
+	httpmock.RegisterResponder("GET", "https://index.docker.io/v2/library/amazonlinux/manifests/2023", httpmock.NewStringResponder(200, resp))
+
+	httpmock.RegisterResponder("GET", "https://public.ecr.aws/v2/",
+		httpmock.NewStringResponder(200, `{
+	}`))
+	httpmock.RegisterResponder("GET", "https://public.ecr.aws/v2/amazonlinux/amazonlinux/manifests/2023", httpmock.NewStringResponder(200, resp))
+
 	tests := []struct {
 		fileName        string
 		isChanged       bool
@@ -48,8 +56,10 @@ func TestSecureDockerFile(t *testing.T) {
 		{fileName: "Dockerfile-not-pinned", isChanged: true, useExemptConfig: false},
 		{fileName: "Dockerfile-not-pinned-as", isChanged: true, useExemptConfig: false},
 		{fileName: "Dockerfile-multiple-images", isChanged: true, useExemptConfig: false},
-		{fileName: "Dockerfile-exempted", isChanged: false, exemptedImages: []string{"python"}, useExemptConfig: true},
-		{fileName: "Dockerfile-exempted-wildcard", isChanged: true, exemptedImages: []string{"amazon*", "alpine"}, useExemptConfig: true},
+		{fileName: "Dockerfile-exempted", isChanged: false, exemptedImages: []string{"python:3.7"}, useExemptConfig: true},
+		{fileName: "Dockerfile-exempted-wildcard", isChanged: true, exemptedImages: []string{"amazon*", "alpine:*"}, useExemptConfig: true},
+		{fileName: "Dockerfile-imageandtag-exempted", isChanged: true, exemptedImages: []string{"amazonlinux:2"}, useExemptConfig: true},
+		{fileName: "Dockerfile-imageandtag-exempted-2", isChanged: true, exemptedImages: []string{"public.ecr.aws/amazonlinux/amazonlinux:2023"}, useExemptConfig: true},
 	}
 
 	for _, test := range tests {

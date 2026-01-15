@@ -1,0 +1,11 @@
+FROM --platform=linux/x86_64 amazonlinux:2023@sha256:5fb6f4b9d73ddeb0e431c938bee25c69157a1e3c880a81ff72c43a8055628de5 as build_env
+
+FROM --platform=linux/x86_64 amazonlinux:2@sha256:5fb6f4b9d73ddeb0e431c938bee25c69157a1e3c880a81ff72c43a8055628de5 as base
+
+FROM python:3.7@sha256:5fb6f4b9d73ddeb0e431c938bee25c69157a1e3c880a81ff72c43a8055628de5
+
+RUN apt-get update && apt-get install -y vim
+
+WORKDIR /app
+
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023
