@@ -1,0 +1,12 @@
+name: "MegaLinter"
+github-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    actions: write
+    actions-reason: to cancel duplicate workflow runs
+    contents: read
+    contents-reason: to fetch commit details
+  #Reference: https://github.com/fkirc/skip-duplicate-actions/blob/b8076051474d234b9bf70d23464609b88d271060/src/main.ts#L424
+  #https://github.com/oxsecurity/megalinter/blob/09bd8a3aab852fd55f80b3c66dab3cc360c0b5b0/mega-linter-runner/lib/upgrade.js#L187
