@@ -2,4 +2,4 @@
 
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities to info@stepsecurity.io
+Please report security vulnerabilities to your manager.
