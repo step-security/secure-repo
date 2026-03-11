@@ -2,6 +2,7 @@ package dependabot
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,11 +23,36 @@ type Ecosystem struct {
 	PackageEcosystem string
 	Directory        string
 	Interval         string
+	CoolDown         *dbCoolDown
 }
 
 type UpdateDependabotConfigRequest struct {
-	Ecosystems []Ecosystem
-	Content    string
+	Ecosystems  []Ecosystem
+	Content     string
+	Subtractive bool
+}
+
+// dbCoolDown represents the cooldown block, which the upstream dependabot package does not support.
+type dbCoolDown struct {
+	DefaultDays     int      `yaml:"default-days,omitempty"`
+	SemverMajorDays int      `yaml:"semver-major-days,omitempty"`
+	SemverMinorDays int      `yaml:"semver-minor-days,omitempty"`
+	SemverPatchDays int      `yaml:"semver-patch-days,omitempty"`
+	Include         []string `yaml:"include,omitempty"`
+	Exclude         []string `yaml:"exclude,omitempty"`
+}
+
+// dbUpdate embeds the upstream dependabot.Update inline so all its fields are preserved,
+// and extends it with the cooldown block.
+type dbUpdate struct {
+	dependabot.Update `yaml:",inline"`
+	CoolDown          *dbCoolDown `yaml:"cooldown,omitempty"`
+}
+
+// dbConfig is the top-level dependabot config file structure backed by dbUpdate.
+type dbConfig struct {
+	Version int        `yaml:"version"`
+	Updates []dbUpdate `yaml:"updates"`
 }
 
 // getIndentation returns the indentation level of the first list found in a given YAML string.
@@ -70,8 +96,8 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	}
 
 	inputConfigFile := []byte(updateDependabotConfigRequest.Content)
-	configMetadata := dependabot.New()
-	err = configMetadata.Unmarshal(inputConfigFile)
+	var cfg dbConfig
+	err = yaml.Unmarshal(inputConfigFile, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal dependabot config: %v", err)
 	}
@@ -82,6 +108,20 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	response.FinalOutput = updateDependabotConfigRequest.Content
 	response.OriginalInput = updateDependabotConfigRequest.Content
 	response.IsChanged = false
+
+	// In subtractive mode, update only the specified fields of existing entries.
+	if updateDependabotConfigRequest.Subtractive {
+		if updateDependabotConfigRequest.Content == "" {
+			return response, nil
+		}
+		newContent, changed, err := updateSubtractiveFields(response.FinalOutput, updateDependabotConfigRequest.Ecosystems)
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply subtractive update: %v", err)
+		}
+		response.FinalOutput = newContent
+		response.IsChanged = changed
+		return response, nil
+	}
 
 	// Using strings.Builder for efficient string concatenation
 	var finalOutput strings.Builder
@@ -104,20 +144,22 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 
 	for _, Update := range updateDependabotConfigRequest.Ecosystems {
 		updateAlreadyExist := false
-		for _, update := range configMetadata.Updates {
-			if update.PackageEcosystem == Update.PackageEcosystem && update.Directory == Update.Directory {
+		for _, update := range cfg.Updates {
+			if update.PackageEcosystem == Update.PackageEcosystem && (update.Directory == Update.Directory || update.Directory == Update.Directory+"/") {
 				updateAlreadyExist = true
 				break
 			}
 		}
 
 		if !updateAlreadyExist {
-			item := dependabot.Update{
-				PackageEcosystem: Update.PackageEcosystem,
-				Directory:        Update.Directory,
-				Schedule:         dependabot.Schedule{Interval: Update.Interval},
+			item := dbUpdate{
+				Update: dependabot.Update{
+					PackageEcosystem: Update.PackageEcosystem,
+					Directory:        Update.Directory,
+					Schedule:         dependabot.Schedule{Interval: Update.Interval},
+				},
 			}
-			items := []dependabot.Update{item}
+			items := []dbUpdate{item}
 			addedItem, err := yaml.Marshal(items)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal update items: %v", err)
@@ -136,6 +178,79 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	response.FinalOutput = finalOutput.String()
 
 	return response, nil
+}
+
+// updateSubtractiveFields finds each ecosystem entry in the existing YAML config by
+// PackageEcosystem + Directory, then updates only the non-empty fields from the request,
+// leaving every other field of that entry unchanged.
+func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bool, error) {
+	var cfg dbConfig
+	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
+		return "", false, fmt.Errorf("failed to parse yaml: %w", err)
+	}
+
+	isChanged := false
+	for _, eco := range ecosystems {
+		for i, update := range cfg.Updates {
+			if update.PackageEcosystem != eco.PackageEcosystem {
+				continue
+			}
+			if update.Directory != eco.Directory && update.Directory != eco.Directory+"/" {
+				continue
+			}
+
+			// Found the matching entry — update only non-empty fields.
+			if eco.Interval != "" && cfg.Updates[i].Schedule.Interval != eco.Interval {
+				cfg.Updates[i].Schedule.Interval = eco.Interval
+				isChanged = true
+			}
+
+			if eco.CoolDown != nil {
+				if cfg.Updates[i].CoolDown == nil {
+					cfg.Updates[i].CoolDown = &dbCoolDown{}
+				}
+				existing := cfg.Updates[i].CoolDown
+				cd := eco.CoolDown
+				if cd.DefaultDays != 0 && existing.DefaultDays != cd.DefaultDays {
+					existing.DefaultDays = cd.DefaultDays
+					isChanged = true
+				}
+				if cd.SemverMajorDays != 0 && existing.SemverMajorDays != cd.SemverMajorDays {
+					existing.SemverMajorDays = cd.SemverMajorDays
+					isChanged = true
+				}
+				if cd.SemverMinorDays != 0 && existing.SemverMinorDays != cd.SemverMinorDays {
+					existing.SemverMinorDays = cd.SemverMinorDays
+					isChanged = true
+				}
+				if cd.SemverPatchDays != 0 && existing.SemverPatchDays != cd.SemverPatchDays {
+					existing.SemverPatchDays = cd.SemverPatchDays
+					isChanged = true
+				}
+				if len(cd.Include) > 0 {
+					existing.Include = cd.Include
+					isChanged = true
+				}
+				if len(cd.Exclude) > 0 {
+					existing.Exclude = cd.Exclude
+					isChanged = true
+				}
+			}
+			break
+		}
+	}
+
+	if !isChanged {
+		return content, false, nil
+	}
+
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(&cfg); err != nil {
+		return "", false, fmt.Errorf("failed to marshal yaml: %w", err)
+	}
+	return buf.String(), true, nil
 }
 
 // addIndentation adds a certain number of spaces to the start of each line in the input string.
