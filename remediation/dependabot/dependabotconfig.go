@@ -24,6 +24,7 @@ type Ecosystem struct {
 	Directory        string
 	Interval         string
 	CoolDown         *dbCoolDown
+	Groups           map[string]dbGroup
 }
 
 type UpdateDependabotConfigRequest struct {
@@ -42,11 +43,22 @@ type dbCoolDown struct {
 	Exclude         []string `yaml:"exclude,omitempty"`
 }
 
+// dbGroup represents a single entry in the groups block.
+type dbGroup struct {
+	AppliesTo      string   `yaml:"applies-to,omitempty"`
+	Patterns       []string `yaml:"patterns,omitempty"`
+	ExcludePatterns []string `yaml:"exclude-patterns,omitempty"`
+	DependencyType string   `yaml:"dependency-type,omitempty"`
+	UpdateTypes    []string `yaml:"update-types,omitempty"`
+	GroupBy        string   `yaml:"group-by,omitempty"`
+}
+
 // dbUpdate embeds the upstream dependabot.Update inline so all its fields are preserved,
-// and extends it with the cooldown block.
+// and extends it with the groups and cooldown blocks.
 type dbUpdate struct {
 	dependabot.Update `yaml:",inline"`
-	CoolDown          *dbCoolDown `yaml:"cooldown,omitempty"`
+	Groups            map[string]dbGroup `yaml:"groups,omitempty"`
+	CoolDown          *dbCoolDown        `yaml:"cooldown,omitempty"`
 }
 
 // dbConfig is the top-level dependabot config file structure backed by dbUpdate.
@@ -158,6 +170,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 					Directory:        Update.Directory,
 					Schedule:         dependabot.Schedule{Interval: Update.Interval},
 				},
+				Groups: Update.Groups,
 			}
 			items := []dbUpdate{item}
 			addedItem, err := yaml.Marshal(items)
@@ -234,6 +247,47 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bo
 				if len(cd.Exclude) > 0 {
 					existing.Exclude = cd.Exclude
 					isChanged = true
+				}
+			}
+
+			if len(eco.Groups) > 0 {
+				if cfg.Updates[i].Groups == nil {
+					cfg.Updates[i].Groups = make(map[string]dbGroup)
+				}
+				for groupName, ecoGroup := range eco.Groups {
+					existing, exists := cfg.Updates[i].Groups[groupName]
+					if !exists {
+						// New group — add it wholesale.
+						cfg.Updates[i].Groups[groupName] = ecoGroup
+						isChanged = true
+						continue
+					}
+					// Existing group — update only the non-empty fields.
+					if ecoGroup.AppliesTo != "" && existing.AppliesTo != ecoGroup.AppliesTo {
+						existing.AppliesTo = ecoGroup.AppliesTo
+						isChanged = true
+					}
+					if len(ecoGroup.Patterns) > 0 {
+						existing.Patterns = ecoGroup.Patterns
+						isChanged = true
+					}
+					if len(ecoGroup.ExcludePatterns) > 0 {
+						existing.ExcludePatterns = ecoGroup.ExcludePatterns
+						isChanged = true
+					}
+					if ecoGroup.DependencyType != "" && existing.DependencyType != ecoGroup.DependencyType {
+						existing.DependencyType = ecoGroup.DependencyType
+						isChanged = true
+					}
+					if len(ecoGroup.UpdateTypes) > 0 {
+						existing.UpdateTypes = ecoGroup.UpdateTypes
+						isChanged = true
+					}
+					if ecoGroup.GroupBy != "" && existing.GroupBy != ecoGroup.GroupBy {
+						existing.GroupBy = ecoGroup.GroupBy
+						isChanged = true
+					}
+					cfg.Updates[i].Groups[groupName] = existing
 				}
 			}
 			break
