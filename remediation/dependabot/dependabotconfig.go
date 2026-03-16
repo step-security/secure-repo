@@ -23,8 +23,8 @@ type Ecosystem struct {
 	PackageEcosystem string
 	Directory        string
 	Interval         string
-	CoolDown         *dbCoolDown
-	Groups           map[string]dbGroup
+	CoolDown         *CoolDown
+	Groups           map[string]Group
 }
 
 type UpdateDependabotConfigRequest struct {
@@ -33,8 +33,8 @@ type UpdateDependabotConfigRequest struct {
 	Subtractive bool
 }
 
-// dbCoolDown represents the cooldown block, which the upstream dependabot package does not support.
-type dbCoolDown struct {
+// CoolDown represents the cooldown block, which the upstream dependabot package does not support.
+type CoolDown struct {
 	DefaultDays     int      `yaml:"default-days,omitempty"`
 	SemverMajorDays int      `yaml:"semver-major-days,omitempty"`
 	SemverMinorDays int      `yaml:"semver-minor-days,omitempty"`
@@ -43,22 +43,22 @@ type dbCoolDown struct {
 	Exclude         []string `yaml:"exclude,omitempty"`
 }
 
-// dbGroup represents a single entry in the groups block.
-type dbGroup struct {
-	AppliesTo      string   `yaml:"applies-to,omitempty"`
-	Patterns       []string `yaml:"patterns,omitempty"`
+// Group represents a single entry in the groups block.
+type Group struct {
+	AppliesTo       string   `yaml:"applies-to,omitempty"`
+	Patterns        []string `yaml:"patterns,omitempty"`
 	ExcludePatterns []string `yaml:"exclude-patterns,omitempty"`
-	DependencyType string   `yaml:"dependency-type,omitempty"`
-	UpdateTypes    []string `yaml:"update-types,omitempty"`
-	GroupBy        string   `yaml:"group-by,omitempty"`
+	DependencyType  string   `yaml:"dependency-type,omitempty"`
+	UpdateTypes     []string `yaml:"update-types,omitempty"`
+	GroupBy         string   `yaml:"group-by,omitempty"`
 }
 
 // dbUpdate embeds the upstream dependabot.Update inline so all its fields are preserved,
 // and extends it with the groups and cooldown blocks.
 type dbUpdate struct {
 	dependabot.Update `yaml:",inline"`
-	Groups            map[string]dbGroup `yaml:"groups,omitempty"`
-	CoolDown          *dbCoolDown        `yaml:"cooldown,omitempty"`
+	Groups            map[string]Group `yaml:"groups,omitempty"`
+	CoolDown          *CoolDown        `yaml:"cooldown,omitempty"`
 }
 
 // dbConfig is the top-level dependabot config file structure backed by dbUpdate.
@@ -220,7 +220,7 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bo
 
 			if eco.CoolDown != nil {
 				if cfg.Updates[i].CoolDown == nil {
-					cfg.Updates[i].CoolDown = &dbCoolDown{}
+					cfg.Updates[i].CoolDown = &CoolDown{}
 				}
 				existing := cfg.Updates[i].CoolDown
 				cd := eco.CoolDown
@@ -252,7 +252,7 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bo
 
 			if len(eco.Groups) > 0 {
 				if cfg.Updates[i].Groups == nil {
-					cfg.Updates[i].Groups = make(map[string]dbGroup)
+					cfg.Updates[i].Groups = make(map[string]Group)
 				}
 				for groupName, ecoGroup := range eco.Groups {
 					existing, exists := cfg.Updates[i].Groups[groupName]
