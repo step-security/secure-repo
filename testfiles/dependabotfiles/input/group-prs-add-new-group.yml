@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      prod-deps:
+        patterns:
+          - "react*"
+        dependency-type: production
