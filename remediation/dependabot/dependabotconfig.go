@@ -53,18 +53,18 @@ type Group struct {
 	GroupBy         string   `yaml:"group-by,omitempty"`
 }
 
-// dbUpdate embeds the upstream dependabot.Update inline so all its fields are preserved,
+// Update embeds the upstream dependabot.Update inline so all its fields are preserved,
 // and extends it with the groups and cooldown blocks.
-type dbUpdate struct {
+type ExtendedUpdate struct {
 	dependabot.Update `yaml:",inline"`
 	Groups            map[string]Group `yaml:"groups,omitempty"`
 	CoolDown          *CoolDown        `yaml:"cooldown,omitempty"`
 }
 
-// dbConfig is the top-level dependabot config file structure backed by dbUpdate.
-type dbConfig struct {
-	Version int        `yaml:"version"`
-	Updates []dbUpdate `yaml:"updates"`
+// Config is the top-level dependabot config file structure backed by Update.
+type Config struct {
+	Version int              `yaml:"version"`
+	Updates []ExtendedUpdate `yaml:"updates"`
 }
 
 // getIndentation returns the indentation level of the first list found in a given YAML string.
@@ -108,7 +108,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	}
 
 	inputConfigFile := []byte(updateDependabotConfigRequest.Content)
-	var cfg dbConfig
+	var cfg Config
 	err = yaml.Unmarshal(inputConfigFile, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal dependabot config: %v", err)
@@ -164,7 +164,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		}
 
 		if !updateAlreadyExist {
-			item := dbUpdate{
+			item := ExtendedUpdate{
 				Update: dependabot.Update{
 					PackageEcosystem: Update.PackageEcosystem,
 					Directory:        Update.Directory,
@@ -172,7 +172,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 				},
 				Groups: Update.Groups,
 			}
-			items := []dbUpdate{item}
+			items := []ExtendedUpdate{item}
 			addedItem, err := yaml.Marshal(items)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal update items: %v", err)
@@ -197,7 +197,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 // PackageEcosystem + Directory, then updates only the non-empty fields from the request,
 // leaving every other field of that entry unchanged.
 func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bool, error) {
-	var cfg dbConfig
+	var cfg Config
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return "", false, fmt.Errorf("failed to parse yaml: %w", err)
 	}
