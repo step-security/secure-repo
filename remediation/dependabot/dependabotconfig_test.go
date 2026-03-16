@@ -110,7 +110,7 @@ func TestGroups(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					Groups: map[string]dbGroup{
+					Groups: map[string]Group{
 						"all": {Patterns: []string{"*"}},
 					},
 				},
@@ -126,7 +126,7 @@ func TestGroups(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					Groups: map[string]dbGroup{
+					Groups: map[string]Group{
 						"dev-deps": {
 							DependencyType: "development",
 							UpdateTypes:    []string{"minor", "patch"},
@@ -147,7 +147,7 @@ func TestGroups(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					Groups: map[string]dbGroup{
+					Groups: map[string]Group{
 						"all": {
 							Patterns:        []string{"angular*", "react*"},
 							ExcludePatterns: []string{"lodash", "axios"},
@@ -167,7 +167,7 @@ func TestGroups(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					Groups: map[string]dbGroup{
+					Groups: map[string]Group{
 						"all": {Patterns: []string{"*"}},
 					},
 				},
@@ -226,7 +226,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					CoolDown:         &dbCoolDown{DefaultDays: 5, SemverPatchDays: 2},
+					CoolDown:         &CoolDown{DefaultDays: 5, SemverPatchDays: 2},
 				},
 			},
 			isChanged: true,
@@ -238,7 +238,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &dbCoolDown{SemverMajorDays: 20},
+					CoolDown:         &CoolDown{SemverMajorDays: 20},
 				},
 			},
 			isChanged: true,
@@ -249,7 +249,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					CoolDown: &dbCoolDown{
+					CoolDown: &CoolDown{
 						Include: []string{"lodash", "axios"},
 						Exclude: []string{"express", "react"},
 					},
