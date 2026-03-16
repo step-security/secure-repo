@@ -23,8 +23,8 @@ type Ecosystem struct {
 	PackageEcosystem string
 	Directory        string
 	Interval         string
-	CoolDown         *CoolDown
-	Groups           map[string]Group
+	CoolDown         *CoolDown        `json:",omitempty"`
+	Groups           map[string]Group `json:",omitempty"`
 }
 
 type UpdateDependabotConfigRequest struct {
