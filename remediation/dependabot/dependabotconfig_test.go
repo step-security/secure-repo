@@ -211,6 +211,66 @@ func TestGroups(t *testing.T) {
 	}
 }
 
+func TestAdditiveCoolDown(t *testing.T) {
+	const inputDirectory = "../../testfiles/dependabotfiles/input"
+	const outputDirectory = "../../testfiles/dependabotfiles/output"
+
+	tests := []struct {
+		inputFileName  string
+		outputFileName string
+		ecosystems     []Ecosystem
+		isChanged      bool
+	}{
+		{
+			// Additive — new ecosystem added with CoolDown; CoolDown must appear in output.
+			inputFileName:  "additive-new-with-cooldown.yml",
+			outputFileName: "additive-new-with-cooldown.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown:         &CoolDown{DefaultDays: 5},
+				},
+			},
+			isChanged: true,
+		},
+	}
+
+	for _, test := range tests {
+		input, err := ioutil.ReadFile(path.Join(inputDirectory, test.inputFileName))
+		if err != nil {
+			log.Fatal(err)
+		}
+		req := UpdateDependabotConfigRequest{
+			Content:     string(input),
+			Ecosystems:  test.ecosystems,
+			Subtractive: false,
+		}
+		inputJSON, err := json.Marshal(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		output, err := UpdateDependabotConfig(string(inputJSON))
+		if err != nil {
+			t.Fatalf("Error not expected: %s", err)
+		}
+
+		expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, test.outputFileName))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if string(expectedOutput) != output.FinalOutput {
+			t.Errorf("test failed %s did not match expected output\n%s", test.outputFileName, output.FinalOutput)
+		}
+		if output.IsChanged != test.isChanged {
+			t.Errorf("test failed %s did not match IsChanged, Expected: %v Got: %v", test.outputFileName, test.isChanged, output.IsChanged)
+		}
+	}
+}
+
 func TestUpdateSubtractiveFields(t *testing.T) {
 	const inputDirectory = "../../testfiles/dependabotfiles/input"
 	const outputDirectory = "../../testfiles/dependabotfiles/output"
