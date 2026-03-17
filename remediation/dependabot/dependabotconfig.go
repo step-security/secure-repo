@@ -170,7 +170,8 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 					Directory:        Update.Directory,
 					Schedule:         dependabot.Schedule{Interval: Update.Interval},
 				},
-				Groups: Update.Groups,
+				Groups:   Update.Groups,
+				CoolDown: Update.CoolDown,
 			}
 			items := []ExtendedUpdate{item}
 			addedItem, err := yaml.Marshal(items)
