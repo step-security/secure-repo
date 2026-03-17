@@ -317,6 +317,49 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			},
 			isChanged: true,
 		},
+		{
+			// Subtractive — request has two ecosystems; github-actions exists and gets updated,
+			// npm does not exist in the config and is silently skipped.
+			fileName: "subtractive-multi-skip-missing.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "monthly",
+					CoolDown: &CoolDown{
+						DefaultDays:     14,
+						SemverMajorDays: 60,
+					},
+					Groups: map[string]Group{
+						"actions": {Patterns: []string{"*"}},
+					},
+				},
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown: &CoolDown{
+						DefaultDays:     7,
+						SemverMajorDays: 30,
+						SemverMinorDays: 14,
+						SemverPatchDays: 5,
+					},
+					Groups: map[string]Group{
+						"production-dependencies": {
+							AppliesTo:      "version-updates",
+							Patterns:       []string{"*"},
+							DependencyType: "production",
+						},
+						"dev-dependencies": {
+							AppliesTo:      "version-updates",
+							Patterns:       []string{"*"},
+							DependencyType: "development",
+						},
+					},
+				},
+			},
+			isChanged: true,
+		},
 	}
 
 	for _, test := range tests {

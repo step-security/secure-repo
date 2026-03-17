@@ -205,6 +205,7 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bo
 
 	isChanged := false
 	for _, eco := range ecosystems {
+		found := false
 		for i, update := range cfg.Updates {
 			if update.PackageEcosystem != eco.PackageEcosystem {
 				continue
@@ -212,6 +213,7 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bo
 			if update.Directory != eco.Directory && update.Directory != eco.Directory+"/" {
 				continue
 			}
+			found = true
 
 			// Found the matching entry — update only non-empty fields.
 			if eco.Interval != "" && cfg.Updates[i].Schedule.Interval != eco.Interval {
@@ -292,6 +294,20 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bo
 				}
 			}
 			break
+		}
+
+		if !found {
+			// Ecosystem not in config — add it as a new entry.
+			cfg.Updates = append(cfg.Updates, ExtendedUpdate{
+				Update: dependabot.Update{
+					PackageEcosystem: eco.PackageEcosystem,
+					Directory:        eco.Directory,
+					Schedule:         dependabot.Schedule{Interval: eco.Interval},
+				},
+				Groups:   eco.Groups,
+				CoolDown: eco.CoolDown,
+			})
+			isChanged = true
 		}
 	}
 
