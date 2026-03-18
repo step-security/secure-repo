@@ -126,7 +126,11 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		if updateDependabotConfigRequest.Content == "" {
 			return response, nil
 		}
-		newContent, changed, err := updateSubtractiveFields(response.FinalOutput, updateDependabotConfigRequest.Ecosystems)
+		subtractiveIndent, err := getIndentation(string(inputConfigFile))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get indentation: %v", err)
+		}
+		newContent, changed, err := updateSubtractiveFields(response.FinalOutput, updateDependabotConfigRequest.Ecosystems, subtractiveIndent-1)
 		if err != nil {
 			return nil, fmt.Errorf("failed to apply subtractive update: %v", err)
 		}
@@ -197,7 +201,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 // updateSubtractiveFields finds each ecosystem entry in the existing YAML config by
 // PackageEcosystem + Directory, then updates only the non-empty fields from the request,
 // leaving every other field of that entry unchanged.
-func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bool, error) {
+func updateSubtractiveFields(content string, ecosystems []Ecosystem, indent int) (string, bool, error) {
 	var cfg Config
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return "", false, fmt.Errorf("failed to parse yaml: %w", err)
@@ -317,7 +321,7 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem) (string, bo
 
 	var buf bytes.Buffer
 	enc := yaml.NewEncoder(&buf)
-	enc.SetIndent(2)
+	enc.SetIndent(indent)
 	if err := enc.Encode(&cfg); err != nil {
 		return "", false, fmt.Errorf("failed to marshal yaml: %w", err)
 	}
