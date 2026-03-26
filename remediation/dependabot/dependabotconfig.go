@@ -339,13 +339,15 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, indent int)
 			CoolDown: eco.CoolDown,
 		}
 		items := []ExtendedUpdate{item}
-		addedItem, err := yaml.Marshal(items)
-		if err != nil {
+		var itemBuf bytes.Buffer
+		itemEnc := yaml.NewEncoder(&itemBuf)
+		itemEnc.SetIndent(indent)
+		if err := itemEnc.Encode(items); err != nil {
 			return "", false, fmt.Errorf("failed to marshal update items: %w", err)
 		}
 		// addIndentation expects a 1-indexed column; indent is already the space
 		// count, so pass indent+1.
-		data, err := addIndentation(string(addedItem), indent+1)
+		data, err := addIndentation(itemBuf.String(), indent+1)
 		if err != nil {
 			return "", false, fmt.Errorf("failed to add indentation: %w", err)
 		}
