@@ -11,6 +11,7 @@ updates:
     cooldown:
       default-days: 14
       semver-major-days: 60
+
   - package-ecosystem: npm
     directory: /
     schedule:
