@@ -11,21 +11,22 @@ updates:
     cooldown:
       default-days: 14
       semver-major-days: 60
+
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     groups:
       dev-dependencies:
-        applies-to: version-updates
-        patterns:
-          - '*'
-        dependency-type: development
+          applies-to: version-updates
+          patterns:
+              - '*'
+          dependency-type: development
       production-dependencies:
-        applies-to: version-updates
-        patterns:
-          - '*'
-        dependency-type: production
+          applies-to: version-updates
+          patterns:
+              - '*'
+          dependency-type: production
     cooldown:
       default-days: 7
       semver-major-days: 30
