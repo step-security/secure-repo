@@ -23,7 +23,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	pinnedActions, addedHardenRunner, addedPermissions, replacedMaintainedActions, replacedRunnerLabels := false, false, false, false, false
 	ignoreMissingKBs := false
 	enableLogging := false
-	addEmptyTopLevelPermissions := false
+	addEmptyTopLevelPermissions := true
 	skipHardenRunnerForContainers := false
 	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap, runnerLabelMap := []string{}, false, map[string]string{}, map[string]string{}, map[string]string{}
 
@@ -85,8 +85,8 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		enableLogging = true
 	}
 
-	if queryStringParams["addEmptyTopLevelPermissions"] == "true" {
-		addEmptyTopLevelPermissions = true
+	if queryStringParams["addEmptyTopLevelPermissions"] == "false" {
+		addEmptyTopLevelPermissions = false
 	}
 
 	if queryStringParams["skipHardenRunnerForContainers"] == "true" {

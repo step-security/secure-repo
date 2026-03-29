@@ -26,7 +26,7 @@ export async function getResponse (payload : any){
     }
   });
 
-  const response = await apiClient.post<SecureWorkflowReponse>('/v1/secure-workflow?addHardenRunner=false&pinActions=false&', payload);
+  const response = await apiClient.post<SecureWorkflowReponse>('/v1/secure-workflow?addHardenRunner=false&pinActions=false&addEmptyTopLevelPermissions=true', payload);
   const user = response.data;
   return user;
 };

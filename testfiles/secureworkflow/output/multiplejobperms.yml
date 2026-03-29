@@ -25,8 +25,7 @@ on:
         description: 'Expected checksum of output binary file'
         required: true
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   build:
