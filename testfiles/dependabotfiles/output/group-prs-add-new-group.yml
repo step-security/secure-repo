@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      dev-deps:
+        patterns:
+          - eslint*
+          - jest*
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      prod-deps:
+        patterns:
+          - react*
+        dependency-type: production

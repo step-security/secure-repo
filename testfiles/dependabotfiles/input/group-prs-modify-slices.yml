@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      all:
+        patterns:
+          - "react*"
+          - "vue*"
+        exclude-patterns:
+          - "lodash"
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+          - major

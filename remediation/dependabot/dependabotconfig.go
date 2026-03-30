@@ -2,6 +2,7 @@ package dependabot
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,11 +23,48 @@ type Ecosystem struct {
 	PackageEcosystem string
 	Directory        string
 	Interval         string
+	CoolDown         *CoolDown        `json:",omitempty"`
+	Groups           map[string]Group `json:",omitempty"`
 }
 
 type UpdateDependabotConfigRequest struct {
-	Ecosystems []Ecosystem
-	Content    string
+	Ecosystems  []Ecosystem
+	Content     string
+	Subtractive bool
+}
+
+// CoolDown represents the cooldown block, which the upstream dependabot package does not support.
+type CoolDown struct {
+	DefaultDays     int      `yaml:"default-days,omitempty"`
+	SemverMajorDays int      `yaml:"semver-major-days,omitempty"`
+	SemverMinorDays int      `yaml:"semver-minor-days,omitempty"`
+	SemverPatchDays int      `yaml:"semver-patch-days,omitempty"`
+	Include         []string `yaml:"include,omitempty"`
+	Exclude         []string `yaml:"exclude,omitempty"`
+}
+
+// Group represents a single entry in the groups block.
+type Group struct {
+	AppliesTo       string   `yaml:"applies-to,omitempty"`
+	Patterns        []string `yaml:"patterns,omitempty"`
+	ExcludePatterns []string `yaml:"exclude-patterns,omitempty"`
+	DependencyType  string   `yaml:"dependency-type,omitempty"`
+	UpdateTypes     []string `yaml:"update-types,omitempty"`
+	GroupBy         string   `yaml:"group-by,omitempty"`
+}
+
+// Update embeds the upstream dependabot.Update inline so all its fields are preserved,
+// and extends it with the groups and cooldown blocks.
+type ExtendedUpdate struct {
+	dependabot.Update `yaml:",inline"`
+	Groups            map[string]Group `yaml:"groups,omitempty"`
+	CoolDown          *CoolDown        `yaml:"cooldown,omitempty"`
+}
+
+// Config is the top-level dependabot config file structure backed by Update.
+type Config struct {
+	Version int              `yaml:"version"`
+	Updates []ExtendedUpdate `yaml:"updates"`
 }
 
 // getIndentation returns the indentation level of the first list found in a given YAML string.
@@ -70,8 +108,8 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	}
 
 	inputConfigFile := []byte(updateDependabotConfigRequest.Content)
-	configMetadata := dependabot.New()
-	err = configMetadata.Unmarshal(inputConfigFile)
+	var cfg Config
+	err = yaml.Unmarshal(inputConfigFile, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal dependabot config: %v", err)
 	}
@@ -82,6 +120,24 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	response.FinalOutput = updateDependabotConfigRequest.Content
 	response.OriginalInput = updateDependabotConfigRequest.Content
 	response.IsChanged = false
+
+	// In subtractive mode, update only the specified fields of existing entries.
+	if updateDependabotConfigRequest.Subtractive {
+		if updateDependabotConfigRequest.Content == "" {
+			return response, nil
+		}
+		subtractiveIndent, err := getIndentation(string(inputConfigFile))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get indentation: %v", err)
+		}
+		newContent, changed, err := updateSubtractiveFields(response.FinalOutput, updateDependabotConfigRequest.Ecosystems, subtractiveIndent-1)
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply subtractive update: %v", err)
+		}
+		response.FinalOutput = newContent
+		response.IsChanged = changed
+		return response, nil
+	}
 
 	// Using strings.Builder for efficient string concatenation
 	var finalOutput strings.Builder
@@ -104,20 +160,24 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 
 	for _, Update := range updateDependabotConfigRequest.Ecosystems {
 		updateAlreadyExist := false
-		for _, update := range configMetadata.Updates {
-			if update.PackageEcosystem == Update.PackageEcosystem && update.Directory == Update.Directory {
+		for _, update := range cfg.Updates {
+			if update.PackageEcosystem == Update.PackageEcosystem && (update.Directory == Update.Directory || update.Directory == Update.Directory+"/") {
 				updateAlreadyExist = true
 				break
 			}
 		}
 
 		if !updateAlreadyExist {
-			item := dependabot.Update{
-				PackageEcosystem: Update.PackageEcosystem,
-				Directory:        Update.Directory,
-				Schedule:         dependabot.Schedule{Interval: Update.Interval},
+			item := ExtendedUpdate{
+				Update: dependabot.Update{
+					PackageEcosystem: Update.PackageEcosystem,
+					Directory:        Update.Directory,
+					Schedule:         dependabot.Schedule{Interval: Update.Interval},
+				},
+				Groups:   Update.Groups,
+				CoolDown: Update.CoolDown,
 			}
-			items := []dependabot.Update{item}
+			items := []ExtendedUpdate{item}
 			addedItem, err := yaml.Marshal(items)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal update items: %v", err)
@@ -136,6 +196,165 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	response.FinalOutput = finalOutput.String()
 
 	return response, nil
+}
+
+// updateSubtractiveFields finds each ecosystem entry in the existing YAML config by
+// PackageEcosystem + Directory, then updates only the non-empty fields from the request,
+func updateSubtractiveFields(content string, ecosystems []Ecosystem, indent int) (string, bool, error) {
+	var cfg Config
+	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
+		return "", false, fmt.Errorf("failed to parse yaml: %w", err)
+	}
+
+	existingChanged := false
+	var toAdd []Ecosystem
+
+	for _, eco := range ecosystems {
+		found := false
+		for i, update := range cfg.Updates {
+			if update.PackageEcosystem != eco.PackageEcosystem {
+				continue
+			}
+			if update.Directory != eco.Directory && update.Directory != eco.Directory+"/" {
+				continue
+			}
+			found = true
+
+			// Found the matching entry — update only non-empty fields.
+			if eco.Interval != "" && cfg.Updates[i].Schedule.Interval != eco.Interval {
+				cfg.Updates[i].Schedule.Interval = eco.Interval
+				existingChanged = true
+			}
+
+			if eco.CoolDown != nil {
+				if cfg.Updates[i].CoolDown == nil {
+					cfg.Updates[i].CoolDown = &CoolDown{}
+				}
+				existing := cfg.Updates[i].CoolDown
+				cd := eco.CoolDown
+				if cd.DefaultDays != 0 && existing.DefaultDays != cd.DefaultDays {
+					existing.DefaultDays = cd.DefaultDays
+					existingChanged = true
+				}
+				if cd.SemverMajorDays != 0 && existing.SemverMajorDays != cd.SemverMajorDays {
+					existing.SemverMajorDays = cd.SemverMajorDays
+					existingChanged = true
+				}
+				if cd.SemverMinorDays != 0 && existing.SemverMinorDays != cd.SemverMinorDays {
+					existing.SemverMinorDays = cd.SemverMinorDays
+					existingChanged = true
+				}
+				if cd.SemverPatchDays != 0 && existing.SemverPatchDays != cd.SemverPatchDays {
+					existing.SemverPatchDays = cd.SemverPatchDays
+					existingChanged = true
+				}
+				if len(cd.Include) > 0 {
+					existing.Include = cd.Include
+					existingChanged = true
+				}
+				if len(cd.Exclude) > 0 {
+					existing.Exclude = cd.Exclude
+					existingChanged = true
+				}
+			}
+
+			if len(eco.Groups) > 0 {
+				if cfg.Updates[i].Groups == nil {
+					cfg.Updates[i].Groups = make(map[string]Group)
+				}
+				for groupName, ecoGroup := range eco.Groups {
+					existing, exists := cfg.Updates[i].Groups[groupName]
+					if !exists {
+						// New group — add it wholesale.
+						cfg.Updates[i].Groups[groupName] = ecoGroup
+						existingChanged = true
+						continue
+					}
+					// Existing group — update only the non-empty fields.
+					if ecoGroup.AppliesTo != "" && existing.AppliesTo != ecoGroup.AppliesTo {
+						existing.AppliesTo = ecoGroup.AppliesTo
+						existingChanged = true
+					}
+					if len(ecoGroup.Patterns) > 0 {
+						existing.Patterns = ecoGroup.Patterns
+						existingChanged = true
+					}
+					if len(ecoGroup.ExcludePatterns) > 0 {
+						existing.ExcludePatterns = ecoGroup.ExcludePatterns
+						existingChanged = true
+					}
+					if ecoGroup.DependencyType != "" && existing.DependencyType != ecoGroup.DependencyType {
+						existing.DependencyType = ecoGroup.DependencyType
+						existingChanged = true
+					}
+					if len(ecoGroup.UpdateTypes) > 0 {
+						existing.UpdateTypes = ecoGroup.UpdateTypes
+						existingChanged = true
+					}
+					if ecoGroup.GroupBy != "" && existing.GroupBy != ecoGroup.GroupBy {
+						existing.GroupBy = ecoGroup.GroupBy
+						existingChanged = true
+					}
+					cfg.Updates[i].Groups[groupName] = existing
+				}
+			}
+			break
+		}
+
+		if !found {
+			toAdd = append(toAdd, eco)
+		}
+	}
+
+	if !existingChanged && len(toAdd) == 0 {
+		return content, false, nil
+	}
+
+	// Re-serialize existing entries only when they were actually modified;
+	// otherwise preserve the original content so formatting is not disturbed.
+	var finalOutput strings.Builder
+	if existingChanged {
+		var buf bytes.Buffer
+		enc := yaml.NewEncoder(&buf)
+		enc.SetIndent(indent)
+		if err := enc.Encode(&cfg); err != nil {
+			return "", false, fmt.Errorf("failed to marshal yaml: %w", err)
+		}
+		finalOutput.WriteString(buf.String())
+	} else {
+		finalOutput.WriteString(content)
+	}
+
+	// Append new ecosystems using the same additive approach: marshal each entry
+	// individually and WriteString with addIndentation so a blank line is
+	// inserted before every new entry.
+	for _, eco := range toAdd {
+		item := ExtendedUpdate{
+			Update: dependabot.Update{
+				PackageEcosystem: eco.PackageEcosystem,
+				Directory:        eco.Directory,
+				Schedule:         dependabot.Schedule{Interval: eco.Interval},
+			},
+			Groups:   eco.Groups,
+			CoolDown: eco.CoolDown,
+		}
+		items := []ExtendedUpdate{item}
+		var itemBuf bytes.Buffer
+		itemEnc := yaml.NewEncoder(&itemBuf)
+		itemEnc.SetIndent(indent)
+		if err := itemEnc.Encode(items); err != nil {
+			return "", false, fmt.Errorf("failed to marshal update items: %w", err)
+		}
+		// addIndentation expects a 1-indexed column; indent is already the space
+		// count, so pass indent+1.
+		data, err := addIndentation(itemBuf.String(), indent+1)
+		if err != nil {
+			return "", false, fmt.Errorf("failed to add indentation: %w", err)
+		}
+		finalOutput.WriteString(data)
+	}
+
+	return finalOutput.String(), true, nil
 }
 
 // addIndentation adds a certain number of spaces to the start of each line in the input string.
