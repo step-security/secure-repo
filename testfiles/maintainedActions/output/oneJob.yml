@@ -12,7 +12,7 @@ jobs:
       - uses: step-security/skip-duplicate-actions@v5
         with:
           do_not_skip: '["release"]'
-      - uses: step-security/git-restore-mtime-action@v2
+      - uses: step-security/git-restore-mtime-action@v1
         with:
           pattern: '**/*'
       - uses: step-security/actions-cache/restore@v1
