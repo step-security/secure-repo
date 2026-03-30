@@ -228,20 +228,20 @@ func isAbsolute(ref string) bool {
 	parts := strings.Split(ref, "@")
 	last := parts[len(parts)-1]
 
-	if len(last) == 40 && isAllHex(last) {
+	if len(last) == 40 && IsAllHex(last) {
 		return true
 	}
 
-	if len(last) == 71 && last[:6] == "sha256" && isAllHex(last[7:]) {
+	if len(last) == 71 && last[:6] == "sha256" && IsAllHex(last[7:]) {
 		return true
 	}
 
 	return false
 }
 
-// isAllHex returns true if the given string is all hex characters, false
+// IsAllHex returns true if the given string is all hex characters, false
 // otherwise.
-func isAllHex(s string) bool {
+func IsAllHex(s string) bool {
 	for _, ch := range s {
 		if (ch < '0' || ch > '9') && (ch < 'a' || ch > 'f') && (ch < 'A' || ch > 'F') {
 			return false
