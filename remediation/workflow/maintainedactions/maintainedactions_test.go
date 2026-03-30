@@ -16,21 +16,38 @@ func TestReplaceActions(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	// Mock GitHub API responses for checking major version tags on forks
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/ref/tags/v5",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5","object":{"sha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","type":"commit"}}`))
+	// Mock GitHub API responses for getting latest releases
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v5.5.5",
+			"name": "v5.5.5",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/ref/tags/v3",
-		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v5.3.2",
+			"name": "v5.3.2",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/ref/tags/v5",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5","object":{"sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/releases/latest",
+		httpmock.NewStringResponder(200, `{
+			"tag_name": "v2.1.0",
+			"name": "v2.1.0",
+			"body": "Release notes",
+			"created_at": "2023-01-01T00:00:00Z"
+		}`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/ref/tags/v1",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1","object":{"sha":"cccccccccccccccccccccccccccccccccccccccc","type":"commit"}}`))
-
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/ref/tags/v1",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1","object":{"sha":"dddddddddddddddddddddddddddddddddddddddd","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/releases/latest",
+		httpmock.NewStringResponder(200, `{
+				"tag_name": "v1.0.0",
+				"name": "v1.0.0",
+				"body": "Release notes",
+				"created_at": "2023-01-01T00:00:00Z"
+			}`))
 
 	tests := []struct {
 		name        string
@@ -65,13 +82,6 @@ func TestReplaceActions(t *testing.T) {
 			inputFile:   "compositeAction.yml",
 			outputFile:  "compositeAction.yml",
 			wantUpdated: true,
-			wantErr:     false,
-		},
-		{
-			name:        "no replacement when fork does not have matching major version",
-			inputFile:   "noMatchingMajorVersion.yml",
-			outputFile:  "noMatchingMajorVersion.yml",
-			wantUpdated: false,
 			wantErr:     false,
 		},
 	}
@@ -114,13 +124,4 @@ func TestReplaceActions(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestSome(t *testing.T) {
-
-	version, err := GetMajorTagFromSHA("tj-actions/changed-files", "00f80efd45353091691a96565de08f4f50c685f8")
-	if err != nil {
-		t.Errorf("GetMajorTagFromSHA() error = %v", err)
-	}
-	t.Logf("GetMajorTagFromSHA() version = %v", version)
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"github.com/step-security/secure-repo/remediation/workflow/permissions"
-	"github.com/step-security/secure-repo/remediation/workflow/pin"
 	"gopkg.in/yaml.v3"
 )
 
@@ -77,33 +76,19 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 			continue
 		}
 		for stepIdx, step := range job.Steps {
+			// fmt.Println("step ", step.Uses)
 			actionName := strings.Split(step.Uses, "@")[0]
 			if newAction, ok := actionMap[actionName]; ok {
-				parts := strings.SplitN(step.Uses, "@", 2)
-				if len(parts) < 2 || parts[1] == "" {
-					continue
-				}
-				ref := parts[1]
-				var version string
-				if len(ref) == 40 && pin.IsAllHex(ref) {
-					version, err = GetMajorTagFromSHA(actionName, ref)
-					if err != nil || version == "" {
-						continue
-					}
-				} else {
-					version = ref
-				}
-				majorVersion := getMajorVersion(version)
-				tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
-				if err != nil || !exists {
-					continue
+				latestVersion, err := GetLatestRelease(newAction)
+				if err != nil {
+					return inputYaml, updated, fmt.Errorf("unable to get latest release: %v", err)
 				}
 				replacements = append(replacements, replacement{
 					jobName:        jobName,
 					stepIdx:        stepIdx,
 					newAction:      newAction,
 					originalAction: step.Uses,
-					latestVersion:  tag,
+					latestVersion:  latestVersion,
 				})
 			}
 		}
@@ -115,31 +100,16 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 			if len(step.Uses) > 0 {
 				actionName := strings.Split(step.Uses, "@")[0]
 				if newAction, ok := actionMap[actionName]; ok {
-					parts := strings.SplitN(step.Uses, "@", 2)
-					if len(parts) < 2 || parts[1] == "" {
-						continue
-					}
-					ref := parts[1]
-					var version string
-					if len(ref) == 40 && pin.IsAllHex(ref) {
-						version, err = GetMajorTagFromSHA(actionName, ref)
-						if err != nil || version == "" {
-							continue
-						}
-					} else {
-						version = ref
-					}
-					majorVersion := getMajorVersion(version)
-					tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
-					if err != nil || !exists {
-						continue
+					latestVersion, err := GetLatestRelease(newAction)
+					if err != nil {
+						return inputYaml, updated, fmt.Errorf("unable to get latest release: %v", err)
 					}
 					replacements = append(replacements, replacement{
-						jobName:        "composite",
+						jobName:        "composite", // special marker for composite actions
 						stepIdx:        stepIdx,
 						newAction:      newAction,
 						originalAction: step.Uses,
-						latestVersion:  tag,
+						latestVersion:  latestVersion,
 					})
 				}
 			}
