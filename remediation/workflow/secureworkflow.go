@@ -26,6 +26,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	addEmptyTopLevelPermissions := false
 	skipHardenRunnerForContainers := false
 	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap, runnerLabelMap := []string{}, false, map[string]string{}, map[string]string{}, map[string]string{}
+	hardenRunnerConfig := hardenrunner.HardenRunnerConfig{}
 
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
@@ -52,7 +53,13 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			runnerLabelMap = v
 		}
 	}
-
+	if len(params) > 5 {
+		if v, ok := params[5].(string); ok {
+			if len(v) > 0 {
+				hardenRunnerConfig.Config = v
+			}
+		}
+	}
 	if queryStringParams["pinActions"] == "false" {
 		pinActions = false
 	}
@@ -198,7 +205,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 				log.Printf("Harden runner action is exempted from pinning")
 			}
 		}
-		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, HardenRunnerActionPathWithTag, pinHardenRunner, pinToImmutable, skipHardenRunnerForContainers)
+		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, hardenRunnerConfig, pinHardenRunner, pinToImmutable, skipHardenRunnerForContainers)
 		if enableLogging {
 			log.Printf("Added harden runner: %v", addedHardenRunner)
 		}
