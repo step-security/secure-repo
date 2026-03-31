@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const defaultTestConfig = "- name: Harden the runner (Audit all outbound calls)\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: audit"
+const defaultTestConfig = DefaultHardenRunnerConfig
 
 func TestAddAction(t *testing.T) {
 	type args struct {

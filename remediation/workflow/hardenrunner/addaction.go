@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	HardenRunnerActionPath = "step-security/harden-runner"
-	HardenRunnerActionName = "Harden the runner (Audit all outbound calls)"
+	HardenRunnerActionPath    = "step-security/harden-runner"
+	HardenRunnerActionName    = "Harden the runner (Audit all outbound calls)"
+	DefaultHardenRunnerConfig = "- name: Harden the runner (Audit all outbound calls)\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: audit"
 )
 
 type HardenRunnerConfig struct {
@@ -33,6 +34,9 @@ func getActionFromConfig(config HardenRunnerConfig) string {
 }
 
 func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActions, pinToImmutable bool, skipContainerJobs bool) (string, bool, error) {
+	if hardenRunnerConfig.Config == "" {
+		hardenRunnerConfig.Config = DefaultHardenRunnerConfig
+	}
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
