@@ -54,10 +54,8 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		}
 	}
 	if len(params) > 5 {
-		if v, ok := params[5].(string); ok {
-			if len(v) > 0 {
-				hardenRunnerConfig.Config = v
-			}
+		if v, ok := params[5].(hardenrunner.HardenRunnerConfig); ok {
+			hardenRunnerConfig = v
 		}
 	}
 	if queryStringParams["pinActions"] == "false" {
