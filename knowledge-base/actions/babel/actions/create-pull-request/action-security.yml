@@ -1,0 +1,10 @@
+name: Open a Pull Request
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to create PRs
+    issues: write
+    issues-reason: to add labels
