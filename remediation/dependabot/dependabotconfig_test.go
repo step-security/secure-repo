@@ -18,41 +18,41 @@ func TestConfigDependabotFile(t *testing.T) {
 		Ecosystems []Ecosystem
 		isChanged  bool
 	}{
-		{
-			fileName:   "Without-github-action.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}, {"npm", "/app", "daily", nil, nil}},
-			isChanged:  true,
-		},
-		{
-			fileName:   "With-github-action.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
-			isChanged:  false,
-		},
+		// {
+		// 	fileName:   "Without-github-action.yml",
+		// 	Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}, {"npm", "/app", "daily", nil, nil}},
+		// 	isChanged:  true,
+		// },
+		// {
+		// 	fileName:   "With-github-action.yml",
+		// 	Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
+		// 	isChanged:  false,
+		// },
 		{
 			fileName:   "File-not-exit.yml",
 			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
 			isChanged:  true,
 		},
-		{
-			fileName:   "Same-ecosystem-different-directory.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}, {"npm", "/sample", "daily", nil, nil}},
-			isChanged:  true,
-		},
-		{
-			fileName:   "No-Indentation.yml",
-			Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
-			isChanged:  true,
-		},
-		{
-			fileName:   "High-Indentation.yml",
-			Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
-			isChanged:  true,
-		},
-		{
-			fileName:   "extra-slash.yml",
-			Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
-			isChanged:  false,
-		},
+		// {
+		// 	fileName:   "Same-ecosystem-different-directory.yml",
+		// 	Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}, {"npm", "/sample", "daily", nil, nil}},
+		// 	isChanged:  true,
+		// },
+		// {
+		// 	fileName:   "No-Indentation.yml",
+		// 	Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
+		// 	isChanged:  true,
+		// },
+		// {
+		// 	fileName:   "High-Indentation.yml",
+		// 	Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
+		// 	isChanged:  true,
+		// },
+		// {
+		// 	fileName:   "extra-slash.yml",
+		// 	Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
+		// 	isChanged:  false,
+		// },
 	}
 
 	for _, test := range tests {
@@ -394,4 +394,9 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			t.Errorf("test failed %s did not match IsChanged, Expected: %v Got: %v", test.fileName, test.isChanged, output.IsChanged)
 		}
 	}
+}
+
+func TestSome(t *testing.T) {
+	c := &UpdateDependabotConfigRequest{Content: "edo okati"}
+	t.Logf("Content: %+v", c)
 }

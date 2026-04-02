@@ -35,22 +35,22 @@ type UpdateDependabotConfigRequest struct {
 
 // CoolDown represents the cooldown block, which the upstream dependabot package does not support.
 type CoolDown struct {
-	DefaultDays     int      `yaml:"default-days,omitempty"`
-	SemverMajorDays int      `yaml:"semver-major-days,omitempty"`
-	SemverMinorDays int      `yaml:"semver-minor-days,omitempty"`
-	SemverPatchDays int      `yaml:"semver-patch-days,omitempty"`
-	Include         []string `yaml:"include,omitempty"`
-	Exclude         []string `yaml:"exclude,omitempty"`
+	DefaultDays     int      `yaml:"default-days,omitempty" json:"default-days,omitempty"`
+	SemverMajorDays int      `yaml:"semver-major-days,omitempty" json:"semver-major-days,omitempty"`
+	SemverMinorDays int      `yaml:"semver-minor-days,omitempty" json:"semver-minor-days,omitempty"`
+	SemverPatchDays int      `yaml:"semver-patch-days,omitempty" json:"semver-patch-days,omitempty"`
+	Include         []string `yaml:"include,omitempty" json:"include,omitempty"`
+	Exclude         []string `yaml:"exclude,omitempty" json:"exclude,omitempty"`
 }
 
 // Group represents a single entry in the groups block.
 type Group struct {
-	AppliesTo       string   `yaml:"applies-to,omitempty"`
-	Patterns        []string `yaml:"patterns,omitempty"`
-	ExcludePatterns []string `yaml:"exclude-patterns,omitempty"`
-	DependencyType  string   `yaml:"dependency-type,omitempty"`
-	UpdateTypes     []string `yaml:"update-types,omitempty"`
-	GroupBy         string   `yaml:"group-by,omitempty"`
+	AppliesTo       string   `yaml:"applies-to,omitempty" json:"applies-to,omitempty"`
+	Patterns        []string `yaml:"patterns,omitempty" json:"patterns,omitempty"`
+	ExcludePatterns []string `yaml:"exclude-patterns,omitempty" json:"exclude-patterns,omitempty"`
+	DependencyType  string   `yaml:"dependency-type,omitempty" json:"dependency-type,omitempty"`
+	UpdateTypes     []string `yaml:"update-types,omitempty" json:"update-types,omitempty"`
+	GroupBy         string   `yaml:"group-by,omitempty" json:"group-by,omitempty"`
 }
 
 // Update embeds the upstream dependabot.Update inline so all its fields are preserved,
