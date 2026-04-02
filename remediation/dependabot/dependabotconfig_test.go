@@ -395,8 +395,3 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 		}
 	}
 }
-
-func TestSome(t *testing.T) {
-	c := &UpdateDependabotConfigRequest{Content: "edo okati"}
-	t.Logf("Content: %+v", c)
-}
