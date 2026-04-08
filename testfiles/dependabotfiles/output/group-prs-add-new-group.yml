@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: daily
     groups:
+      prod-deps:
+        patterns:
+          - "react*"
+        dependency-type: production
       dev-deps:
         patterns:
           - eslint*
@@ -13,7 +17,3 @@ updates:
         update-types:
           - minor
           - patch
-      prod-deps:
-        patterns:
-          - react*
-        dependency-type: production

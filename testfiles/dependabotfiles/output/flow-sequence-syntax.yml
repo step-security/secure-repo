@@ -1,0 +1,23 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      all:
+        applies-to: version-updates
+        patterns: [lodash, axios]
+    cooldown:
+      default-days: 5
+
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    groups:
+      all:
+        patterns:
+          - requests
+          - flask
