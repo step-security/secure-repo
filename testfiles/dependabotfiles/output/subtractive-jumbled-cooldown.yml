@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      semver-patch-days: 7
+      semver-major-days: 30
+      default-days: 3
+      exclude:
+        - express
+        - webpack
+      semver-minor-days: 14
+      include:
+        - lodash
+        - axios
+        - react

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 
 	dependabot "github.com/paulvollmer/dependabot-config-go"
@@ -130,7 +132,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		if err != nil {
 			return nil, fmt.Errorf("failed to get indentation: %v", err)
 		}
-		newContent, changed, err := updateSubtractiveFields(response.FinalOutput, updateDependabotConfigRequest.Ecosystems, subtractiveIndent-1)
+		newContent, changed, err := updateSubtractiveFields(response.FinalOutput, updateDependabotConfigRequest.Ecosystems, cfg, subtractiveIndent-1)
 		if err != nil {
 			return nil, fmt.Errorf("failed to apply subtractive update: %v", err)
 		}
@@ -198,137 +200,578 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	return response, nil
 }
 
-// updateSubtractiveFields finds each ecosystem entry in the existing YAML config by
-// PackageEcosystem + Directory, then updates only the non-empty fields from the request,
-func updateSubtractiveFields(content string, ecosystems []Ecosystem, indent int) (string, bool, error) {
-	var cfg Config
-	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
-		return "", false, fmt.Errorf("failed to parse yaml: %w", err)
+// findMappingValue returns the value node for the given key inside a YAML mapping node.
+func findMappingValue(node *yaml.Node, key string) *yaml.Node {
+	if node == nil || node.Kind != yaml.MappingNode {
+		return nil
+	}
+	for i := 0; i+1 < len(node.Content); i += 2 {
+		if node.Content[i].Value == key {
+			return node.Content[i+1]
+		}
+	}
+	return nil
+}
+
+// findLastLine returns the maximum 1-indexed line number among node and all its descendants.
+func findLastLine(node *yaml.Node) int {
+	last := node.Line
+	for _, child := range node.Content {
+		if l := findLastLine(child); l > last {
+			last = l
+		}
+	}
+	return last
+}
+
+// getChildIndent returns the 0-indexed column of the first key in a mapping node.
+func getChildIndent(mappingNode *yaml.Node) int {
+	if mappingNode.Kind == yaml.MappingNode && len(mappingNode.Content) > 0 {
+		return mappingNode.Content[0].Column - 1
+	}
+	return 0
+}
+
+// marshalYAMLValue returns the YAML-safe representation of a scalar string,
+// adding quotes when needed (e.g. '*' becomes '\'*\”).
+func marshalYAMLValue(v string) string {
+	b, err := yaml.Marshal(v)
+	if err != nil {
+		return v
+	}
+	return strings.TrimRight(string(b), "\n")
+}
+
+// insertAfterLine inserts newLines into lines after the given 1-indexed line number.
+func insertAfterLine(lines []string, afterLine int, newLines []string) []string {
+	idx := afterLine // 1-indexed line N → insert at 0-indexed position N
+	result := make([]string, 0, len(lines)+len(newLines))
+	result = append(result, lines[:idx]...)
+	result = append(result, newLines...)
+	result = append(result, lines[idx:]...)
+	return result
+}
+
+// replaceScalarOnLine replaces the old value at the given node position with newVal,
+// preserving any trailing content (e.g. comments) on the same line.
+func replaceScalarOnLine(lines []string, lineIdx int, node *yaml.Node, newVal string) {
+	line := lines[lineIdx]
+	col := node.Column - 1
+	end := col + len(node.Value)
+	if end > len(line) {
+		end = len(line)
+	}
+	lines[lineIdx] = line[:col] + newVal + line[end:]
+}
+
+// replaceSequence replaces the items of a sequence node in lines with newValues.
+// Handles both flow style ([a, b]) and block style (- a\n- b).
+// Returns (updated lines, net line count change, whether changed).
+func replaceSequence(lines []string, seqNode *yaml.Node, newValues []string, lineOffset int) ([]string, int, bool) {
+	if seqNode.Style == yaml.FlowStyle {
+		lineIdx := seqNode.Line - 1 + lineOffset
+		line := lines[lineIdx]
+		col := seqNode.Column - 1
+		openIdx := strings.Index(line[col:], "[")
+		if openIdx < 0 {
+			return lines, 0, false
+		}
+		actualOpen := col + openIdx
+		closeIdx := strings.LastIndex(line, "]")
+		if closeIdx <= actualOpen {
+			return lines, 0, false
+		}
+		quotedVals := make([]string, len(newValues))
+		for i, v := range newValues {
+			quotedVals[i] = marshalYAMLValue(v)
+		}
+		newSeq := "[" + strings.Join(quotedVals, ", ") + "]"
+		oldSeq := line[actualOpen : closeIdx+1]
+		if oldSeq == newSeq {
+			return lines, 0, false
+		}
+		result := make([]string, len(lines))
+		copy(result, lines)
+		result[lineIdx] = line[:actualOpen] + newSeq + line[closeIdx+1:]
+		return result, 0, true
 	}
 
-	existingChanged := false
+	// Block sequence
+	if len(seqNode.Content) == 0 {
+		return lines, 0, false
+	}
+	firstItemLine := seqNode.Content[0].Line - 1 + lineOffset
+	lastItemLine := findLastLine(seqNode) - 1 + lineOffset
+	itemIndent := seqNode.Column - 1 // spaces before the '-'
+
+	newItemLines := make([]string, len(newValues))
+	for i, v := range newValues {
+		newItemLines[i] = strings.Repeat(" ", itemIndent) + "- " + marshalYAMLValue(v)
+	}
+
+	// Check if content is actually different
+	oldCount := lastItemLine - firstItemLine + 1
+	if oldCount == len(newItemLines) {
+		same := true
+		for i := 0; i < oldCount; i++ {
+			if lines[firstItemLine+i] != newItemLines[i] {
+				same = false
+				break
+			}
+		}
+		if same {
+			return lines, 0, false
+		}
+	}
+
+	result := make([]string, 0, len(lines)-oldCount+len(newItemLines))
+	result = append(result, lines[:firstItemLine]...)
+	result = append(result, newItemLines...)
+	result = append(result, lines[lastItemLine+1:]...)
+	return result, len(newItemLines) - oldCount, true
+}
+
+// buildBlockSeq builds lines for a new YAML block sequence field (key + items).
+func buildBlockSeq(key string, values []string, keyIndent, itemIndent int) []string {
+	result := []string{strings.Repeat(" ", keyIndent) + key + ":"}
+	for _, v := range values {
+		result = append(result, strings.Repeat(" ", itemIndent)+"- "+marshalYAMLValue(v))
+	}
+	return result
+}
+
+// buildNewBlock marshals a struct value and returns indented lines for "key:\n  field: val\n ...".
+func buildNewBlock(key string, value interface{}, keyIndent, indentStep int) []string {
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(indentStep)
+	_ = enc.Encode(value)
+	_ = enc.Close()
+	raw := strings.TrimRight(buf.String(), "\n")
+	rawLines := strings.Split(raw, "\n")
+
+	fieldPfx := strings.Repeat(" ", keyIndent+indentStep)
+	result := []string{strings.Repeat(" ", keyIndent) + key + ":"}
+	for _, l := range rawLines {
+		if l != "" {
+			result = append(result, fieldPfx+l)
+		}
+	}
+	return result
+}
+
+// buildNewSingleGroup marshals a Group struct and returns indented lines for one group entry.
+func buildNewSingleGroup(name string, g Group, nameIndent, fieldIndent, indentStep int) []string {
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(indentStep)
+	_ = enc.Encode(&g)
+	_ = enc.Close()
+	raw := strings.TrimRight(buf.String(), "\n")
+	rawLines := strings.Split(raw, "\n")
+
+	fieldPfx := strings.Repeat(" ", fieldIndent)
+	result := []string{strings.Repeat(" ", nameIndent) + name + ":"}
+	for _, l := range rawLines {
+		if l != "" {
+			result = append(result, fieldPfx+l)
+		}
+	}
+	return result
+}
+
+// buildNewGroupsBlock builds lines for an entire new "groups:" block with all entries.
+func buildNewGroupsBlock(groups map[string]Group, keyIndent, indentStep int) []string {
+	nameIndent := keyIndent + indentStep
+	fieldIndent := nameIndent + indentStep
+
+	result := []string{strings.Repeat(" ", keyIndent) + "groups:"}
+	names := make([]string, 0, len(groups))
+	for name := range groups {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		result = append(result, buildNewSingleGroup(name, groups[name], nameIndent, fieldIndent, indentStep)...)
+	}
+	return result
+}
+
+// entryReplacement holds what needs to change for a single updates entry.
+type entryReplacement struct {
+	entryNode   *yaml.Node
+	newInterval string
+	cooldown    *CoolDown
+	groups      map[string]Group
+}
+
+// applyCooldownUpdates updates existing cooldown fields or inserts new ones.
+// Processes fields in file order so lineOffset stays accurate.
+// Returns (lines inserted, whether changed).
+func applyCooldownUpdates(cooldownNode *yaml.Node, cd *CoolDown, lines *[]string, lineOffset, indentStep int) (int, bool) {
+	changed := false
+	insertedTotal := 0
+	fieldIndent := getChildIndent(cooldownNode)
+
+	intUpdates := map[string]int{
+		"default-days":      cd.DefaultDays,
+		"semver-major-days": cd.SemverMajorDays,
+		"semver-minor-days": cd.SemverMinorDays,
+		"semver-patch-days": cd.SemverPatchDays,
+	}
+	seqUpdates := map[string][]string{
+		"include": cd.Include,
+		"exclude": cd.Exclude,
+	}
+
+	// Process existing fields in file order (iterate Content pairs top-to-bottom).
+	processed := make(map[string]bool)
+	for i := 0; i+1 < len(cooldownNode.Content); i += 2 {
+		keyNode := cooldownNode.Content[i]
+		valNode := cooldownNode.Content[i+1]
+		key := keyNode.Value
+
+		if val, ok := intUpdates[key]; ok && val != 0 {
+			processed[key] = true
+			valStr := strconv.Itoa(val)
+			if valNode.Value != valStr {
+				lineIdx := valNode.Line - 1 + lineOffset + insertedTotal
+				replaceScalarOnLine(*lines, lineIdx, valNode, valStr)
+				changed = true
+			}
+		}
+
+		if vals, ok := seqUpdates[key]; ok && len(vals) > 0 {
+			processed[key] = true
+			newLines, netChange, ch := replaceSequence(*lines, valNode, vals, lineOffset+insertedTotal)
+			if ch {
+				*lines = newLines
+				insertedTotal += netChange
+				changed = true
+			}
+		}
+	}
+
+	// Add fields that don't exist yet (appended at end of cooldown block).
+	for _, key := range []string{"default-days", "semver-major-days", "semver-minor-days", "semver-patch-days"} {
+		if processed[key] {
+			continue
+		}
+		val := intUpdates[key]
+		if val == 0 {
+			continue
+		}
+		lastLine := findLastLine(cooldownNode) + lineOffset + insertedTotal
+		newLine := strings.Repeat(" ", fieldIndent) + key + ": " + strconv.Itoa(val)
+		*lines = insertAfterLine(*lines, lastLine, []string{newLine})
+		insertedTotal++
+		changed = true
+	}
+	for _, key := range []string{"include", "exclude"} {
+		if processed[key] {
+			continue
+		}
+		vals := seqUpdates[key]
+		if len(vals) == 0 {
+			continue
+		}
+		lastLine := findLastLine(cooldownNode) + lineOffset + insertedTotal
+		newLines := buildBlockSeq(key, vals, fieldIndent, fieldIndent+indentStep)
+		*lines = insertAfterLine(*lines, lastLine, newLines)
+		insertedTotal += len(newLines)
+		changed = true
+	}
+
+	return insertedTotal, changed
+}
+
+// applyGroupUpdates updates existing group fields or inserts new groups.
+// Processes existing groups in file order so lineOffset stays accurate.
+// Returns (lines inserted, whether changed).
+func applyGroupUpdates(groupsNode *yaml.Node, groups map[string]Group, lines *[]string, lineOffset, indentStep int) (int, bool) {
+	changed := false
+	insertedTotal := 0
+	nameIndent := getChildIndent(groupsNode)
+	fieldIndent := nameIndent + indentStep
+
+	// Process existing groups in file order.
+	processedGroups := make(map[string]bool)
+	for i := 0; i+1 < len(groupsNode.Content); i += 2 {
+		groupKeyNode := groupsNode.Content[i]
+		groupValNode := groupsNode.Content[i+1]
+		groupName := groupKeyNode.Value
+
+		ecoGroup, exists := groups[groupName]
+		if !exists {
+			continue
+		}
+		processedGroups[groupName] = true
+
+		grpFieldIndent := getChildIndent(groupValNode)
+		if grpFieldIndent == 0 {
+			grpFieldIndent = fieldIndent
+		}
+
+		// Process fields within this group in file order.
+		processedFields := make(map[string]bool)
+		for j := 0; j+1 < len(groupValNode.Content); j += 2 {
+			fKeyNode := groupValNode.Content[j]
+			fValNode := groupValNode.Content[j+1]
+			fName := fKeyNode.Value
+
+			switch fName {
+			case "applies-to":
+				processedFields[fName] = true
+				if ecoGroup.AppliesTo != "" && fValNode.Value != ecoGroup.AppliesTo {
+					lineIdx := fValNode.Line - 1 + lineOffset + insertedTotal
+					replaceScalarOnLine(*lines, lineIdx, fValNode, ecoGroup.AppliesTo)
+					changed = true
+				}
+			case "patterns":
+				processedFields[fName] = true
+				if len(ecoGroup.Patterns) > 0 {
+					nl, nc, ch := replaceSequence(*lines, fValNode, ecoGroup.Patterns, lineOffset+insertedTotal)
+					if ch {
+						*lines = nl
+						insertedTotal += nc
+						changed = true
+					}
+				}
+			case "exclude-patterns":
+				processedFields[fName] = true
+				if len(ecoGroup.ExcludePatterns) > 0 {
+					nl, nc, ch := replaceSequence(*lines, fValNode, ecoGroup.ExcludePatterns, lineOffset+insertedTotal)
+					if ch {
+						*lines = nl
+						insertedTotal += nc
+						changed = true
+					}
+				}
+			case "dependency-type":
+				processedFields[fName] = true
+				if ecoGroup.DependencyType != "" && fValNode.Value != ecoGroup.DependencyType {
+					lineIdx := fValNode.Line - 1 + lineOffset + insertedTotal
+					replaceScalarOnLine(*lines, lineIdx, fValNode, ecoGroup.DependencyType)
+					changed = true
+				}
+			case "update-types":
+				processedFields[fName] = true
+				if len(ecoGroup.UpdateTypes) > 0 {
+					nl, nc, ch := replaceSequence(*lines, fValNode, ecoGroup.UpdateTypes, lineOffset+insertedTotal)
+					if ch {
+						*lines = nl
+						insertedTotal += nc
+						changed = true
+					}
+				}
+			case "group-by":
+				processedFields[fName] = true
+				if ecoGroup.GroupBy != "" && fValNode.Value != ecoGroup.GroupBy {
+					lineIdx := fValNode.Line - 1 + lineOffset + insertedTotal
+					replaceScalarOnLine(*lines, lineIdx, fValNode, ecoGroup.GroupBy)
+					changed = true
+				}
+			}
+		}
+
+		// Add fields that don't exist in this group.
+		addScalar := func(key, value string) {
+			if value == "" || processedFields[key] {
+				return
+			}
+			ll := findLastLine(groupValNode) + lineOffset + insertedTotal
+			*lines = insertAfterLine(*lines, ll, []string{strings.Repeat(" ", grpFieldIndent) + key + ": " + value})
+			insertedTotal++
+			changed = true
+		}
+		addSeq := func(key string, values []string) {
+			if len(values) == 0 || processedFields[key] {
+				return
+			}
+			ll := findLastLine(groupValNode) + lineOffset + insertedTotal
+			nl := buildBlockSeq(key, values, grpFieldIndent, grpFieldIndent+indentStep)
+			*lines = insertAfterLine(*lines, ll, nl)
+			insertedTotal += len(nl)
+			changed = true
+		}
+		addScalar("applies-to", ecoGroup.AppliesTo)
+		addSeq("patterns", ecoGroup.Patterns)
+		addSeq("exclude-patterns", ecoGroup.ExcludePatterns)
+		addScalar("dependency-type", ecoGroup.DependencyType)
+		addSeq("update-types", ecoGroup.UpdateTypes)
+		addScalar("group-by", ecoGroup.GroupBy)
+	}
+
+	// Add new groups (sorted for deterministic output).
+	var newGroupNames []string
+	for name := range groups {
+		if !processedGroups[name] {
+			newGroupNames = append(newGroupNames, name)
+		}
+	}
+	sort.Strings(newGroupNames)
+	for _, name := range newGroupNames {
+		lastLine := findLastLine(groupsNode) + lineOffset + insertedTotal
+		newLines := buildNewSingleGroup(name, groups[name], nameIndent, fieldIndent, indentStep)
+		*lines = insertAfterLine(*lines, lastLine, newLines)
+		insertedTotal += len(newLines)
+		changed = true
+	}
+
+	return insertedTotal, changed
+}
+
+// updateSubtractiveFields finds each ecosystem entry in the existing YAML config by
+// PackageEcosystem + Directory, then updates only the non-empty fields from the request.
+// It uses the yaml.Node tree for navigation (line numbers) and does targeted text edits
+// on the original lines — preserving blank lines, comments, registries, and all formatting.
+func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config, indent int) (string, bool, error) {
+	var rootNode yaml.Node
+	if err := yaml.Unmarshal([]byte(content), &rootNode); err != nil {
+		return "", false, fmt.Errorf("failed to parse yaml: %w", err)
+	}
+	if len(rootNode.Content) == 0 {
+		return content, false, nil
+	}
+	docNode := rootNode.Content[0]
+
+	updatesNode := findMappingValue(docNode, "updates")
+	if updatesNode == nil || updatesNode.Kind != yaml.SequenceNode {
+		return content, false, nil
+	}
+
+	// Phase 1: Build replacements by matching request ecosystems to YAML entries.
+	// Uses the Config struct for matching (like the additive path and maintainedActions),
+	// and updatesNode.Content[i] to get the corresponding yaml.Node for line-based edits.
+	var replacements []entryReplacement
 	var toAdd []Ecosystem
 
 	for _, eco := range ecosystems {
 		found := false
 		for i, update := range cfg.Updates {
-			if update.PackageEcosystem != eco.PackageEcosystem {
-				continue
+			if update.PackageEcosystem == eco.PackageEcosystem && (update.Directory == eco.Directory || update.Directory == eco.Directory+"/") {
+				found = true
+				replacements = append(replacements, entryReplacement{
+					entryNode:   updatesNode.Content[i],
+					newInterval: eco.Interval,
+					cooldown:    eco.CoolDown,
+					groups:      eco.Groups,
+				})
+				break
 			}
-			if update.Directory != eco.Directory && update.Directory != eco.Directory+"/" {
-				continue
-			}
-			found = true
-
-			// Found the matching entry — update only non-empty fields.
-			if eco.Interval != "" && cfg.Updates[i].Schedule.Interval != eco.Interval {
-				cfg.Updates[i].Schedule.Interval = eco.Interval
-				existingChanged = true
-			}
-
-			if eco.CoolDown != nil {
-				if cfg.Updates[i].CoolDown == nil {
-					cfg.Updates[i].CoolDown = &CoolDown{}
-				}
-				existing := cfg.Updates[i].CoolDown
-				cd := eco.CoolDown
-				if cd.DefaultDays != 0 && existing.DefaultDays != cd.DefaultDays {
-					existing.DefaultDays = cd.DefaultDays
-					existingChanged = true
-				}
-				if cd.SemverMajorDays != 0 && existing.SemverMajorDays != cd.SemverMajorDays {
-					existing.SemverMajorDays = cd.SemverMajorDays
-					existingChanged = true
-				}
-				if cd.SemverMinorDays != 0 && existing.SemverMinorDays != cd.SemverMinorDays {
-					existing.SemverMinorDays = cd.SemverMinorDays
-					existingChanged = true
-				}
-				if cd.SemverPatchDays != 0 && existing.SemverPatchDays != cd.SemverPatchDays {
-					existing.SemverPatchDays = cd.SemverPatchDays
-					existingChanged = true
-				}
-				if len(cd.Include) > 0 {
-					existing.Include = cd.Include
-					existingChanged = true
-				}
-				if len(cd.Exclude) > 0 {
-					existing.Exclude = cd.Exclude
-					existingChanged = true
-				}
-			}
-
-			if len(eco.Groups) > 0 {
-				if cfg.Updates[i].Groups == nil {
-					cfg.Updates[i].Groups = make(map[string]Group)
-				}
-				for groupName, ecoGroup := range eco.Groups {
-					existing, exists := cfg.Updates[i].Groups[groupName]
-					if !exists {
-						// New group — add it wholesale.
-						cfg.Updates[i].Groups[groupName] = ecoGroup
-						existingChanged = true
-						continue
-					}
-					// Existing group — update only the non-empty fields.
-					if ecoGroup.AppliesTo != "" && existing.AppliesTo != ecoGroup.AppliesTo {
-						existing.AppliesTo = ecoGroup.AppliesTo
-						existingChanged = true
-					}
-					if len(ecoGroup.Patterns) > 0 {
-						existing.Patterns = ecoGroup.Patterns
-						existingChanged = true
-					}
-					if len(ecoGroup.ExcludePatterns) > 0 {
-						existing.ExcludePatterns = ecoGroup.ExcludePatterns
-						existingChanged = true
-					}
-					if ecoGroup.DependencyType != "" && existing.DependencyType != ecoGroup.DependencyType {
-						existing.DependencyType = ecoGroup.DependencyType
-						existingChanged = true
-					}
-					if len(ecoGroup.UpdateTypes) > 0 {
-						existing.UpdateTypes = ecoGroup.UpdateTypes
-						existingChanged = true
-					}
-					if ecoGroup.GroupBy != "" && existing.GroupBy != ecoGroup.GroupBy {
-						existing.GroupBy = ecoGroup.GroupBy
-						existingChanged = true
-					}
-					cfg.Updates[i].Groups[groupName] = existing
-				}
-			}
-			break
 		}
-
 		if !found {
 			toAdd = append(toAdd, eco)
 		}
 	}
 
-	if !existingChanged && len(toAdd) == 0 {
+	if len(replacements) == 0 && len(toAdd) == 0 {
 		return content, false, nil
 	}
 
-	// Re-serialize existing entries only when they were actually modified;
-	// otherwise preserve the original content so formatting is not disturbed.
-	var finalOutput strings.Builder
-	if existingChanged {
-		var buf bytes.Buffer
-		enc := yaml.NewEncoder(&buf)
-		enc.SetIndent(indent)
-		if err := enc.Encode(&cfg); err != nil {
-			return "", false, fmt.Errorf("failed to marshal yaml: %w", err)
+	// Sort replacements by line number so we process top-to-bottom.
+	sort.Slice(replacements, func(i, j int) bool {
+		return replacements[i].entryNode.Line < replacements[j].entryNode.Line
+	})
+
+	// Phase 2: Apply replacements on original lines.
+	// For each entry we first update all EXISTING fields (no new blocks), then
+	// insert any NEW blocks at the end. This prevents line-offset confusion when
+	// an insertion shifts lines that later operations still reference.
+	inputLines := strings.Split(content, "\n")
+	changed := false
+	lineOffset := 0
+
+	for _, r := range replacements {
+		keyIndent := r.entryNode.Column - 1
+
+		// --- Interval ---
+		if r.newInterval != "" {
+			schedNode := findMappingValue(r.entryNode, "schedule")
+			if schedNode != nil {
+				intervalNode := findMappingValue(schedNode, "interval")
+				if intervalNode != nil && intervalNode.Value != r.newInterval {
+					lineIdx := intervalNode.Line - 1 + lineOffset
+					replaceScalarOnLine(inputLines, lineIdx, intervalNode, r.newInterval)
+					changed = true
+				}
+			}
 		}
-		finalOutput.WriteString(buf.String())
-	} else {
-		finalOutput.WriteString(content)
+
+		// --- Update EXISTING cooldown and groups in file order ---
+		existingCooldownNode := findMappingValue(r.entryNode, "cooldown")
+		existingGroupsNode := findMappingValue(r.entryNode, "groups")
+
+		// Determine which appears first in the file.
+		cooldownFirst := true
+		if existingCooldownNode != nil && existingGroupsNode != nil {
+			cdLine, grpLine := 0, 0
+			for i := 0; i+1 < len(r.entryNode.Content); i += 2 {
+				if r.entryNode.Content[i].Value == "cooldown" {
+					cdLine = r.entryNode.Content[i].Line
+				}
+				if r.entryNode.Content[i].Value == "groups" {
+					grpLine = r.entryNode.Content[i].Line
+				}
+			}
+			cooldownFirst = cdLine < grpLine
+		}
+
+		processExistingCooldown := func() {
+			if r.cooldown != nil && existingCooldownNode != nil {
+				lo, ch := applyCooldownUpdates(existingCooldownNode, r.cooldown, &inputLines, lineOffset, indent)
+				lineOffset += lo
+				if ch {
+					changed = true
+				}
+			}
+		}
+		processExistingGroups := func() {
+			if len(r.groups) > 0 && existingGroupsNode != nil {
+				lo, ch := applyGroupUpdates(existingGroupsNode, r.groups, &inputLines, lineOffset, indent)
+				lineOffset += lo
+				if ch {
+					changed = true
+				}
+			}
+		}
+
+		if cooldownFirst {
+			processExistingCooldown()
+			processExistingGroups()
+		} else {
+			processExistingGroups()
+			processExistingCooldown()
+		}
+
+		// --- Insert NEW blocks at end of entry ---
+		if r.cooldown != nil && existingCooldownNode == nil {
+			insertAfter := findLastLine(r.entryNode) + lineOffset
+			newLines := buildNewBlock("cooldown", r.cooldown, keyIndent, indent)
+			inputLines = insertAfterLine(inputLines, insertAfter, newLines)
+			lineOffset += len(newLines)
+			changed = true
+		}
+		if len(r.groups) > 0 && existingGroupsNode == nil {
+			entryLastLine := findLastLine(r.entryNode) + lineOffset
+			newLines := buildNewGroupsBlock(r.groups, keyIndent, indent)
+			inputLines = insertAfterLine(inputLines, entryLastLine, newLines)
+			lineOffset += len(newLines)
+			changed = true
+		}
 	}
 
-	// Append new ecosystems using the same additive approach: marshal each entry
-	// individually and WriteString with addIndentation so a blank line is
-	// inserted before every new entry.
+	if !changed && len(toAdd) == 0 {
+		return content, false, nil
+	}
+
+	result := strings.Join(inputLines, "\n")
+
+	// Append ecosystems that were not found in existing config (additive).
 	for _, eco := range toAdd {
+		if !strings.HasSuffix(result, "\n") {
+			result += "\n"
+		}
 		item := ExtendedUpdate{
 			Update: dependabot.Update{
 				PackageEcosystem: eco.PackageEcosystem,
@@ -345,16 +788,14 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, indent int)
 		if err := itemEnc.Encode(items); err != nil {
 			return "", false, fmt.Errorf("failed to marshal update items: %w", err)
 		}
-		// addIndentation expects a 1-indexed column; indent is already the space
-		// count, so pass indent+1.
 		data, err := addIndentation(itemBuf.String(), indent+1)
 		if err != nil {
 			return "", false, fmt.Errorf("failed to add indentation: %w", err)
 		}
-		finalOutput.WriteString(data)
+		result += data
 	}
 
-	return finalOutput.String(), true, nil
+	return result, true, nil
 }
 
 // addIndentation adds a certain number of spaces to the start of each line in the input string.
