@@ -1,0 +1,69 @@
+version: 2
+
+registries:
+  artifactory:
+    type: npm-registry
+    url: https://artifactory.example.com/api/npm/npm/
+    token: ${{ secrets.ARTIFACTORY_TOKEN }}
+    replaces-base: true
+
+updates:
+  # npm dependencies
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    # Cooldown to avoid too many PRs
+    cooldown:
+      default-days: 3
+      semver-major-days: 10
+      semver-minor-days: 5
+      semver-patch-days: 2
+      include:
+        - lodash
+        - axios
+      exclude:
+        - express
+    registries:
+      - artifactory
+    labels:
+      - dependencies
+    # Group related packages together
+    groups:
+      # Production dependencies
+      production:
+        applies-to: version-updates
+        dependency-type: production
+        patterns:
+          - react
+          - react-dom
+        exclude-patterns:
+          - lodash
+        update-types:
+          - minor
+          - patch
+      # Dev tools
+      dev-tools:
+        applies-to: version-updates
+        dependency-type: development
+        patterns:
+          - jest
+          - eslint
+        update-types:
+          - patch
+
+  # pip dependencies
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    labels:
+      - python-deps
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - ci

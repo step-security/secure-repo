@@ -160,6 +160,22 @@ func TestGroups(t *testing.T) {
 			isChanged:   true,
 		},
 		{
+			// Additive (non-subtractive) — complex real-world file with registries, comments, labels, etc.;
+			// adding a new npm ecosystem preserves original content exactly and appends the new entry.
+			inputFileName:  "complex-multi-ecosystem.yml",
+			outputFileName: "complex-multi-ecosystem-additive.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/frontend",
+					Interval:         "daily",
+					CoolDown:         &CoolDown{DefaultDays: 7, SemverMajorDays: 30},
+				},
+			},
+			subtractive: false,
+			isChanged:   true,
+		},
+		{
 			// Additive (non-subtractive) — ecosystem already exists, groups not applied, output unchanged.
 			inputFileName:  "group-prs-modify-patterns-only.yml",
 			outputFileName: "group-prs-modify-patterns-only-no-change.yml",
@@ -292,6 +308,103 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			isChanged: true,
 		},
 		{
+			// Subtractive — input uses flow sequence syntax patterns: ["*"];
+			// verifies that flow style is preserved when patterns are updated and
+			// cooldown is added.
+			fileName: "flow-sequence-syntax.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown:         &CoolDown{DefaultDays: 5},
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"lodash", "axios"}},
+					},
+				},
+				{
+					PackageEcosystem: "pip",
+					Directory:        "/backend",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"requests", "flask"}},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — rich file with registries, comments, cooldown (semver + include/exclude),
+			// and groups with multiple slice fields. Updates npm cooldown semver days, replaces
+			// include/exclude lists, updates group patterns/exclude-patterns/update-types,
+			// and adds a new group. Verifies comments, registries, labels are all preserved.
+			fileName: "subtractive-rich-update.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown: &CoolDown{
+						SemverMajorDays: 30,
+						SemverMinorDays: 14,
+						SemverPatchDays: 7,
+						Include:         []string{"lodash", "axios", "react"},
+						Exclude:         []string{"express", "webpack"},
+					},
+					Groups: map[string]Group{
+						"production": {
+							Patterns:        []string{"react", "react-dom", "redux"},
+							ExcludePatterns: []string{"lodash", "axios"},
+							UpdateTypes:     []string{"minor", "patch"},
+						},
+						"dev-tools": {
+							Patterns:    []string{"jest", "eslint", "prettier"},
+							UpdateTypes: []string{"minor", "patch"},
+						},
+						"new-group": {
+							AppliesTo:      "version-updates",
+							DependencyType: "production",
+							Patterns:       []string{"typescript", "ts-node"},
+						},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — complex file with bundler, docker, github-actions;
+			// update bundler cooldown and interval, and github-actions interval + add cooldown + group.
+			// Docker entry is untouched.
+			fileName: "complex-multi-ecosystem.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "bundler",
+					Directory:        "/manager",
+					Interval:         "weekly",
+					CoolDown: &CoolDown{
+						DefaultDays:     3,
+						SemverMajorDays: 14,
+						SemverPatchDays: 2,
+					},
+					Groups: map[string]Group{
+						"rubocop": {Patterns: []string{"rubocop", "rubocop-rspec", "rubocop-rails", "rubocop-performance", "rubocop-minitest"}},
+					},
+				},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "monthly",
+					CoolDown: &CoolDown{
+						DefaultDays:     14,
+						SemverMajorDays: 60,
+					},
+					Groups: map[string]Group{
+						"actions": {Patterns: []string{"*"}},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
 			fileName: "subtractive-modify-interval-and-major.yml",
 			ecosystems: []Ecosystem{
 				{
@@ -355,6 +468,26 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 							Patterns:       []string{"*"},
 							DependencyType: "development",
 						},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — cooldown fields appear in non-standard order (jumbled);
+			// verifies that values are updated at the correct lines regardless of field order.
+			fileName: "subtractive-jumbled-cooldown.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown: &CoolDown{
+						SemverMajorDays: 30,
+						SemverMinorDays: 14,
+						SemverPatchDays: 7,
+						Include:         []string{"lodash", "axios", "react"},
+						Exclude:         []string{"express", "webpack"},
 					},
 				},
 			},
