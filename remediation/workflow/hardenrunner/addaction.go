@@ -17,8 +17,8 @@ const (
 )
 
 type HardenRunnerConfig struct {
-	Config      string
-	Subtractive bool
+	Config      string `json:"config"`
+	Subtractive bool   `json:"subtractive"`
 }
 
 // getActionFromConfig parses the "uses:" line from the Config yaml string.
