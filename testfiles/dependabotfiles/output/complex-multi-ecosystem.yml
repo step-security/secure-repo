@@ -1,0 +1,137 @@
+version: 2
+
+registries:
+  artifactory:
+    type: rubygems-server
+    url: https://artifactory.example.com/api/gems/rubygems/
+    replaces-base: true
+    username: "xxx"
+    password: "xxx"
+
+  # For submodules and private gems
+  github:
+    type: git
+    url: https://github.com
+    username: x-access-token
+    password: ${{ secrets.GH_API_TOKEN }}
+
+updates:
+  # Ruby/Bundler dependencies
+  - package-ecosystem: bundler
+    directory: /manager/
+    schedule:
+      interval: weekly
+    # How long to wait before updating a package
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 2
+    # Required for private gem resolution
+    insecure-external-code-execution: allow
+    registries:
+      - artifactory
+      - github
+    labels:
+      - dependabot-gem-upgrade
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[PROJ-1234] "
+      include: scope
+    # Update only gems listed in Gemfile
+    allow:
+      - dependency-type: direct
+    # Group gems that release together as part of the same project
+    groups:
+      # RSpec ecosystem - all RSpec gems coordinate releases
+      rspec:
+        patterns:
+          - rspec
+          - rspec-rails
+          - rspec-mocks
+          - rspec-its
+          - rspec-collection_matchers
+          - rspec_junit_formatter
+          - rspec-retry
+      # RuboCop ecosystem - RuboCop and its official extensions
+      rubocop:
+        patterns:
+          - rubocop
+          - rubocop-rspec
+          - rubocop-rails
+          - rubocop-performance
+          - rubocop-minitest
+      # SimpleCov ecosystem - code coverage reporting
+      simplecov:
+        patterns:
+          - simplecov
+          - simplecov-cobertura
+          - simplecov-console
+          - simplecov-rcov
+      # Pry ecosystem - Pry debugger and its extensions
+      pry:
+        patterns:
+          - pry
+          - pry-rails
+          - pry-byebug
+          - pry-doc
+      # Ruby stdlib networking gems - released together with Ruby
+      ruby-net:
+        patterns:
+          - net-ssh
+          - net-scp
+          - net-smtp
+          - net-ftp
+          - net-pop
+          - net-imap
+    ignore:
+      # Rails major and minor upgrades should be updated manually
+      - dependency-name: rails
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      # Internal dependency managed separately
+      - dependency-name: net-ldap
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
+      # Maintained by our team
+      - dependency-name: rubyntlm
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
+
+  # Docker dependencies
+  - package-ecosystem: docker
+    directory: /.github
+    schedule:
+      interval: daily
+    labels:
+      - dependabot-docker-upgrade
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[PROJ-1234] "
+      include: scope
+
+  # GitHub Actions dependencies
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    registries:
+      - github
+    labels:
+      - dependabot-gh-actions-upgrade
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[PROJ-1234] "
+      include: scope
+    cooldown:
+      default-days: 14
+      semver-major-days: 60
+    groups:
+      actions:
+        patterns:
+          - '*'

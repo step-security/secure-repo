@@ -4,13 +4,13 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 14
+      semver-major-days: 60
     groups:
       actions:
         patterns:
           - '*'
-    cooldown:
-      default-days: 14
-      semver-major-days: 60
 
   - package-ecosystem: npm
     directory: /
