@@ -17,8 +17,45 @@ const (
 )
 
 type HardenRunnerConfig struct {
-	Config      string `json:"config"`
-	Subtractive bool   `json:"subtractive"`
+	Config           string   `json:"config"`
+	Subtractive      bool     `json:"subtractive"`
+	SkipHardenRunner bool     `json:"skipHardenRunner"`
+	RunnerLabels     []string `json:"runnerLabels"`
+}
+
+// getJobRunsOnLabels extracts the runs-on labels from a job's yaml.Node.
+// Handles both scalar (runs-on: ubuntu-latest) and sequence (runs-on: [self-hosted, linux]) formats.
+func getJobRunsOnLabels(jobNode *yaml.Node) []string {
+	for i := 0; i < len(jobNode.Content); i += 2 {
+		keyNode := jobNode.Content[i]
+		if keyNode.Value == "runs-on" && i+1 < len(jobNode.Content) {
+			valNode := jobNode.Content[i+1]
+			switch valNode.Kind {
+			case yaml.ScalarNode:
+				return []string{valNode.Value}
+			case yaml.SequenceNode:
+				var labels []string
+				for _, item := range valNode.Content {
+					labels = append(labels, item.Value)
+				}
+				return labels
+			}
+		}
+	}
+	return nil
+}
+
+// shouldSkipJob returns true if none of the job's runs-on labels match the allowed labels.
+func shouldSkipJob(jobLabels []string, allowedLabels []string) bool {
+	for _, jl := range jobLabels {
+		for _, al := range allowedLabels {
+			// TODO CHECK CASE INSENSITIVE MATCHING
+			if jl == al {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // getActionFromConfig parses the "uses:" line from the Config yaml string.
@@ -43,6 +80,21 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 	if err != nil {
 		return "", updated, fmt.Errorf("unable to parse yaml %v", err)
 	}
+
+	// Build a map of jobName → yaml.Node for runs-on label lookup
+	jobNodeMap := map[string]*yaml.Node{}
+	if hardenRunnerConfig.SkipHardenRunner && len(hardenRunnerConfig.RunnerLabels) > 0 {
+		t := yaml.Node{}
+		if err := yaml.Unmarshal([]byte(inputYaml), &t); err == nil {
+			jobsNode := permissions.IterateNode(&t, "jobs", "!!map", 0)
+			if jobsNode != nil {
+				for i := 0; i < len(jobsNode.Content); i += 2 {
+					jobNodeMap[jobsNode.Content[i].Value] = jobsNode.Content[i+1]
+				}
+			}
+		}
+	}
+
 	out := inputYaml
 
 	for jobName, job := range workflow.Jobs {
@@ -53,6 +105,14 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		// Skip adding action for jobs running in containers if skipContainerJobs is true
 		if skipContainerJobs && job.Container.Image != "" {
 			continue
+		}
+		// Skip jobs whose runs-on label doesn't match the allowed labels
+		if hardenRunnerConfig.SkipHardenRunner && len(hardenRunnerConfig.RunnerLabels) > 0 {
+			if jn, ok := jobNodeMap[jobName]; ok {
+				if shouldSkipJob(getJobRunsOnLabels(jn), hardenRunnerConfig.RunnerLabels) {
+					continue
+				}
+			}
 		}
 		alreadyPresent := false
 		for _, step := range job.Steps {
