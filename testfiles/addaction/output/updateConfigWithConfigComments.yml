@@ -1,0 +1,21 @@
+name: test-config-with-comments
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Harden Runner step added by StepSecurity
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: block
+          # Approved endpoints for CI
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            # npm registry
+            registry.npmjs.org:443
+
+      - uses: actions/checkout@v3
+      - run: echo "build"
