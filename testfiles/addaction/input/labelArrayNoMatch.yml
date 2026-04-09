@@ -1,0 +1,9 @@
+name: test-label-array-no-match
+on:
+  push:
+jobs:
+  build:
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "build"

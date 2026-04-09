@@ -1,0 +1,15 @@
+name: test-label-multi-job
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "build"
+
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "test"

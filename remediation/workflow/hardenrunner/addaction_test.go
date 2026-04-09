@@ -106,6 +106,119 @@ func TestUpdateHardenRunnerConfig(t *testing.T) {
 	}
 }
 
+func TestRunnerLabelFiltering(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	tests := []struct {
+		name        string
+		inputFile   string
+		config      HardenRunnerConfig
+		wantUpdated bool
+		outputFile  string
+		unchanged   bool // if true, output should equal input
+	}{
+		{
+			name:      "label matches scalar",
+			inputFile: "labelScalar.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelScalar.yml",
+		},
+		{
+			name:      "label does not match",
+			inputFile: "labelNoMatch.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: false,
+			unchanged:   true,
+		},
+		{
+			name:      "label matches in array",
+			inputFile: "labelArray.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelArray.yml",
+		},
+		{
+			name:      "label no match in array",
+			inputFile: "labelArrayNoMatch.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: false,
+			unchanged:   true,
+		},
+		{
+			name:      "skip disabled ignores labels",
+			inputFile: "labelNoMatch.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: false,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+		},
+		{
+			name:      "empty labels list does not filter",
+			inputFile: "labelScalar.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{},
+			},
+			wantUpdated: true,
+			outputFile:  "labelScalar.yml",
+		},
+		{
+			name:      "multi-job mixed labels",
+			inputFile: "labelMultiJob.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelMultiJob.yml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
+			if err != nil {
+				t.Errorf("AddAction() error = %v", err)
+			}
+			if gotUpdated != tt.wantUpdated {
+				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
+			}
+			if tt.unchanged {
+				if got != string(input) {
+					t.Errorf("AddAction() expected no changes but output differs from input\nGot:\n%s\nWant:\n%s", got, string(input))
+				}
+			} else if tt.outputFile != "" {
+				expected, err := ioutil.ReadFile(path.Join(outputDirectory, tt.outputFile))
+				if err != nil {
+					t.Fatalf("error reading output file: %v", err)
+				}
+				if got != string(expected) {
+					t.Errorf("AddAction() output mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
+				}
+			}
+		})
+	}
+}
+
 func TestAddActionWithContainer(t *testing.T) {
 	const inputDirectory = "../../../testfiles/addaction/input"
 	const outputDirectory = "../../../testfiles/addaction/output"
