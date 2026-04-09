@@ -61,33 +61,65 @@ func TestUpdateHardenRunnerConfig(t *testing.T) {
 
 	blockConfig := "- name: Harden the runner (Audit all outbound calls)\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block\n    allowed-endpoints: >\n      github.com:443\n      api.github.com:443"
 
+	blockConfigWithComments := "# Harden Runner step added by StepSecurity\n- name: Harden the runner (Audit all outbound calls)\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block\n    # Approved endpoints for CI\n    allowed-endpoints: >\n      github.com:443\n      api.github.com:443\n      # npm registry\n      registry.npmjs.org:443"
+
 	tests := []struct {
 		name        string
+		inputFile   string
 		config      HardenRunnerConfig
 		wantUpdated bool
 		outputFile  string
 	}{
 		{
 			name:        "subtractive true replaces existing config",
+			inputFile:   "updateConfig.yml",
 			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: true},
 			wantUpdated: true,
 			outputFile:  "updateConfig.yml",
 		},
 		{
 			name:        "subtractive false does not change existing config",
+			inputFile:   "updateConfig.yml",
 			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: false},
 			wantUpdated: false,
 			outputFile:  "updateConfigNotSubtractive.yml",
 		},
-	}
-
-	input, err := ioutil.ReadFile(path.Join(inputDirectory, "updateConfig.yml"))
-	if err != nil {
-		t.Fatalf("error reading input file: %v", err)
+		{
+			name:        "subtractive replaces existing allowed-endpoints",
+			inputFile:   "updateConfigReplaceEndpoints.yml",
+			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "updateConfigReplaceEndpoints.yml",
+		},
+		{
+			name:        "subtractive replaces config with comments",
+			inputFile:   "updateConfigWithComments.yml",
+			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "updateConfigWithComments.yml",
+		},
+		{
+			name:        "subtractive replaces single-line allowed-endpoints",
+			inputFile:   "updateConfigSingleLine.yml",
+			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "updateConfigSingleLine.yml",
+		},
+		{
+			name:        "subtractive with comments in config",
+			inputFile:   "updateConfigWithConfigComments.yml",
+			config:      HardenRunnerConfig{Config: blockConfigWithComments, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "updateConfigWithConfigComments.yml",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
 			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
 			if err != nil {
 				t.Errorf("AddAction() error = %v", err)
