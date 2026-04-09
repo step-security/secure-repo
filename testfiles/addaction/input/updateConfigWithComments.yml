@@ -1,0 +1,19 @@
+name: test-replace-with-comments
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # This step hardens the runner
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: block
+          # These endpoints were approved by the security team
+          allowed-endpoints: >
+            xyz.com:443
+            old-api.example.com:443
+
+      - uses: actions/checkout@v3
+      - run: echo "build"
