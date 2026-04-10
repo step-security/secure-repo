@@ -1,10 +1,11 @@
-name: test-label-array
+name: test-label-mapping-scalar
 on:
   push:
 jobs:
   build:
-    # Run on self-hosted runners with ubuntu
-    runs-on: [self-hosted, linux, ubuntu-latest] # custom runner pool
+    runs-on:
+      group: large-runners
+      labels: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@v2
