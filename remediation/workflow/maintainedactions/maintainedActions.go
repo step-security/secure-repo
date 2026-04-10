@@ -56,8 +56,41 @@ func LoadMaintainedActions(jsonPath string) (map[string]string, error) {
 	return actionMap, nil
 }
 
-// ReplaceActions replaces original actions with Step Security actions in a workflow
-func ReplaceActions(inputYaml string, customerMaintainedActions map[string]string) (string, bool, error) {
+// resolveVersion determines the version to use for the replacement action.
+// When replaceByMajorTag is true, it matches the major version from the original action.
+// When false (default), it uses the latest release of the new action.
+func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTag bool) (string, error) {
+	if !replaceByMajorTag {
+		return GetLatestRelease(newAction)
+	}
+
+	parts := strings.SplitN(originalUses, "@", 2)
+	if len(parts) < 2 || parts[1] == "" {
+		return "", fmt.Errorf("no ref found in %s", originalUses)
+	}
+	ref := parts[1]
+	var version string
+	var err error
+	if len(ref) == 40 && pin.IsAllHex(ref) {
+		version, err = GetMajorTagFromSHA(actionName, ref)
+		if err != nil || version == "" {
+			return "", fmt.Errorf("unable to resolve SHA %s to major tag", ref)
+		}
+	} else {
+		version = ref
+	}
+	majorVersion := getMajorVersion(version)
+	tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
+	if err != nil || !exists {
+		return "", fmt.Errorf("major tag %s not found on %s", majorVersion, newAction)
+	}
+	return tag, nil
+}
+
+// ReplaceActions replaces original actions with Step Security actions in a workflow.
+// When replaceByMajorTag is true, the replacement action uses the same major version as the original.
+// When false (default), it uses the latest release of the replacement action.
+func ReplaceActions(inputYaml string, customerMaintainedActions map[string]string, replaceByMajorTag bool) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 
@@ -79,23 +112,8 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 		for stepIdx, step := range job.Steps {
 			actionName := strings.Split(step.Uses, "@")[0]
 			if newAction, ok := actionMap[actionName]; ok {
-				parts := strings.SplitN(step.Uses, "@", 2)
-				if len(parts) < 2 || parts[1] == "" {
-					continue
-				}
-				ref := parts[1]
-				var version string
-				if len(ref) == 40 && pin.IsAllHex(ref) {
-					version, err = GetMajorTagFromSHA(actionName, ref)
-					if err != nil || version == "" {
-						continue
-					}
-				} else {
-					version = ref
-				}
-				majorVersion := getMajorVersion(version)
-				tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
-				if err != nil || !exists {
+				version, err := resolveVersion(step.Uses, actionName, newAction, replaceByMajorTag)
+				if err != nil {
 					continue
 				}
 				replacements = append(replacements, replacement{
@@ -103,7 +121,7 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 					stepIdx:        stepIdx,
 					newAction:      newAction,
 					originalAction: step.Uses,
-					latestVersion:  tag,
+					latestVersion:  version,
 				})
 			}
 		}
@@ -115,23 +133,8 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 			if len(step.Uses) > 0 {
 				actionName := strings.Split(step.Uses, "@")[0]
 				if newAction, ok := actionMap[actionName]; ok {
-					parts := strings.SplitN(step.Uses, "@", 2)
-					if len(parts) < 2 || parts[1] == "" {
-						continue
-					}
-					ref := parts[1]
-					var version string
-					if len(ref) == 40 && pin.IsAllHex(ref) {
-						version, err = GetMajorTagFromSHA(actionName, ref)
-						if err != nil || version == "" {
-							continue
-						}
-					} else {
-						version = ref
-					}
-					majorVersion := getMajorVersion(version)
-					tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
-					if err != nil || !exists {
+					version, err := resolveVersion(step.Uses, actionName, newAction, replaceByMajorTag)
+					if err != nil {
 						continue
 					}
 					replacements = append(replacements, replacement{
@@ -139,7 +142,7 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 						stepIdx:        stepIdx,
 						newAction:      newAction,
 						originalAction: step.Uses,
-						latestVersion:  tag,
+						latestVersion:  version,
 					})
 				}
 			}
