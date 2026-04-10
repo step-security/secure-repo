@@ -178,6 +178,26 @@ func TestRunnerLabelFiltering(t *testing.T) {
 			outputFile:  "labelScalar.yml",
 		},
 		{
+			name:      "both slices overlap",
+			inputFile: "labelArray.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"windows-latest", "ubuntu-latest", "macos-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelArray.yml",
+		},
+		{
+			name:      "both slices no overlap",
+			inputFile: "labelArray.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"windows-latest", "macos-latest"},
+			},
+			wantUpdated: false,
+			unchanged:   true,
+		},
+		{
 			name:      "multi-job mixed labels",
 			inputFile: "labelMultiJob.yml",
 			config: HardenRunnerConfig{
@@ -186,6 +206,36 @@ func TestRunnerLabelFiltering(t *testing.T) {
 			},
 			wantUpdated: true,
 			outputFile:  "labelMultiJob.yml",
+		},
+		{
+			name:      "mapping with labels array",
+			inputFile: "labelMapping.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelMapping.yml",
+		},
+		{
+			name:      "mapping with labels scalar",
+			inputFile: "labelMappingScalar.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelMappingScalar.yml",
+		},
+		{
+			name:      "mapping with labels no match",
+			inputFile: "labelMapping.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"windows-latest"},
+			},
+			wantUpdated: false,
+			unchanged:   true,
 		},
 	}
 

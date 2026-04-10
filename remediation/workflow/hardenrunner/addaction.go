@@ -24,21 +24,33 @@ type HardenRunnerConfig struct {
 }
 
 // getJobRunsOnLabels extracts the runs-on labels from a job's yaml.Node.
-// Handles both scalar (runs-on: ubuntu-latest) and sequence (runs-on: [self-hosted, linux]) formats.
+// Handles scalar (runs-on: ubuntu-latest), sequence (runs-on: [self-hosted, linux]),
+// and mapping with labels key (runs-on: {labels: [self-hosted, linux]}) formats.
 func getJobRunsOnLabels(jobNode *yaml.Node) []string {
 	for i := 0; i < len(jobNode.Content); i += 2 {
 		keyNode := jobNode.Content[i]
 		if keyNode.Value == "runs-on" && i+1 < len(jobNode.Content) {
-			valNode := jobNode.Content[i+1]
-			switch valNode.Kind {
-			case yaml.ScalarNode:
-				return []string{valNode.Value}
-			case yaml.SequenceNode:
-				var labels []string
-				for _, item := range valNode.Content {
-					labels = append(labels, item.Value)
-				}
-				return labels
+			return extractLabels(jobNode.Content[i+1])
+		}
+	}
+	return nil
+}
+
+// extractLabels extracts labels from a yaml.Node that can be a scalar, sequence, or mapping with a "labels" key.
+func extractLabels(node *yaml.Node) []string {
+	switch node.Kind {
+	case yaml.ScalarNode:
+		return []string{node.Value}
+	case yaml.SequenceNode:
+		var labels []string
+		for _, item := range node.Content {
+			labels = append(labels, item.Value)
+		}
+		return labels
+	case yaml.MappingNode:
+		for j := 0; j < len(node.Content); j += 2 {
+			if node.Content[j].Value == "labels" && j+1 < len(node.Content) {
+				return extractLabels(node.Content[j+1])
 			}
 		}
 	}

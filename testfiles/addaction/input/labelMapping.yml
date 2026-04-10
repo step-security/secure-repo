@@ -1,0 +1,11 @@
+name: test-label-mapping
+on:
+  push:
+jobs:
+  build:
+    runs-on:
+      # Use specific runner labels
+      labels: [self-hosted, linux, ubuntu-latest] # approved labels
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "build"
