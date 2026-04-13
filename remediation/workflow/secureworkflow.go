@@ -25,6 +25,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	enableLogging := false
 	addEmptyTopLevelPermissions := false
 	skipHardenRunnerForContainers := false
+	replaceActionByMajorTag := false
 	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap, runnerLabelMap := []string{}, false, map[string]string{}, map[string]string{}, map[string]string{}
 	hardenRunnerConfig := hardenrunner.HardenRunnerConfig{}
 
@@ -98,6 +99,10 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		skipHardenRunnerForContainers = true
 	}
 
+	if queryStringParams["replaceActionByMajorTag"] == "true" {
+		replaceActionByMajorTag = true
+	}
+
 	if enableLogging {
 		// Log query parameters
 		paramsJSON, _ := json.MarshalIndent(queryStringParams, "", "  ")
@@ -151,7 +156,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if replaceMaintainedActions {
-		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, maintainedActionsMap)
+		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, maintainedActionsMap, replaceActionByMajorTag)
 		if err != nil {
 			log.Printf("Error replacing maintained actions: %v", err)
 			secureWorkflowReponse.HasErrors = true

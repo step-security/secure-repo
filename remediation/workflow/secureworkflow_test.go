@@ -231,11 +231,13 @@ func TestSecureWorkflow(t *testing.T) {
 			queryParams["addHardenRunner"] = "true"
 			queryParams["pinActions"] = "true"
 			queryParams["addPermissions"] = "false"
+			queryParams["replaceActionByMajorTag"] = "true"
 		case "compositeAction.yml":
 			queryParams["addMaintainedActions"] = "true"
 			queryParams["addHardenRunner"] = "false"
 			queryParams["pinActions"] = "true"
 			queryParams["addPermissions"] = "false"
+			queryParams["replaceActionByMajorTag"] = "true"
 		}
 		queryParams["addProjectComment"] = "false"
 
