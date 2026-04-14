@@ -8,8 +8,6 @@ import (
 	"testing"
 )
 
-func intPtr(i int) *int { return &i }
-
 func TestConfigDependabotFile(t *testing.T) {
 
 	const inputDirectory = "../../testfiles/dependabotfiles/input"
@@ -181,7 +179,7 @@ func TestGroups(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/frontend",
 					Interval:         "daily",
-					CoolDown:         &CoolDown{DefaultDays: intPtr(7), SemverMajorDays: intPtr(30)},
+					CoolDown:         &CoolDown{DefaultDays: 7, SemverMajorDays: 30},
 				},
 			},
 			subtractive: false,
@@ -258,7 +256,7 @@ func TestAdditiveCoolDown(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{DefaultDays: intPtr(5)},
+					CoolDown:         &CoolDown{DefaultDays: 5},
 				},
 			},
 			isChanged: true,
@@ -314,7 +312,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					CoolDown:         &CoolDown{DefaultDays: intPtr(5), SemverPatchDays: intPtr(2)},
+					CoolDown:         &CoolDown{DefaultDays: 5, SemverPatchDays: 2},
 				},
 			},
 			isChanged: true,
@@ -329,7 +327,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{DefaultDays: intPtr(5)},
+					CoolDown:         &CoolDown{DefaultDays: 5},
 					Groups: map[string]Group{
 						"all": {Patterns: []string{"lodash", "axios"}},
 					},
@@ -356,9 +354,9 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						SemverMajorDays: intPtr(30),
-						SemverMinorDays: intPtr(14),
-						SemverPatchDays: intPtr(7),
+						SemverMajorDays: 30,
+						SemverMinorDays: 14,
+						SemverPatchDays: 7,
 						Include:         []string{"lodash", "axios", "react"},
 						Exclude:         []string{"express", "webpack"},
 					},
@@ -393,9 +391,9 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/manager",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						DefaultDays:     intPtr(3),
-						SemverMajorDays: intPtr(14),
-						SemverPatchDays: intPtr(2),
+						DefaultDays:     3,
+						SemverMajorDays: 14,
+						SemverPatchDays: 2,
 					},
 					Groups: map[string]Group{
 						"rubocop": {Patterns: []string{"rubocop", "rubocop-rspec", "rubocop-rails", "rubocop-performance", "rubocop-minitest"}},
@@ -406,8 +404,8 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "monthly",
 					CoolDown: &CoolDown{
-						DefaultDays:     intPtr(14),
-						SemverMajorDays: intPtr(60),
+						DefaultDays:     14,
+						SemverMajorDays: 60,
 					},
 					Groups: map[string]Group{
 						"actions": {Patterns: []string{"*"}},
@@ -423,7 +421,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{SemverMajorDays: intPtr(20)},
+					CoolDown:         &CoolDown{SemverMajorDays: 20},
 				},
 			},
 			isChanged: true,
@@ -452,8 +450,8 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "monthly",
 					CoolDown: &CoolDown{
-						DefaultDays:     intPtr(14),
-						SemverMajorDays: intPtr(60),
+						DefaultDays:     14,
+						SemverMajorDays: 60,
 					},
 					Groups: map[string]Group{
 						"actions": {Patterns: []string{"*"}},
@@ -464,10 +462,10 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						DefaultDays:     intPtr(7),
-						SemverMajorDays: intPtr(30),
-						SemverMinorDays: intPtr(14),
-						SemverPatchDays: intPtr(5),
+						DefaultDays:     7,
+						SemverMajorDays: 30,
+						SemverMinorDays: 14,
+						SemverPatchDays: 5,
 					},
 					Groups: map[string]Group{
 						"production-dependencies": {
@@ -495,7 +493,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{DefaultDays: intPtr(5)},
+					CoolDown:         &CoolDown{DefaultDays: 5},
 				},
 				{
 					PackageEcosystem: "github-actions",
@@ -519,25 +517,6 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			isChanged: true,
 		},
 		{
-			// Subtractive — removing semver-* cooldown attributes by explicitly setting them
-			// to 0; the semver-major-days, semver-minor-days, and semver-patch-days fields
-			// should be removed from the output while default-days is preserved.
-			fileName: "subtractive-remove-semver.yml",
-			ecosystems: []Ecosystem{
-				{
-					PackageEcosystem: "pip",
-					Directory:        "/",
-					CoolDown: &CoolDown{
-						DefaultDays:     intPtr(5),
-						SemverMajorDays: intPtr(0),
-						SemverMinorDays: intPtr(0),
-						SemverPatchDays: intPtr(0),
-					},
-				},
-			},
-			isChanged: true,
-		},
-		{
 			// Subtractive — cooldown fields appear in non-standard order (jumbled);
 			// verifies that values are updated at the correct lines regardless of field order.
 			fileName: "subtractive-jumbled-cooldown.yml",
@@ -547,9 +526,9 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						SemverMajorDays: intPtr(30),
-						SemverMinorDays: intPtr(14),
-						SemverPatchDays: intPtr(7),
+						SemverMajorDays: 30,
+						SemverMinorDays: 14,
+						SemverPatchDays: 7,
 						Include:         []string{"lodash", "axios", "react"},
 						Exclude:         []string{"express", "webpack"},
 					},
@@ -624,7 +603,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{DefaultDays: intPtr(10)},
+					CoolDown:         &CoolDown{DefaultDays: 10},
 				},
 			},
 			isChanged: true,
@@ -640,7 +619,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{DefaultDays: intPtr(10)},
+					CoolDown:         &CoolDown{DefaultDays: 10},
 					Groups: map[string]Group{
 						"all": {Patterns: []string{"react", "angular"}},
 					},

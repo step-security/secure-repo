@@ -36,13 +36,11 @@ type UpdateDependabotConfigRequest struct {
 }
 
 // CoolDown represents the cooldown block, which the upstream dependabot package does not support.
-// Int fields use *int so that nil means "not specified" (don't touch) and a zero pointer
-// means "remove this field from the config".
 type CoolDown struct {
-	DefaultDays     *int     `yaml:"default-days,omitempty"`
-	SemverMajorDays *int     `yaml:"semver-major-days,omitempty"`
-	SemverMinorDays *int     `yaml:"semver-minor-days,omitempty"`
-	SemverPatchDays *int     `yaml:"semver-patch-days,omitempty"`
+	DefaultDays     int      `yaml:"default-days,omitempty"`
+	SemverMajorDays int      `yaml:"semver-major-days,omitempty"`
+	SemverMinorDays int      `yaml:"semver-minor-days,omitempty"`
+	SemverPatchDays int      `yaml:"semver-patch-days,omitempty"`
 	Include         []string `yaml:"include,omitempty"`
 	Exclude         []string `yaml:"exclude,omitempty"`
 }
@@ -469,7 +467,7 @@ func applyCooldownUpdates(cooldownNode *yaml.Node, cd *CoolDown, lines *[]string
 	insertedTotal := 0
 	fieldIndent := getChildIndent(cooldownNode)
 
-	intUpdates := map[string]*int{
+	intUpdates := map[string]int{
 		"default-days":      cd.DefaultDays,
 		"semver-major-days": cd.SemverMajorDays,
 		"semver-minor-days": cd.SemverMinorDays,
@@ -487,21 +485,13 @@ func applyCooldownUpdates(cooldownNode *yaml.Node, cd *CoolDown, lines *[]string
 		valNode := cooldownNode.Content[i+1]
 		key := keyNode.Value
 
-		if valPtr, ok := intUpdates[key]; ok && valPtr != nil {
+		if val, ok := intUpdates[key]; ok && val != 0 {
 			processed[key] = true
-			if *valPtr == 0 {
-				// Explicitly set to 0 — remove this field line.
-				lineIdx := keyNode.Line - 1 + lineOffset + insertedTotal
-				*lines = append((*lines)[:lineIdx], (*lines)[lineIdx+1:]...)
-				insertedTotal--
+			valStr := strconv.Itoa(val)
+			if valNode.Value != valStr {
+				lineIdx := valNode.Line - 1 + lineOffset + insertedTotal
+				replaceScalarOnLine(*lines, lineIdx, valNode, valStr)
 				changed = true
-			} else {
-				valStr := strconv.Itoa(*valPtr)
-				if valNode.Value != valStr {
-					lineIdx := valNode.Line - 1 + lineOffset + insertedTotal
-					replaceScalarOnLine(*lines, lineIdx, valNode, valStr)
-					changed = true
-				}
 			}
 		}
 
@@ -521,12 +511,12 @@ func applyCooldownUpdates(cooldownNode *yaml.Node, cd *CoolDown, lines *[]string
 		if processed[key] {
 			continue
 		}
-		valPtr := intUpdates[key]
-		if valPtr == nil || *valPtr == 0 {
+		val := intUpdates[key]
+		if val == 0 {
 			continue
 		}
 		lastLine := findLastLine(cooldownNode) + lineOffset + insertedTotal
-		newLine := strings.Repeat(" ", fieldIndent) + key + ": " + strconv.Itoa(*valPtr)
+		newLine := strings.Repeat(" ", fieldIndent) + key + ": " + strconv.Itoa(val)
 		*lines = insertAfterLine(*lines, lastLine, []string{newLine})
 		insertedTotal++
 		changed = true
