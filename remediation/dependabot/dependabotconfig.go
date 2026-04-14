@@ -185,8 +185,14 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		if err := yaml.Unmarshal(inputConfigFile, &rootNode); err != nil {
 			return nil, fmt.Errorf("failed to parse yaml for insertion point: %v", err)
 		}
+		if len(rootNode.Content) == 0 {
+			return nil, fmt.Errorf("failed to parse yaml: document is empty")
+		}
 		docNode := rootNode.Content[0]
 		updatesNode := findMappingValue(docNode, "updates")
+		if updatesNode == nil || updatesNode.Kind != yaml.SequenceNode {
+			return nil, fmt.Errorf("missing or invalid 'updates' section in dependabot config")
+		}
 
 		inputLines := strings.Split(response.FinalOutput, "\n")
 		updatesLastLine := findLastLine(updatesNode)
