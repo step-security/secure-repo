@@ -86,7 +86,7 @@ func TestCustomActionConfig(t *testing.T) {
 		},
 		{
 			name:        "subtractive replaces harden-runner with custom action",
-			inputFile:   "updateConfig.yml",
+			inputFile:   "customActionSubtractive.yml",
 			config:      HardenRunnerConfig{Config: customConfigWithEndpoints, Subtractive: true},
 			wantUpdated: true,
 			outputFile:  "customActionSubtractive.yml",
