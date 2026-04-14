@@ -55,6 +55,68 @@ func TestAddAction(t *testing.T) {
 	}
 }
 
+func TestCustomActionConfig(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	customConfig := "- name: Security Scanner\n  uses: org/security-scanner@v3\n  with:\n    mode: strict\n    scan-level: deep"
+
+	customConfigWithEndpoints := "- name: Harden the runner\n  uses: acme-corp/harden-runner@v2\n  with:\n    egress-policy: block\n    allowed-endpoints: >\n      github.com:443\n      registry.npmjs.org:443"
+
+	tests := []struct {
+		name        string
+		inputFile   string
+		config      HardenRunnerConfig
+		wantUpdated bool
+		outputFile  string
+	}{
+		{
+			name:        "add custom action to single job",
+			inputFile:   "customAction.yml",
+			config:      HardenRunnerConfig{Config: customConfig},
+			wantUpdated: true,
+			outputFile:  "customAction.yml",
+		},
+		{
+			name:        "add custom action with endpoints to two jobs",
+			inputFile:   "customActionTwoJobs.yml",
+			config:      HardenRunnerConfig{Config: customConfigWithEndpoints},
+			wantUpdated: true,
+			outputFile:  "customActionTwoJobs.yml",
+		},
+		{
+			name:        "subtractive replaces harden-runner with custom action",
+			inputFile:   "customActionSubtractive.yml",
+			config:      HardenRunnerConfig{Config: customConfigWithEndpoints, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "customActionSubtractive.yml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
+			if err != nil {
+				t.Errorf("AddAction() error = %v", err)
+			}
+			if gotUpdated != tt.wantUpdated {
+				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
+			}
+			expected, err := ioutil.ReadFile(path.Join(outputDirectory, tt.outputFile))
+			if err != nil {
+				t.Fatalf("error reading output file: %v", err)
+			}
+			if got != string(expected) {
+				t.Errorf("AddAction() output mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
+			}
+		})
+	}
+}
+
 func TestUpdateHardenRunnerConfig(t *testing.T) {
 	const inputDirectory = "../../../testfiles/addaction/input"
 	const outputDirectory = "../../../testfiles/addaction/output"
@@ -111,6 +173,13 @@ func TestUpdateHardenRunnerConfig(t *testing.T) {
 			config:      HardenRunnerConfig{Config: blockConfigWithComments, Subtractive: true},
 			wantUpdated: true,
 			outputFile:  "updateConfigWithConfigComments.yml",
+		},
+		{
+			name:        "subtractive replaces harden-runner as last step",
+			inputFile:   "updateConfigLastStep.yml",
+			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "updateConfigLastStep.yml",
 		},
 	}
 
@@ -198,6 +267,7 @@ func TestRunnerLabelFiltering(t *testing.T) {
 				RunnerLabels:     []string{"ubuntu-latest"},
 			},
 			wantUpdated: true,
+			outputFile:  "labelNoMatch-skipDisabled.yml",
 		},
 		{
 			name:      "empty labels list does not filter",
@@ -269,6 +339,16 @@ func TestRunnerLabelFiltering(t *testing.T) {
 			wantUpdated: false,
 			unchanged:   true,
 		},
+		{
+			name:      "mapping with group only no labels key",
+			inputFile: "labelMappingNoLabels.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: false,
+			unchanged:   true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -321,5 +401,67 @@ func TestAddActionWithContainer(t *testing.T) {
 	}
 	if got != string(input) {
 		t.Errorf("AddAction() with skipContainerJobs=true should not modify the yaml")
+	}
+}
+
+func TestGetActionFromConfig(t *testing.T) {
+	tests := []struct {
+		name   string
+		config HardenRunnerConfig
+		want   string
+	}{
+		{
+			name:   "extracts uses from config",
+			config: HardenRunnerConfig{Config: "- name: Harden Runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: audit"},
+			want:   "step-security/harden-runner@v2",
+		},
+		{
+			name:   "extracts custom action path",
+			config: HardenRunnerConfig{Config: "- name: Custom Runner\n  uses: my-org/custom-runner@v1\n  with:\n    mode: strict"},
+			want:   "my-org/custom-runner@v1",
+		},
+		{
+			name:   "falls back when no uses line",
+			config: HardenRunnerConfig{Config: "- name: Harden Runner\n  run: echo hello"},
+			want:   HardenRunnerActionPath,
+		},
+		{
+			name:   "falls back on empty config",
+			config: HardenRunnerConfig{Config: ""},
+			want:   HardenRunnerActionPath,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getActionFromConfig(tt.config)
+			if got != tt.want {
+				t.Errorf("getActionFromConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAddActionWithEmptyConfig(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	input, err := ioutil.ReadFile(path.Join(inputDirectory, "labelScalar.yml"))
+	if err != nil {
+		t.Fatalf("error reading test file: %v", err)
+	}
+	// Empty Config should use DefaultHardenRunnerConfig
+	got, gotUpdated, err := AddAction(string(input), HardenRunnerConfig{}, false, false, false)
+	if err != nil {
+		t.Fatalf("AddAction() error = %v", err)
+	}
+	if !gotUpdated {
+		t.Error("AddAction() expected updated = true")
+	}
+	expected, err := ioutil.ReadFile(path.Join(outputDirectory, "labelScalar.yml"))
+	if err != nil {
+		t.Fatalf("error reading output file: %v", err)
+	}
+	if got != string(expected) {
+		t.Errorf("AddAction() with empty config mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
 	}
 }

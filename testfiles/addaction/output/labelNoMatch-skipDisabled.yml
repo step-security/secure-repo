@@ -1,0 +1,14 @@
+name: test-label-no-match
+on:
+  push:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v3
+      - run: echo "build"
