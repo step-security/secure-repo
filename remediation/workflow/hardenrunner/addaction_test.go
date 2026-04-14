@@ -55,6 +55,68 @@ func TestAddAction(t *testing.T) {
 	}
 }
 
+func TestCustomActionConfig(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	customConfig := "- name: Security Scanner\n  uses: org/security-scanner@v3\n  with:\n    mode: strict\n    scan-level: deep"
+
+	customConfigWithEndpoints := "- name: Harden the runner\n  uses: acme-corp/harden-runner@v2\n  with:\n    egress-policy: block\n    allowed-endpoints: >\n      github.com:443\n      registry.npmjs.org:443"
+
+	tests := []struct {
+		name        string
+		inputFile   string
+		config      HardenRunnerConfig
+		wantUpdated bool
+		outputFile  string
+	}{
+		{
+			name:        "add custom action to single job",
+			inputFile:   "customAction.yml",
+			config:      HardenRunnerConfig{Config: customConfig},
+			wantUpdated: true,
+			outputFile:  "customAction.yml",
+		},
+		{
+			name:        "add custom action with endpoints to two jobs",
+			inputFile:   "customActionTwoJobs.yml",
+			config:      HardenRunnerConfig{Config: customConfigWithEndpoints},
+			wantUpdated: true,
+			outputFile:  "customActionTwoJobs.yml",
+		},
+		{
+			name:        "subtractive replaces harden-runner with custom action",
+			inputFile:   "updateConfig.yml",
+			config:      HardenRunnerConfig{Config: customConfigWithEndpoints, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "customActionSubtractive.yml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
+			if err != nil {
+				t.Errorf("AddAction() error = %v", err)
+			}
+			if gotUpdated != tt.wantUpdated {
+				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
+			}
+			expected, err := ioutil.ReadFile(path.Join(outputDirectory, tt.outputFile))
+			if err != nil {
+				t.Fatalf("error reading output file: %v", err)
+			}
+			if got != string(expected) {
+				t.Errorf("AddAction() output mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
+			}
+		})
+	}
+}
+
 func TestUpdateHardenRunnerConfig(t *testing.T) {
 	const inputDirectory = "../../../testfiles/addaction/input"
 	const outputDirectory = "../../../testfiles/addaction/output"
