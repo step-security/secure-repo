@@ -141,35 +141,14 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		return response, nil
 	}
 
-	// Using strings.Builder for efficient string concatenation
-	var finalOutput strings.Builder
-	finalOutput.WriteString(response.FinalOutput)
-
 	if updateDependabotConfigRequest.Content == "" {
+		// Empty content: build from scratch using string concatenation.
 		if len(updateDependabotConfigRequest.Ecosystems) == 0 {
 			return response, nil
 		}
+		var finalOutput strings.Builder
 		finalOutput.WriteString("version: 2\nupdates:")
-	} else {
-		if !strings.HasSuffix(response.FinalOutput, "\n") {
-			finalOutput.WriteString("\n")
-		}
-		indentation, err = getIndentation(string(inputConfigFile))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get indentation: %v", err)
-		}
-	}
-
-	for _, Update := range updateDependabotConfigRequest.Ecosystems {
-		updateAlreadyExist := false
-		for _, update := range cfg.Updates {
-			if update.PackageEcosystem == Update.PackageEcosystem && (update.Directory == Update.Directory || update.Directory == Update.Directory+"/") {
-				updateAlreadyExist = true
-				break
-			}
-		}
-
-		if !updateAlreadyExist {
+		for _, Update := range updateDependabotConfigRequest.Ecosystems {
 			item := ExtendedUpdate{
 				Update: dependabot.Update{
 					PackageEcosystem: Update.PackageEcosystem,
@@ -184,7 +163,6 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal update items: %v", err)
 			}
-
 			data, err := addIndentation(string(addedItem), indentation)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add indentation: %v", err)
@@ -192,10 +170,76 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 			finalOutput.WriteString(data)
 			response.IsChanged = true
 		}
-	}
+		response.FinalOutput = finalOutput.String()
+	} else {
+		// Non-empty content: insert new entries at the end of the updates section
+		// so that sibling top-level keys like registries are preserved in place.
+		indentation, err = getIndentation(string(inputConfigFile))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get indentation: %v", err)
+		}
 
-	// Set FinalOutput to the built string
-	response.FinalOutput = finalOutput.String()
+		var rootNode yaml.Node
+		if err := yaml.Unmarshal(inputConfigFile, &rootNode); err != nil {
+			return nil, fmt.Errorf("failed to parse yaml for insertion point: %v", err)
+		}
+		if len(rootNode.Content) == 0 {
+			return nil, fmt.Errorf("failed to parse yaml: document is empty")
+		}
+		docNode := rootNode.Content[0]
+		updatesNode := findMappingValue(docNode, "updates")
+		if updatesNode == nil || updatesNode.Kind != yaml.SequenceNode {
+			return nil, fmt.Errorf("missing or invalid 'updates' section in dependabot config")
+		}
+
+		inputLines := strings.Split(response.FinalOutput, "\n")
+		updatesLastLine := findLastLine(updatesNode)
+		lineOffset := 0
+
+		for _, Update := range updateDependabotConfigRequest.Ecosystems {
+			updateAlreadyExist := false
+			for _, update := range cfg.Updates {
+				if update.PackageEcosystem == Update.PackageEcosystem && (update.Directory == Update.Directory || update.Directory == Update.Directory+"/") {
+					updateAlreadyExist = true
+					break
+				}
+			}
+
+			if !updateAlreadyExist {
+				item := ExtendedUpdate{
+					Update: dependabot.Update{
+						PackageEcosystem: Update.PackageEcosystem,
+						Directory:        Update.Directory,
+						Schedule:         dependabot.Schedule{Interval: Update.Interval},
+					},
+					Groups:   Update.Groups,
+					CoolDown: Update.CoolDown,
+				}
+				items := []ExtendedUpdate{item}
+				addedItem, err := yaml.Marshal(items)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal update items: %v", err)
+				}
+				data, err := addIndentation(string(addedItem), indentation)
+				if err != nil {
+					return nil, fmt.Errorf("failed to add indentation: %v", err)
+				}
+
+				// Trim trailing newline to avoid double blank lines when content
+				// follows after the updates section (e.g. registries block).
+				dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
+				insertAt := updatesLastLine + lineOffset
+				inputLines = insertAfterLine(inputLines, insertAt, dataLines)
+				lineOffset += len(dataLines)
+				response.IsChanged = true
+			}
+		}
+
+		response.FinalOutput = strings.Join(inputLines, "\n")
+		if !strings.HasSuffix(response.FinalOutput, "\n") {
+			response.FinalOutput += "\n"
+		}
+	}
 
 	return response, nil
 }
@@ -258,6 +302,16 @@ func replaceScalarOnLine(lines []string, lineIdx int, node *yaml.Node, newVal st
 	line := lines[lineIdx]
 	col := node.Column - 1
 	end := col + len(node.Value)
+	// When the original value is quoted, node.Column points to the opening quote
+	// but node.Value is the unquoted content. Account for the surrounding quotes.
+	if node.Style == yaml.DoubleQuotedStyle || node.Style == yaml.SingleQuotedStyle {
+		end += 2 // skip both opening and closing quote
+		if node.Style == yaml.DoubleQuotedStyle {
+			newVal = "\"" + newVal + "\""
+		} else {
+			newVal = "'" + newVal + "'"
+		}
+	}
 	if end > len(line) {
 		end = len(line)
 	}
@@ -765,13 +819,10 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 		return content, false, nil
 	}
 
-	result := strings.Join(inputLines, "\n")
-
-	// Append ecosystems that were not found in existing config (additive).
+	// Insert ecosystems that were not found in existing config at the end of the
+	// updates section, so sibling top-level keys like registries stay in place.
+	updatesLastLine := findLastLine(updatesNode) + lineOffset
 	for _, eco := range toAdd {
-		if !strings.HasSuffix(result, "\n") {
-			result += "\n"
-		}
 		item := ExtendedUpdate{
 			Update: dependabot.Update{
 				PackageEcosystem: eco.PackageEcosystem,
@@ -792,9 +843,17 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 		if err != nil {
 			return "", false, fmt.Errorf("failed to add indentation: %w", err)
 		}
-		result += data
+
+		dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
+		inputLines = insertAfterLine(inputLines, updatesLastLine, dataLines)
+		updatesLastLine += len(dataLines)
+		changed = true
 	}
 
+	result := strings.Join(inputLines, "\n")
+	if !strings.HasSuffix(result, "\n") {
+		result += "\n"
+	}
 	return result, true, nil
 }
 
