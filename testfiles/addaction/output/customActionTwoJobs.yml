@@ -1,0 +1,32 @@
+name: test-custom-action-two-jobs
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner
+        uses: acme-corp/harden-runner@v2
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            registry.npmjs.org:443
+
+      - uses: actions/checkout@v3
+      - run: echo "build"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Harden the runner
+        uses: acme-corp/harden-runner@v2
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            registry.npmjs.org:443
+
+      - uses: actions/checkout@v3
+      - run: echo "deploy"

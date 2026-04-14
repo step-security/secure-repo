@@ -1,0 +1,15 @@
+name: test-custom-action
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Security Scanner
+        uses: org/security-scanner@v3
+        with:
+          mode: strict
+          scan-level: deep
+
+      - uses: actions/checkout@v3
+      - run: echo "build"
