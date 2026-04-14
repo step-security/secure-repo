@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      production:
+        patterns:
+          - "*"
+        applies-to: version-updates
+        exclude-patterns:
+          - lodash
+          - axios
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+        group-by: semver-level
