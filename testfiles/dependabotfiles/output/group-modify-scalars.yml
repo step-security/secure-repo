@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      production:
+        applies-to: security-updates
+        patterns:
+          - "*"
+        dependency-type: development
+        group-by: dependency-name

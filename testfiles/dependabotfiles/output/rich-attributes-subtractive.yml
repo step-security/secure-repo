@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/New_York
+    assignees:
+      - user1
+      - user2
+    reviewers:
+      - reviewer1
+    labels:
+      - dependencies
+    milestone: 4
+    open-pull-requests-limit: 5
+    target-branch: develop
+    commit-message:
+      prefix: "deps"
+      include: scope
+    rebase-strategy: auto
+    versioning-strategy: increase
+    cooldown:
+      default-days: 10
+    groups:
+      all:
+        patterns:
+          - react
+          - angular
