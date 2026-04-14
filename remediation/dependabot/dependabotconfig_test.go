@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+func intPtr(i int) *int { return &i }
+
 func TestConfigDependabotFile(t *testing.T) {
 
 	const inputDirectory = "../../testfiles/dependabotfiles/input"
@@ -52,6 +54,16 @@ func TestConfigDependabotFile(t *testing.T) {
 			fileName:   "extra-slash.yml",
 			Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
 			isChanged:  false,
+		},
+		{
+			fileName:   "npm-with-registries-and-groups.yml",
+			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
+			isChanged:  true,
+		},
+		{
+			fileName:   "rich-attributes-additive.yml",
+			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
+			isChanged:  true,
 		},
 	}
 
@@ -169,7 +181,7 @@ func TestGroups(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/frontend",
 					Interval:         "daily",
-					CoolDown:         &CoolDown{DefaultDays: 7, SemverMajorDays: 30},
+					CoolDown:         &CoolDown{DefaultDays: intPtr(7), SemverMajorDays: intPtr(30)},
 				},
 			},
 			subtractive: false,
@@ -246,7 +258,7 @@ func TestAdditiveCoolDown(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{DefaultDays: 5},
+					CoolDown:         &CoolDown{DefaultDays: intPtr(5)},
 				},
 			},
 			isChanged: true,
@@ -302,7 +314,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 				{
 					PackageEcosystem: "npm",
 					Directory:        "/",
-					CoolDown:         &CoolDown{DefaultDays: 5, SemverPatchDays: 2},
+					CoolDown:         &CoolDown{DefaultDays: intPtr(5), SemverPatchDays: intPtr(2)},
 				},
 			},
 			isChanged: true,
@@ -317,7 +329,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{DefaultDays: 5},
+					CoolDown:         &CoolDown{DefaultDays: intPtr(5)},
 					Groups: map[string]Group{
 						"all": {Patterns: []string{"lodash", "axios"}},
 					},
@@ -344,9 +356,9 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						SemverMajorDays: 30,
-						SemverMinorDays: 14,
-						SemverPatchDays: 7,
+						SemverMajorDays: intPtr(30),
+						SemverMinorDays: intPtr(14),
+						SemverPatchDays: intPtr(7),
 						Include:         []string{"lodash", "axios", "react"},
 						Exclude:         []string{"express", "webpack"},
 					},
@@ -381,9 +393,9 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/manager",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						DefaultDays:     3,
-						SemverMajorDays: 14,
-						SemverPatchDays: 2,
+						DefaultDays:     intPtr(3),
+						SemverMajorDays: intPtr(14),
+						SemverPatchDays: intPtr(2),
 					},
 					Groups: map[string]Group{
 						"rubocop": {Patterns: []string{"rubocop", "rubocop-rspec", "rubocop-rails", "rubocop-performance", "rubocop-minitest"}},
@@ -394,8 +406,8 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "monthly",
 					CoolDown: &CoolDown{
-						DefaultDays:     14,
-						SemverMajorDays: 60,
+						DefaultDays:     intPtr(14),
+						SemverMajorDays: intPtr(60),
 					},
 					Groups: map[string]Group{
 						"actions": {Patterns: []string{"*"}},
@@ -411,7 +423,7 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					PackageEcosystem: "npm",
 					Directory:        "/",
 					Interval:         "weekly",
-					CoolDown:         &CoolDown{SemverMajorDays: 20},
+					CoolDown:         &CoolDown{SemverMajorDays: intPtr(20)},
 				},
 			},
 			isChanged: true,
@@ -440,8 +452,8 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "monthly",
 					CoolDown: &CoolDown{
-						DefaultDays:     14,
-						SemverMajorDays: 60,
+						DefaultDays:     intPtr(14),
+						SemverMajorDays: intPtr(60),
 					},
 					Groups: map[string]Group{
 						"actions": {Patterns: []string{"*"}},
@@ -452,10 +464,10 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						DefaultDays:     7,
-						SemverMajorDays: 30,
-						SemverMinorDays: 14,
-						SemverPatchDays: 5,
+						DefaultDays:     intPtr(7),
+						SemverMajorDays: intPtr(30),
+						SemverMinorDays: intPtr(14),
+						SemverPatchDays: intPtr(5),
 					},
 					Groups: map[string]Group{
 						"production-dependencies": {
@@ -474,6 +486,58 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			isChanged: true,
 		},
 		{
+			// Subtractive — npm entry with registries and groups at top-level after updates;
+			// updates npm in-place and adds github-actions (not in config) within the updates
+			// section. Verifies the registries block below updates is preserved untouched.
+			fileName: "npm-with-registries-and-groups-subtractive.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown:         &CoolDown{DefaultDays: intPtr(5)},
+				},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "daily",
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — pip ecosystem interval change from daily to weekly;
+			// cooldown with semver fields left untouched.
+			fileName: "subtractive-pip-interval-change.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "pip",
+					Directory:        "/",
+					Interval:         "weekly",
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — removing semver-* cooldown attributes by explicitly setting them
+			// to 0; the semver-major-days, semver-minor-days, and semver-patch-days fields
+			// should be removed from the output while default-days is preserved.
+			fileName: "subtractive-remove-semver.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "pip",
+					Directory:        "/",
+					CoolDown: &CoolDown{
+						DefaultDays:     intPtr(5),
+						SemverMajorDays: intPtr(0),
+						SemverMinorDays: intPtr(0),
+						SemverPatchDays: intPtr(0),
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
 			// Subtractive — cooldown fields appear in non-standard order (jumbled);
 			// verifies that values are updated at the correct lines regardless of field order.
 			fileName: "subtractive-jumbled-cooldown.yml",
@@ -483,11 +547,102 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Directory:        "/",
 					Interval:         "weekly",
 					CoolDown: &CoolDown{
-						SemverMajorDays: 30,
-						SemverMinorDays: 14,
-						SemverPatchDays: 7,
+						SemverMajorDays: intPtr(30),
+						SemverMinorDays: intPtr(14),
+						SemverPatchDays: intPtr(7),
 						Include:         []string{"lodash", "axios", "react"},
 						Exclude:         []string{"express", "webpack"},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — add include and exclude lists to an existing cooldown
+			// that only has int fields; exercises buildBlockSeq.
+			fileName: "subtractive-add-include-exclude.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					CoolDown: &CoolDown{
+						Include: []string{"lodash", "axios"},
+						Exclude: []string{"express"},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — modify applies-to, dependency-type, and group-by
+			// scalar fields on an existing group.
+			fileName: "group-modify-scalars.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"production": {
+							AppliesTo:      "security-updates",
+							DependencyType: "development",
+							GroupBy:        "dependency-name",
+						},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — add missing fields (applies-to, exclude-patterns,
+			// dependency-type, update-types, group-by) to an existing group that
+			// only has patterns; exercises addScalar, addSeq, and buildBlockSeq
+			// within applyGroupUpdates.
+			fileName: "group-add-missing-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"production": {
+							AppliesTo:       "version-updates",
+							DependencyType:  "production",
+							ExcludePatterns: []string{"lodash", "axios"},
+							UpdateTypes:     []string{"minor", "patch"},
+							GroupBy:         "semver-level",
+						},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — input uses single-quoted YAML values; verifies that
+			// replaceScalarOnLine preserves single-quote style.
+			fileName: "single-quoted-values.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown:         &CoolDown{DefaultDays: intPtr(10)},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — rich config with schedule.day/time/timezone, assignees,
+			// reviewers, labels, milestone, open-pull-requests-limit, target-branch,
+			// commit-message, rebase-strategy, versioning-strategy; verifies all
+			// attributes are preserved when updating interval, cooldown, and groups.
+			fileName: "rich-attributes-subtractive.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					CoolDown:         &CoolDown{DefaultDays: intPtr(10)},
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"react", "angular"}},
 					},
 				},
 			},
@@ -527,4 +682,101 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			t.Errorf("test failed %s did not match IsChanged, Expected: %v Got: %v", test.fileName, test.isChanged, output.IsChanged)
 		}
 	}
+}
+
+func TestErrorHandling(t *testing.T) {
+	t.Run("invalid JSON input", func(t *testing.T) {
+		_, err := UpdateDependabotConfig("not valid json")
+		if err == nil {
+			t.Fatal("expected error for invalid JSON")
+		}
+	})
+
+	t.Run("invalid YAML content", func(t *testing.T) {
+		req := UpdateDependabotConfigRequest{
+			Content:    ":\n  :\n    - [invalid",
+			Ecosystems: []Ecosystem{{"npm", "/", "daily", nil, nil}},
+		}
+		inputJSON, _ := json.Marshal(req)
+		_, err := UpdateDependabotConfig(string(inputJSON))
+		if err == nil {
+			t.Fatal("expected error for invalid YAML")
+		}
+	})
+
+	t.Run("empty content with no ecosystems", func(t *testing.T) {
+		req := UpdateDependabotConfigRequest{
+			Content:    "",
+			Ecosystems: []Ecosystem{},
+		}
+		inputJSON, _ := json.Marshal(req)
+		output, err := UpdateDependabotConfig(string(inputJSON))
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if output.IsChanged {
+			t.Error("expected IsChanged to be false for empty content with no ecosystems")
+		}
+	})
+
+	t.Run("subtractive with empty content", func(t *testing.T) {
+		req := UpdateDependabotConfigRequest{
+			Content:     "",
+			Ecosystems:  []Ecosystem{{"npm", "/", "daily", nil, nil}},
+			Subtractive: true,
+		}
+		inputJSON, _ := json.Marshal(req)
+		output, err := UpdateDependabotConfig(string(inputJSON))
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if output.IsChanged {
+			t.Error("expected IsChanged to be false for subtractive with empty content")
+		}
+	})
+
+	t.Run("additive with content missing updates key", func(t *testing.T) {
+		req := UpdateDependabotConfigRequest{
+			Content:    "version: 2\n",
+			Ecosystems: []Ecosystem{{"npm", "/", "daily", nil, nil}},
+		}
+		inputJSON, _ := json.Marshal(req)
+		_, err := UpdateDependabotConfig(string(inputJSON))
+		if err == nil {
+			t.Fatal("expected error for YAML content with no updates list")
+		}
+	})
+
+	t.Run("subtractive with content missing updates key", func(t *testing.T) {
+		req := UpdateDependabotConfigRequest{
+			Content:     "version: 2\n",
+			Ecosystems:  []Ecosystem{{"npm", "/", "daily", nil, nil}},
+			Subtractive: true,
+		}
+		inputJSON, _ := json.Marshal(req)
+		_, err := UpdateDependabotConfig(string(inputJSON))
+		if err == nil {
+			t.Fatal("expected error for subtractive with no updates list")
+		}
+	})
+
+	t.Run("subtractive with empty ecosystems", func(t *testing.T) {
+		content := "version: 2\nupdates:\n  - package-ecosystem: npm\n    directory: /\n    schedule:\n      interval: daily\n"
+		req := UpdateDependabotConfigRequest{
+			Content:     content,
+			Ecosystems:  []Ecosystem{},
+			Subtractive: true,
+		}
+		inputJSON, _ := json.Marshal(req)
+		output, err := UpdateDependabotConfig(string(inputJSON))
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if output.IsChanged {
+			t.Error("expected IsChanged to be false for subtractive with empty ecosystems")
+		}
+		if output.FinalOutput != content {
+			t.Error("expected output to match original content")
+		}
+	})
 }
