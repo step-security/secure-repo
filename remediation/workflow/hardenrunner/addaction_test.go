@@ -91,6 +91,20 @@ func TestCustomActionConfig(t *testing.T) {
 			wantUpdated: true,
 			outputFile:  "customActionSubtractive.yml",
 		},
+		{
+			name:        "three jobs: custom present, harden-runner present, empty gets action",
+			inputFile:   "customActionAlreadyPresent.yml",
+			config:      HardenRunnerConfig{Config: customConfig},
+			wantUpdated: true,
+			outputFile:  "customActionAlreadyPresent.yml",
+		},
+		{
+			name:        "subtractive three jobs: custom unchanged, harden-runner replaced, empty gets action",
+			inputFile:   "customActionAlreadyPresentSubtractive.yml",
+			config:      HardenRunnerConfig{Config: customConfig, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "customActionAlreadyPresentSubtractive.yml",
+		},
 	}
 
 	for _, tt := range tests {
