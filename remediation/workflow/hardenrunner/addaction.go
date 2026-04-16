@@ -93,6 +93,10 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		return "", updated, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
+	// Extract the action path from the config to detect custom actions already present.
+	configAction := getActionFromConfig(hardenRunnerConfig)
+	configActionPath := strings.Split(configAction, "@")[0]
+
 	// Build a map of jobName → yaml.Node for runs-on label lookup
 	jobNodeMap := map[string]*yaml.Node{}
 	if hardenRunnerConfig.SkipHardenRunner && len(hardenRunnerConfig.RunnerLabels) > 0 {
@@ -128,7 +132,7 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		}
 		alreadyPresent := false
 		for _, step := range job.Steps {
-			if len(step.Uses) > 0 && strings.HasPrefix(step.Uses, HardenRunnerActionPath) {
+			if len(step.Uses) > 0 && (strings.HasPrefix(step.Uses, HardenRunnerActionPath) || strings.HasPrefix(step.Uses, configActionPath)) {
 				alreadyPresent = true
 				break
 			}
