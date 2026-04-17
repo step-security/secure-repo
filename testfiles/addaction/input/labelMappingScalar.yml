@@ -1,0 +1,11 @@
+name: test-label-mapping-scalar
+on:
+  push:
+jobs:
+  build:
+    runs-on:
+      group: large-runners
+      labels: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "build"

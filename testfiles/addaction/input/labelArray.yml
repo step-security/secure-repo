@@ -1,0 +1,10 @@
+name: test-label-array
+on:
+  push:
+jobs:
+  build:
+    # Run on self-hosted runners with ubuntu
+    runs-on: [self-hosted, linux, ubuntu-latest] # custom runner pool
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "build"

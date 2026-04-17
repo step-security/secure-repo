@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      production:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        dependency-type: production
+        group-by: semver-level

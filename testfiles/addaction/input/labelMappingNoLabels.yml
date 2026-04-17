@@ -1,0 +1,10 @@
+name: test-label-mapping-no-labels
+on:
+  push:
+jobs:
+  build:
+    runs-on:
+      group: large-runners
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "build"
