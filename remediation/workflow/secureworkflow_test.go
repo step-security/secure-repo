@@ -109,39 +109,20 @@ func TestSecureWorkflow(t *testing.T) {
 			  ]`),
 	)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/releases/latest",
-		httpmock.NewStringResponder(200, `{
-		"tag_name": "v5.5.5",
-		"name": "v5.5.5",
-		"body": "Release notes",
-		"created_at": "2023-01-01T00:00:00Z"
-	}`))
+	// Mock GetMajorTagIfExists calls (GET /git/ref/tags/vN) for ReplaceActions
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/ref/tags/v5",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5","object":{"sha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","type":"commit"}}`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/releases/latest",
-		httpmock.NewStringResponder(200, `{
-			"tag_name": "v2.1.0",
-			"name": "v2.1.0",
-			"body": "Release notes",
-			"created_at": "2023-01-01T00:00:00Z"
-		}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/ref/tags/v5",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5","object":{"sha":"e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5","type":"commit"}}`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/github/super-linter/releases/latest",
-		httpmock.NewStringResponder(200, `{
-			"tag_name": "v4.9.0",
-			"name": "v4.9.0",
-			"body": "Release notes",
-			"created_at": "2023-01-01T00:00:00Z"
-		}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/ref/tags/v1",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1","object":{"sha":"f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1","type":"commit"}}`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/releases/latest",
-		httpmock.NewStringResponder(200, `{
-			"tag_name": "v2.1.0",
-			"name": "v2.1.0",
-			"body": "Release notes",
-			"created_at": "2023-01-01T00:00:00Z"
-		}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/ref/tags/v1",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1","object":{"sha":"dddddddddddddddddddddddddddddddddddddddd","type":"commit"}}`))
 
-	// Mock APIs for step-security/action-semantic-pull-request
+	// Mock PinActions calls for step-security/action-semantic-pull-request@v5
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/commits/v5",
 		httpmock.NewStringResponder(200, `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0`))
 
@@ -156,36 +137,37 @@ func TestSecureWorkflow(t *testing.T) {
 			}
 		]`))
 
-	// Mock APIs for step-security/skip-duplicate-actions
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/commits/v2",
-		httpmock.NewStringResponder(200, `b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1`))
+	// Mock PinActions calls for step-security/skip-duplicate-actions@v5
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/commits/v5",
+		httpmock.NewStringResponder(200, `e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/matching-refs/tags/v2.",
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/matching-refs/tags/v5.",
 		httpmock.NewStringResponder(200, `[
 			{
-				"ref": "refs/tags/v2.1.0",
+				"ref": "refs/tags/v5.3.0",
 				"object": {
-					"sha": "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1",
+					"sha": "e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5",
 					"type": "commit"
 				}
 			}
 		]`))
 
-	// Mock APIs for step-security/git-restore-mtime-action
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/commits/v2",
-		httpmock.NewStringResponder(200, `c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2`))
+	// Mock PinActions calls for step-security/git-restore-mtime-action@v1
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/commits/v1",
+		httpmock.NewStringResponder(200, `f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1`))
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/matching-refs/tags/v2.",
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/matching-refs/tags/v1.",
 		httpmock.NewStringResponder(200, `[
 			{
-				"ref": "refs/tags/v2.1.0",
+				"ref": "refs/tags/v1.1.0",
 				"object": {
-					"sha": "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2",
+					"sha": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
 					"type": "commit"
 				}
 			}
 		]`))
 
+	// Mock PinActions calls for step-security/actions-cache@v1
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/commits/v1",
 		httpmock.NewStringResponder(200, `d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1b2c3`))
 
@@ -199,14 +181,6 @@ func TestSecureWorkflow(t *testing.T) {
 				}
 			}
 		]`))
-
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/releases/latest",
-		httpmock.NewStringResponder(200, `{
-			"tag_name": "v1.0.0",
-			"name": "v1.0.0",
-			"body": "Release notes",
-			"created_at": "2023-01-01T00:00:00Z"
-		}`))
 
 	tests := []struct {
 		fileName                   string
@@ -257,11 +231,13 @@ func TestSecureWorkflow(t *testing.T) {
 			queryParams["addHardenRunner"] = "true"
 			queryParams["pinActions"] = "true"
 			queryParams["addPermissions"] = "false"
+			queryParams["replaceActionByMajorTag"] = "true"
 		case "compositeAction.yml":
 			queryParams["addMaintainedActions"] = "true"
 			queryParams["addHardenRunner"] = "false"
 			queryParams["pinActions"] = "true"
 			queryParams["addPermissions"] = "false"
+			queryParams["replaceActionByMajorTag"] = "true"
 		}
 		queryParams["addProjectComment"] = "false"
 

@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: step-security/action-semantic-pull-request@v5
+      - uses: step-security/action-semantic-pull-request@v6
         with:
           types: feat,fix,chore
       - uses: step-security/skip-duplicate-actions@v5
@@ -15,7 +15,7 @@ jobs:
       - uses: step-security/git-restore-mtime-action@v2
         with:
           pattern: '**/*'
-      - uses: step-security/actions-cache/restore@v1
+      - uses: step-security/actions-cache/restore@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
