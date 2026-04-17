@@ -1,0 +1,27 @@
+name: 'Test Composite Action'
+description: 'Test composite action for maintained actions replacement'
+branding:
+  icon: 'arrow-up'
+  color: 'blue'
+inputs:
+  component:
+    description: 'Component Name'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - uses: amannn/action-semantic-pull-request@v5
+      with:
+        types: feat,fix,chore
+
+    - uses: fkirc/skip-duplicate-actions@v5
+      with:
+        do_not_skip: '["release"]'
+
+    - uses: chetan/git-restore-mtime-action@v1
+      with:
+        pattern: '**/*'
+
+    - name: Run custom script
+      run: echo "Running custom script"
+      shell: bash
