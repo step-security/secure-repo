@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 
 	"github.com/step-security/secure-repo/remediation/workflow/metadata"
@@ -73,7 +74,10 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	var err error
 	if len(ref) == 40 && pin.IsAllHex(ref) {
 		version, err = GetMajorTagFromSHA(actionName, ref)
-		if err != nil || version == "" {
+		if err != nil {
+			return "", fmt.Errorf("unable to resolve SHA %s to major tag: %w", ref, err)
+		}
+		if version == "" {
 			return "", fmt.Errorf("unable to resolve SHA %s to major tag", ref)
 		}
 	} else {
@@ -114,6 +118,7 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 			if newAction, ok := actionMap[actionName]; ok {
 				version, err := resolveVersion(step.Uses, actionName, newAction, replaceByMajorTag)
 				if err != nil {
+					log.Printf("skipping replacement of %s: %v", step.Uses, err)
 					continue
 				}
 				replacements = append(replacements, replacement{
@@ -135,6 +140,7 @@ func ReplaceActions(inputYaml string, customerMaintainedActions map[string]strin
 				if newAction, ok := actionMap[actionName]; ok {
 					version, err := resolveVersion(step.Uses, actionName, newAction, replaceByMajorTag)
 					if err != nil {
+						log.Printf("skipping replacement of %s: %v", step.Uses, err)
 						continue
 					}
 					replacements = append(replacements, replacement{

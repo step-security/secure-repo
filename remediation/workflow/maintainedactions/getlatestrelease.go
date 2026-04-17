@@ -92,8 +92,6 @@ func GetMajorTagFromSHA(ownerRepo, sha string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("len refs:", len(refs))
-
 	for _, ref := range refs {
 		var refSHA string
 		if ref.GetObject().GetType() == "commit" {

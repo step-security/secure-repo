@@ -41,36 +41,36 @@ func TestReplaceActions(t *testing.T) {
 	}{
 		{
 			name:        "one job with actions to replace",
-			inputFile:   "oneJob.yml",
-			outputFile:  "oneJob.yml",
+			inputFile:   "oneJob_majorTag.yml",
+			outputFile:  "oneJob_majorTag.yml",
 			wantUpdated: true,
 			wantErr:     false,
 		},
 		{
 			name:        "no changes needed - already using maintained actions",
-			inputFile:   "noChangesNeeded.yml",
-			outputFile:  "noChangesNeeded.yml",
+			inputFile:   "noChangesNeeded_majorTag.yml",
+			outputFile:  "noChangesNeeded_majorTag.yml",
 			wantUpdated: false,
 			wantErr:     false,
 		},
 		{
 			name:        "double job with actions to replace",
-			inputFile:   "doubleJob.yml",
-			outputFile:  "doubleJob.yml",
+			inputFile:   "doubleJob_majorTag.yml",
+			outputFile:  "doubleJob_majorTag.yml",
 			wantUpdated: true,
 			wantErr:     false,
 		},
 		{
 			name:        "composite action with actions to replace",
-			inputFile:   "compositeAction.yml",
-			outputFile:  "compositeAction.yml",
+			inputFile:   "compositeAction_majorTag.yml",
+			outputFile:  "compositeAction_majorTag.yml",
 			wantUpdated: true,
 			wantErr:     false,
 		},
 		{
 			name:        "no replacement when fork does not have matching major version",
-			inputFile:   "noMatchingMajorVersion.yml",
-			outputFile:  "noMatchingMajorVersion.yml",
+			inputFile:   "noMatchingMajorVersion_majorTag.yml",
+			outputFile:  "noMatchingMajorVersion_majorTag.yml",
 			wantUpdated: false,
 			wantErr:     false,
 		},
@@ -146,36 +146,36 @@ func TestReplaceActionsLatestRelease(t *testing.T) {
 	}{
 		{
 			name:        "one job with latest release versions",
-			inputFile:   "oneJob.yml",
-			outputFile:  "oneJobLatest.yml",
+			inputFile:   "oneJob_latest.yml",
+			outputFile:  "oneJob_latest.yml",
 			wantUpdated: true,
 			wantErr:     false,
 		},
 		{
 			name:        "no changes needed - already using maintained actions",
-			inputFile:   "noChangesNeeded.yml",
-			outputFile:  "noChangesNeeded.yml",
+			inputFile:   "noChangesNeeded_latest.yml",
+			outputFile:  "noChangesNeeded_latest.yml",
 			wantUpdated: false,
 			wantErr:     false,
 		},
 		{
 			name:        "double job with latest release versions",
-			inputFile:   "doubleJob.yml",
-			outputFile:  "doubleJobLatest.yml",
+			inputFile:   "doubleJob_latest.yml",
+			outputFile:  "doubleJob_latest.yml",
 			wantUpdated: true,
 			wantErr:     false,
 		},
 		{
 			name:        "composite action with latest release versions",
-			inputFile:   "compositeAction.yml",
-			outputFile:  "compositeActionLatest.yml",
+			inputFile:   "compositeAction_latest.yml",
+			outputFile:  "compositeAction_latest.yml",
 			wantUpdated: true,
 			wantErr:     false,
 		},
 		{
 			name:        "replacement happens even when major version differs (latest release used)",
-			inputFile:   "noMatchingMajorVersion.yml",
-			outputFile:  "noMatchingMajorVersionLatest.yml",
+			inputFile:   "noMatchingMajorVersion_latest.yml",
+			outputFile:  "noMatchingMajorVersion_latest.yml",
 			wantUpdated: true,
 			wantErr:     false,
 		},
@@ -218,13 +218,4 @@ func TestReplaceActionsLatestRelease(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestSome(t *testing.T) {
-
-	version, err := GetMajorTagFromSHA("tj-actions/changed-files", "00f80efd45353091691a96565de08f4f50c685f8")
-	if err != nil {
-		t.Errorf("GetMajorTagFromSHA() error = %v", err)
-	}
-	t.Logf("GetMajorTagFromSHA() version = %v", version)
 }
