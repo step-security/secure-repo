@@ -1,0 +1,9 @@
+name: "pkgdeps/git-tag-action"
+action-token:
+  action-input:
+    input: github_token
+    is-default: false
+  permissions:
+    contents: write
+    contents-reason: git tag to repository
+    #Reference: https://github.com/pkgdeps/git-tag-action/blob/c1cf86ac20db977893b854eff1f29b21b1857b6e/src/main.ts#L23
