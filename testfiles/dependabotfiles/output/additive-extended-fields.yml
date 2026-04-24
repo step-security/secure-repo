@@ -1,0 +1,70 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      # Update on Fridays
+      day: friday
+
+    # Private registries
+    registries:
+      - pypi-private
+
+    # Exclude build artifacts
+    exclude-paths:
+      - dist/*
+      - build/*
+
+    # Vendor dependencies
+    vendor: true
+
+    # Allow external code execution
+    insecure-external-code-execution: allow
+
+    # Multi ecosystem grouping
+    multi-ecosystem-group: backend-deps
+
+    # Enable beta ecosystems
+    enable-beta-ecosystems: true
+
+    # Cooldown settings
+    cooldown:
+      default-days: 7
+      # Major version updates need more time
+      semver-major-days: 30
+
+    # Group related packages
+    groups:
+      # All flask related packages
+      flask:
+        patterns:
+          - flask
+          - flask-*
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
+    registries:
+      - github-npm
+    exclude-paths:
+      - node_modules/*
+      - .cache/*
+    vendor: false
+    insecure-external-code-execution: deny
+    multi-ecosystem-group: frontend-deps
+    enable-beta-ecosystems: true
+
+registries:
+  pypi-private:
+    type: python-index
+    url: https://pypi.example.com/simple
+    token: ${{ secrets.PYPI_TOKEN }}

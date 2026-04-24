@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /frontend
+      - /backend
+      - /shared
+    schedule:
+      interval: daily
+    labels:
+      - dependencies
