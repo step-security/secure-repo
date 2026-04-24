@@ -1,0 +1,40 @@
+version: 2
+registries:
+  docker-hub:
+    type: docker-registry
+    url: https://registry.hub.docker.com
+    username: octocat
+    password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+updates:
+  # Docker images — scanned across multiple service roots
+  - package-ecosystem: "docker"
+    directories:
+      - /
+      - /app
+      - /services
+    schedule:
+      interval: daily
+    labels:
+      - "docker"
+      - "dependencies"
+    cooldown:
+      default-days: 10
+      semver-major-days: 60
+  # npm packages across frontend services
+  - package-ecosystem: "npm"
+    directories:
+      - /frontend
+      - /backend
+    schedule:
+      interval: daily
+    labels:
+      - "javascript"
+    cooldown:
+      default-days: 3
+  - package-ecosystem: "github-actions"
+    directory: /
+    schedule:
+      interval: weekly
+    # Keep CI actions up to date automatically
+    labels:
+      - "ci"
