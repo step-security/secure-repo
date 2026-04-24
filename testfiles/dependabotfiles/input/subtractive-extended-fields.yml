@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    registries:
+      - npm-registry
+    exclude-paths:
+      - vendor/*
+    vendor: true
+    insecure-external-code-execution: allow
+    multi-ecosystem-group: my-group
+    enable-beta-ecosystems: false

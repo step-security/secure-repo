@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    rebase-strategy: auto
+    target-branch: develop
+    versioning-strategy: increase
+    milestone: 3
+    open-pull-requests-limit: 7
+    assignees:
+      - dev1
+      - dev2
+    reviewers:
+      - lead
+    labels:
+      - deps
+    commit-message:
+      prefix: deps
+    pull-request-branch-name:
+      separator: /
+    allow:
+      - dependency-name: lodash
+    ignore:
+      - dependency-name: webpack
+        versions:
+          - 5.x
