@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Main application dependencies
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+      # Run updates on Monday morning
+      day: monday
+      time: "09:00"
+      timezone: America/New_York
+
+    # Team members responsible for reviewing
+    assignees:
+      - user1
+      - user2
+
+    # Code reviewers
+    reviewers:
+      - reviewer1
+
+    # PR labels
+    labels:
+      - dependencies
+
+    # Milestone tracking
+    milestone: 4
+
+    # Limit concurrent PRs
+    open-pull-requests-limit: 5
+
+    # Target branch for PRs
+    target-branch: develop
+
+    # Commit message format
+    commit-message:
+      prefix: "deps"
+      include: scope
+
+    # Rebase strategy
+    rebase-strategy: auto
+
+    # Versioning strategy
+    versioning-strategy: increase
+
+registries:
+  npm-registry:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{ secrets.NPM_TOKEN }}

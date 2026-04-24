@@ -1,0 +1,34 @@
+version: 2
+updates:
+  # Monorepo npm dependencies
+  - package-ecosystem: npm
+    # Multiple directories in the monorepo
+    directories:
+      - /frontend
+      - /backend
+      - /shared
+    schedule:
+      interval: daily
+
+    # PR labels
+    labels:
+      - dependencies
+      - npm
+
+    # Limit concurrent PRs
+    open-pull-requests-limit: 10
+
+    # Group all minor and patch updates
+    groups:
+      # Production dependencies
+      production:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+registries:
+  github-npm:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{ secrets.GH_TOKEN }}
