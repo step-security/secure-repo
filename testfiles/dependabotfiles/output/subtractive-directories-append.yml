@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directories:
+      - /app
+      - /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: "nuget"
+    directory: /app
+    schedule:
+      interval: daily
