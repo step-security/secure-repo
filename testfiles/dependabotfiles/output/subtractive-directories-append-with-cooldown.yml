@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directories:
+      - /app
+      - /
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 5
+
+  - package-ecosystem: "nuget"
+    directory: /app
+    schedule:
+      interval: daily

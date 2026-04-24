@@ -24,6 +24,7 @@ type UpdateDependabotConfigResponse struct {
 type Ecosystem struct {
 	PackageEcosystem string
 	Directory        string
+	Directories      []string         `json:",omitempty"`
 	Interval         string
 	CoolDown         *CoolDown        `json:",omitempty"`
 	Groups           map[string]Group `json:",omitempty"`
@@ -55,10 +56,11 @@ type Group struct {
 	GroupBy         string   `yaml:"group-by,omitempty"`
 }
 
-// Update embeds the upstream dependabot.Update inline so all its fields are preserved,
-// and extends it with the groups and cooldown blocks.
+// ExtendedUpdate embeds the upstream dependabot.Update inline so all its fields are preserved,
+// and extends it with the directories, groups, and cooldown blocks.
 type ExtendedUpdate struct {
 	dependabot.Update `yaml:",inline"`
+	Directories       []string         `yaml:"directories,omitempty"`
 	Groups            map[string]Group `yaml:"groups,omitempty"`
 	CoolDown          *CoolDown        `yaml:"cooldown,omitempty"`
 }
@@ -67,6 +69,25 @@ type ExtendedUpdate struct {
 type Config struct {
 	Version int              `yaml:"version"`
 	Updates []ExtendedUpdate `yaml:"updates"`
+}
+
+// matchesEcosystem reports whether an existing config entry already covers the
+// requested ecosystem by package-ecosystem and directory (singular or plural).
+func matchesEcosystem(update ExtendedUpdate, eco Ecosystem) bool {
+	if update.PackageEcosystem != eco.PackageEcosystem {
+		return false
+	}
+	// Match by singular directory.
+	if update.Directory != "" && (update.Directory == eco.Directory || update.Directory == eco.Directory+"/") {
+		return true
+	}
+	// Match by plural directories: covered if any existing directory equals eco.Directory.
+	for _, d := range update.Directories {
+		if d == eco.Directory || d == eco.Directory+"/" {
+			return true
+		}
+	}
+	return false
 }
 
 // getIndentation returns the indentation level of the first list found in a given YAML string.
@@ -199,39 +220,63 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		for _, Update := range updateDependabotConfigRequest.Ecosystems {
 			updateAlreadyExist := false
 			for _, update := range cfg.Updates {
-				if update.PackageEcosystem == Update.PackageEcosystem && (update.Directory == Update.Directory || update.Directory == Update.Directory+"/") {
+				if matchesEcosystem(update, Update) {
 					updateAlreadyExist = true
 					break
 				}
 			}
 
 			if !updateAlreadyExist {
-				item := ExtendedUpdate{
-					Update: dependabot.Update{
-						PackageEcosystem: Update.PackageEcosystem,
-						Directory:        Update.Directory,
-						Schedule:         dependabot.Schedule{Interval: Update.Interval},
-					},
-					Groups:   Update.Groups,
-					CoolDown: Update.CoolDown,
-				}
-				items := []ExtendedUpdate{item}
-				addedItem, err := yaml.Marshal(items)
-				if err != nil {
-					return nil, fmt.Errorf("failed to marshal update items: %v", err)
-				}
-				data, err := addIndentation(string(addedItem), indentation)
-				if err != nil {
-					return nil, fmt.Errorf("failed to add indentation: %v", err)
+				// If an existing entry uses directories (plural) for the same ecosystem,
+				// append the new directory to that list instead of creating a new entry.
+				appendedToDirectories := false
+				for i, update := range cfg.Updates {
+					if update.PackageEcosystem == Update.PackageEcosystem && len(update.Directories) > 0 {
+						entryNode := updatesNode.Content[i]
+						dirsNode := findMappingValue(entryNode, "directories")
+						if dirsNode != nil {
+							newDirs := append(update.Directories, Update.Directory)
+							newLines, netChange, ch := replaceSequence(inputLines, dirsNode, newDirs, lineOffset)
+							if ch {
+								inputLines = newLines
+								lineOffset += netChange
+								response.IsChanged = true
+							}
+							appendedToDirectories = true
+						}
+						break
+					}
 				}
 
-				// Trim trailing newline to avoid double blank lines when content
-				// follows after the updates section (e.g. registries block).
-				dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
-				insertAt := updatesLastLine + lineOffset
-				inputLines = insertAfterLine(inputLines, insertAt, dataLines)
-				lineOffset += len(dataLines)
-				response.IsChanged = true
+				if !appendedToDirectories {
+					item := ExtendedUpdate{
+						Update: dependabot.Update{
+							PackageEcosystem: Update.PackageEcosystem,
+							Directory:        Update.Directory,
+							Schedule:         dependabot.Schedule{Interval: Update.Interval},
+						},
+						Directories: Update.Directories,
+						Groups:      Update.Groups,
+						CoolDown:    Update.CoolDown,
+					}
+					items := []ExtendedUpdate{item}
+					addedItem, err := yaml.Marshal(items)
+					if err != nil {
+						return nil, fmt.Errorf("failed to marshal update items: %v", err)
+					}
+					data, err := addIndentation(string(addedItem), indentation)
+					if err != nil {
+						return nil, fmt.Errorf("failed to add indentation: %v", err)
+					}
+
+					// Trim trailing newline to avoid double blank lines when content
+					// follows after the updates section (e.g. registries block).
+					dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
+					insertAt := updatesLastLine + lineOffset
+					inputLines = insertAfterLine(inputLines, insertAt, dataLines)
+					lineOffset += len(dataLines)
+					response.IsChanged = true
+				}
 			}
 		}
 
@@ -453,10 +498,12 @@ func buildNewGroupsBlock(groups map[string]Group, keyIndent, indentStep int) []s
 
 // entryReplacement holds what needs to change for a single updates entry.
 type entryReplacement struct {
-	entryNode   *yaml.Node
-	newInterval string
-	cooldown    *CoolDown
-	groups      map[string]Group
+	entryNode    *yaml.Node
+	newInterval  string
+	cooldown     *CoolDown
+	groups       map[string]Group
+	dirToAppend  string   // non-empty: append this directory to the existing directories list
+	existingDirs []string // current directories list (used when dirToAppend is set)
 }
 
 // applyCooldownUpdates updates existing cooldown fields or inserts new ones.
@@ -703,7 +750,7 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 	for _, eco := range ecosystems {
 		found := false
 		for i, update := range cfg.Updates {
-			if update.PackageEcosystem == eco.PackageEcosystem && (update.Directory == eco.Directory || update.Directory == eco.Directory+"/") {
+			if matchesEcosystem(update, eco) {
 				found = true
 				replacements = append(replacements, entryReplacement{
 					entryNode:   updatesNode.Content[i],
@@ -715,7 +762,27 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 			}
 		}
 		if !found {
-			toAdd = append(toAdd, eco)
+			// If an existing entry for the same ecosystem uses directories (plural),
+			// append the new directory to that list and apply the field updates there,
+			// instead of creating a separate new entry.
+			appendedTo := false
+			for i, update := range cfg.Updates {
+				if update.PackageEcosystem == eco.PackageEcosystem && len(update.Directories) > 0 {
+					replacements = append(replacements, entryReplacement{
+						entryNode:    updatesNode.Content[i],
+						newInterval:  eco.Interval,
+						cooldown:     eco.CoolDown,
+						groups:       eco.Groups,
+						dirToAppend:  eco.Directory,
+						existingDirs: update.Directories,
+					})
+					appendedTo = true
+					break
+				}
+			}
+			if !appendedTo {
+				toAdd = append(toAdd, eco)
+			}
 		}
 	}
 
@@ -738,6 +805,20 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 
 	for _, r := range replacements {
 		keyIndent := r.entryNode.Column - 1
+
+		// --- Append directory to existing directories list ---
+		if r.dirToAppend != "" {
+			dirsNode := findMappingValue(r.entryNode, "directories")
+			if dirsNode != nil {
+				newDirs := append(r.existingDirs, r.dirToAppend)
+				newLines, netChange, ch := replaceSequence(inputLines, dirsNode, newDirs, lineOffset)
+				if ch {
+					inputLines = newLines
+					lineOffset += netChange
+					changed = true
+				}
+			}
+		}
 
 		// --- Interval ---
 		if r.newInterval != "" {
