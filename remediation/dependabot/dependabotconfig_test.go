@@ -19,49 +19,49 @@ func TestConfigDependabotFile(t *testing.T) {
 		isChanged  bool
 	}{
 		{
-			fileName:  "Without-github-action.yml",
+			fileName:   "Without-github-action.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}, {PackageEcosystem: "npm", Directory: "/app", Interval: "daily"}},
-			isChanged: true,
+			isChanged:  true,
 		},
 		{
-			fileName:  "With-github-action.yml",
+			fileName:   "With-github-action.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
-			isChanged: false,
+			isChanged:  false,
 		},
 		{
-			fileName:  "File-not-exit.yml",
+			fileName:   "File-not-exit.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
-			isChanged: true,
+			isChanged:  true,
 		},
 		{
-			fileName:  "Same-ecosystem-different-directory.yml",
+			fileName:   "Same-ecosystem-different-directory.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}, {PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
-			isChanged: true,
+			isChanged:  true,
 		},
 		{
-			fileName:  "No-Indentation.yml",
+			fileName:   "No-Indentation.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
-			isChanged: true,
+			isChanged:  true,
 		},
 		{
-			fileName:  "High-Indentation.yml",
+			fileName:   "High-Indentation.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
-			isChanged: true,
+			isChanged:  true,
 		},
 		{
-			fileName:  "extra-slash.yml",
+			fileName:   "extra-slash.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
-			isChanged: false,
+			isChanged:  false,
 		},
 		{
-			fileName:  "npm-with-registries-and-groups.yml",
+			fileName:   "npm-with-registries-and-groups.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
-			isChanged: true,
+			isChanged:  true,
 		},
 		{
-			fileName:  "rich-attributes-additive.yml",
+			fileName:   "rich-attributes-additive.yml",
 			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
-			isChanged: true,
+			isChanged:  true,
 		},
 	}
 
@@ -698,6 +698,36 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			ecosystems: []Ecosystem{
 				{PackageEcosystem: "docker", Directory: "/services", Interval: "daily", CoolDown: &CoolDown{DefaultDays: 10, SemverMajorDays: 60}},
 				{PackageEcosystem: "npm", Directory: "/backend", Interval: "daily", CoolDown: &CoolDown{DefaultDays: 3}},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — real-world shaped config: github-actions + nuget + docker (singular
+			// directories) alongside npm which uses directories (plural) with no existing cooldown.
+			// github-actions uses directories (plural), / already in list → cooldown added in place.
+			// npm uses directories (plural), /temp not in list → /temp appended, cooldown + groups added.
+			// nuget and docker (singular directory) are left untouched.
+			fileName: "subtractive-directories-append-existing-cooldown.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/temp",
+					CoolDown:         &CoolDown{DefaultDays: 7, SemverMajorDays: 30, SemverMinorDays: 14, SemverPatchDays: 5},
+					Interval:         "weekly",
+					Groups: map[string]Group{
+						"dev-dependencies":        {AppliesTo: "version-updates", Patterns: []string{"*"}, DependencyType: "development"},
+						"production-dependencies": {AppliesTo: "version-updates", Patterns: []string{"*"}, DependencyType: "production"},
+					},
+				},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "monthly",
+					CoolDown:         &CoolDown{DefaultDays: 14},
+					Groups: map[string]Group{"actions": {
+						Patterns: []string{"*"},
+					}},
+				},
 			},
 			isChanged: true,
 		},

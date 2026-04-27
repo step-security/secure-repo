@@ -502,8 +502,8 @@ type entryReplacement struct {
 	newInterval  string
 	cooldown     *CoolDown
 	groups       map[string]Group
-	dirToAppend  string   // non-empty: append this directory to the existing directories list
-	existingDirs []string // current directories list (used when dirToAppend is set)
+	dirsToAppend []string // directories to append to the existing directories list
+	existingDirs []string // current directories list (used when dirsToAppend is set)
 }
 
 // applyCooldownUpdates updates existing cooldown fields or inserts new ones.
@@ -744,20 +744,40 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 	// Phase 1: Build replacements by matching request ecosystems to YAML entries.
 	// Uses the Config struct for matching (like the additive path and maintainedActions),
 	// and updatesNode.Content[i] to get the corresponding yaml.Node for line-based edits.
-	var replacements []entryReplacement
+	// replacementMap is keyed on *yaml.Node so that multiple ecosystems targeting the same
+	// YAML entry (e.g. npm "/" and npm "/temp" both referencing the same npm directories
+	// block) are merged into a single entryReplacement, preventing double-edit corruption.
+	replacementMap := make(map[*yaml.Node]*entryReplacement)
 	var toAdd []Ecosystem
+
+	mergeInto := func(r *entryReplacement, eco Ecosystem) {
+		if r.newInterval == "" {
+			r.newInterval = eco.Interval
+		}
+		if r.cooldown == nil {
+			r.cooldown = eco.CoolDown
+		}
+		if r.groups == nil {
+			r.groups = eco.Groups
+		}
+	}
 
 	for _, eco := range ecosystems {
 		found := false
 		for i, update := range cfg.Updates {
 			if matchesEcosystem(update, eco) {
 				found = true
-				replacements = append(replacements, entryReplacement{
-					entryNode:   updatesNode.Content[i],
-					newInterval: eco.Interval,
-					cooldown:    eco.CoolDown,
-					groups:      eco.Groups,
-				})
+				node := updatesNode.Content[i]
+				if existing, ok := replacementMap[node]; ok {
+					mergeInto(existing, eco)
+				} else {
+					replacementMap[node] = &entryReplacement{
+						entryNode:   node,
+						newInterval: eco.Interval,
+						cooldown:    eco.CoolDown,
+						groups:      eco.Groups,
+					}
+				}
 				break
 			}
 		}
@@ -768,14 +788,23 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 			appendedTo := false
 			for i, update := range cfg.Updates {
 				if update.PackageEcosystem == eco.PackageEcosystem && len(update.Directories) > 0 {
-					replacements = append(replacements, entryReplacement{
-						entryNode:    updatesNode.Content[i],
-						newInterval:  eco.Interval,
-						cooldown:     eco.CoolDown,
-						groups:       eco.Groups,
-						dirToAppend:  eco.Directory,
-						existingDirs: update.Directories,
-					})
+					node := updatesNode.Content[i]
+					if existing, ok := replacementMap[node]; ok {
+						existing.dirsToAppend = append(existing.dirsToAppend, eco.Directory)
+						if existing.existingDirs == nil {
+							existing.existingDirs = update.Directories
+						}
+						mergeInto(existing, eco)
+					} else {
+						replacementMap[node] = &entryReplacement{
+							entryNode:    node,
+							newInterval:  eco.Interval,
+							cooldown:     eco.CoolDown,
+							groups:       eco.Groups,
+							dirsToAppend: []string{eco.Directory},
+							existingDirs: update.Directories,
+						}
+					}
 					appendedTo = true
 					break
 				}
@@ -784,6 +813,11 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 				toAdd = append(toAdd, eco)
 			}
 		}
+	}
+
+	var replacements []entryReplacement
+	for _, r := range replacementMap {
+		replacements = append(replacements, *r)
 	}
 
 	if len(replacements) == 0 && len(toAdd) == 0 {
@@ -806,11 +840,11 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 	for _, r := range replacements {
 		keyIndent := r.entryNode.Column - 1
 
-		// --- Append directory to existing directories list ---
-		if r.dirToAppend != "" {
+		// --- Append directories to existing directories list ---
+		if len(r.dirsToAppend) > 0 {
 			dirsNode := findMappingValue(r.entryNode, "directories")
 			if dirsNode != nil {
-				newDirs := append(r.existingDirs, r.dirToAppend)
+				newDirs := append(r.existingDirs, r.dirsToAppend...)
 				newLines, netChange, ch := replaceSequence(inputLines, dirsNode, newDirs, lineOffset)
 				if ch {
 					inputLines = newLines
