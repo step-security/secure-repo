@@ -1,0 +1,56 @@
+version: 2
+updates:
+  # CI actions - keep up to date
+  - package-ecosystem: github-actions
+    directories:
+      - /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14
+    groups:
+      actions:
+        patterns:
+          - '*'
+
+  # .NET dependencies
+  - package-ecosystem: nuget
+    directory: /.github/workflows/execute-build/test_apps/DotnetHelloWorld/AerospikeHelloWorld/AerospikeHelloWorld
+    schedule:
+      interval: daily
+
+  # Container images
+  - package-ecosystem: docker
+    directory: /.github/workflows/execute-build/test_apps/hi
+    schedule:
+      interval: daily
+
+  # Node.js dependencies
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /temp
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 14
+      semver-patch-days: 5
+    groups:
+      dev-dependencies:
+        applies-to: version-updates
+        patterns:
+          - '*'
+        dependency-type: development
+      production-dependencies:
+        applies-to: version-updates
+        patterns:
+          - '*'
+        dependency-type: production
+
+registries:
+  npm-github:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{ secrets.NPM_TOKEN }}
