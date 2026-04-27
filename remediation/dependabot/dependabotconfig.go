@@ -194,6 +194,7 @@ func ecosystemToExtendedUpdate(eco Ecosystem) ExtendedUpdate {
 	return item
 }
 
+
 // getIndentation returns the indentation level of the first list found in a given YAML string.
 // If the YAML string is empty or invalid, or if no list is found, it returns an error.
 func getIndentation(dependabotConfig string) (int, error) {
@@ -323,24 +324,47 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 			}
 
 			if !updateAlreadyExist {
-				item := ecosystemToExtendedUpdate(eco)
-				items := []ExtendedUpdate{item}
-				addedItem, err := yaml.Marshal(items)
-				if err != nil {
-					return nil, fmt.Errorf("failed to marshal update items: %v", err)
-				}
-				data, err := addIndentation(string(addedItem), indentation)
-				if err != nil {
-					return nil, fmt.Errorf("failed to add indentation: %v", err)
+				// If an existing entry uses directories (plural) for the same ecosystem,
+				// append the new directory to that list instead of creating a new entry.
+				appendedToDirectories := false
+				for i, update := range cfg.Updates {
+					if update.PackageEcosystem == eco.PackageEcosystem && len(update.Directories) > 0 {
+						entryNode := updatesNode.Content[i]
+						dirsNode := findMappingValue(entryNode, "directories")
+						if dirsNode != nil {
+							newDirs := append(update.Directories, eco.Directory)
+							newLines, netChange, ch := replaceSequence(inputLines, dirsNode, newDirs, lineOffset)
+							if ch {
+								inputLines = newLines
+								lineOffset += netChange
+								response.IsChanged = true
+							}
+							appendedToDirectories = true
+						}
+						break
+					}
 				}
 
-				// Trim trailing newline to avoid double blank lines when content
-				// follows after the updates section (e.g. registries block).
-				dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
-				insertAt := updatesLastLine + lineOffset
-				inputLines = insertAfterLine(inputLines, insertAt, dataLines)
-				lineOffset += len(dataLines)
-				response.IsChanged = true
+				if !appendedToDirectories {
+					item := ecosystemToExtendedUpdate(eco)
+					items := []ExtendedUpdate{item}
+					addedItem, err := yaml.Marshal(items)
+					if err != nil {
+						return nil, fmt.Errorf("failed to marshal update items: %v", err)
+					}
+					data, err := addIndentation(string(addedItem), indentation)
+					if err != nil {
+						return nil, fmt.Errorf("failed to add indentation: %v", err)
+					}
+
+					// Trim trailing newline to avoid double blank lines when content
+					// follows after the updates section (e.g. registries block).
+					dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
+					insertAt := updatesLastLine + lineOffset
+					inputLines = insertAfterLine(inputLines, insertAt, dataLines)
+					lineOffset += len(dataLines)
+					response.IsChanged = true
+				}
 			}
 		}
 

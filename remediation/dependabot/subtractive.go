@@ -724,7 +724,12 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 	}
 
 	// Phase 1: Build replacements by matching request ecosystems to YAML entries.
+	// replacementByNode tracks which YAML node already has a replacement so that
+	// multiple ecosystems targeting the same entry (e.g. npm "/" and npm "/temp"
+	// both referencing the same npm directories block) are merged, preventing
+	// double-edit corruption.
 	var replacements []entryReplacement
+	replacementByNode := make(map[*yaml.Node]int) // node → index in replacements
 	var toAdd []Ecosystem
 
 	for _, eco := range ecosystems {
@@ -732,15 +737,56 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 		for i, update := range cfg.Updates {
 			if matchesEcosystem(update, eco) {
 				found = true
-				replacements = append(replacements, entryReplacement{
-					entryNode: updatesNode.Content[i],
-					eco:       eco,
-				})
+				node := updatesNode.Content[i]
+				if idx, ok := replacementByNode[node]; ok {
+					// Merge: append this eco's directory to existing replacement's Directories.
+					existing := &replacements[idx]
+					if eco.Directory != "" {
+						existing.eco.Directories = append(existing.eco.Directories, eco.Directory)
+					}
+				} else {
+					replacementByNode[node] = len(replacements)
+					replacements = append(replacements, entryReplacement{
+						entryNode: node,
+						eco:       eco,
+					})
+				}
 				break
 			}
 		}
 		if !found {
-			toAdd = append(toAdd, eco)
+			// If an existing entry for the same ecosystem uses directories (plural),
+			// append the new directory to that list instead of creating a separate new entry.
+			appendedTo := false
+			for i, update := range cfg.Updates {
+				if update.PackageEcosystem == eco.PackageEcosystem && len(update.Directories) > 0 {
+					node := updatesNode.Content[i]
+					if idx, ok := replacementByNode[node]; ok {
+						existing := &replacements[idx]
+						if eco.Directory != "" {
+							existing.eco.Directories = append(existing.eco.Directories, eco.Directory)
+						}
+					} else {
+						// Create replacement with Directories = existing + new.
+						mergedEco := eco
+						mergedEco.Directories = make([]string, 0, len(update.Directories)+1)
+						mergedEco.Directories = append(mergedEco.Directories, update.Directories...)
+						if eco.Directory != "" {
+							mergedEco.Directories = append(mergedEco.Directories, eco.Directory)
+						}
+						replacementByNode[node] = len(replacements)
+						replacements = append(replacements, entryReplacement{
+							entryNode: node,
+							eco:       mergedEco,
+						})
+					}
+					appendedTo = true
+					break
+				}
+			}
+			if !appendedTo {
+				toAdd = append(toAdd, eco)
+			}
 		}
 	}
 
