@@ -6,7 +6,12 @@ import (
 	"log"
 	"path"
 	"testing"
+
+	dependabotconfig "github.com/paulvollmer/dependabot-config-go"
 )
+
+func intPtr(i int) *int    { return &i }
+func boolPtr(b bool) *bool { return &b }
 
 func TestConfigDependabotFile(t *testing.T) {
 
@@ -297,6 +302,80 @@ func TestAdditiveCoolDown(t *testing.T) {
 					Directory:        "/",
 					Interval:         "weekly",
 					CoolDown:         &CoolDown{DefaultDays: 5},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Additive — add github-actions with all library fields (assignees, reviewers,
+			// labels, milestone, commit-message, allow, ignore, etc.) to a config that
+			// already has npm. Comments, blank lines, and registries block preserved.
+			inputFileName:  "additive-library-fields.yml",
+			outputFileName: "additive-library-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem:      "github-actions",
+					Directory:             "/",
+					Interval:              "weekly",
+					Assignees:             []string{"ci-bot"},
+					Reviewers:             []string{"platform-team"},
+					Labels:                []string{"ci", "github-actions"},
+					Milestone:             intPtr(2),
+					OpenPullRequestsLimit: intPtr(3),
+					CommitMessage: &dependabotconfig.CommitMessage{
+						Prefix:  "[CI]",
+						Include: "scope",
+					},
+					RebaseStrategy:        "auto",
+					VersioningStrategy:    "increase",
+					TargetBranch:          "main",
+					PullRequestBranchName: &dependabotconfig.PullRequestBranchName{Separator: "/"},
+					Allow:                 []dependabotconfig.Allow{{DependencyName: "actions/*"}},
+					Ignore:                []dependabotconfig.Ignore{{DependencyName: "actions/checkout", Versions: []string{">= 5"}}},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Additive — add npm with all extended fields (registries, exclude-paths,
+			// vendor, insecure-external-code-execution, multi-ecosystem-group,
+			// enable-beta-ecosystems, cooldown) to a config that already has pip.
+			// Comments, blank lines, and registries block preserved.
+			inputFileName:  "additive-extended-fields.yml",
+			outputFileName: "additive-extended-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem:              "npm",
+					Directory:                     "/frontend",
+					Interval:                      "daily",
+					Registries:                    []string{"github-npm"},
+					ExcludePaths:                  []string{"node_modules/*", ".cache/*"},
+					Vendor:                        boolPtr(false),
+					InsecureExternalCodeExecution: "deny",
+					MultiEcosystemGroup:           "frontend-deps",
+					EnableBetaEcosystems:          boolPtr(true),
+					CoolDown:                      &CoolDown{DefaultDays: 5, SemverMajorDays: 14},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Additive — add github-actions with directories (plural), labels, groups,
+			// and open-pull-requests-limit to a monorepo config that already has npm
+			// with directories. Comments, blank lines, and registries block preserved.
+			inputFileName:  "additive-directories.yml",
+			outputFileName: "additive-directories.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem:      "github-actions",
+					Directory:             "/",
+					Interval:              "weekly",
+					Directories:           []string{"/", "/.github"},
+					Labels:                []string{"ci"},
+					OpenPullRequestsLimit: intPtr(5),
+					Groups: map[string]Group{
+						"actions": {Patterns: []string{"actions/*"}},
+					},
 				},
 			},
 			isChanged: true,
@@ -746,6 +825,208 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 					Groups: map[string]Group{
 						"all": {Patterns: []string{"react", "angular"}},
 					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — update all library-supported fields: scalars (interval,
+			// rebase-strategy, target-branch, versioning-strategy, milestone,
+			// open-pull-requests-limit), string lists (assignees, reviewers, labels),
+			// commit-message sub-fields, pull-request-branch-name separator,
+			// schedule sub-fields (day, time, timezone), and object lists (allow, ignore).
+			fileName: "subtractive-library-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Interval:         "weekly",
+					Day:              "friday",
+					Time:             "14:00",
+					Timezone:         "Europe/London",
+					Allow: []dependabotconfig.Allow{
+						{DependencyName: "react"},
+						{DependencyName: "angular", DependencyType: "development"},
+					},
+					Assignees: []string{"user3", "user4", "user5"},
+					CommitMessage: &dependabotconfig.CommitMessage{
+						Prefix:            "chore",
+						PrefixDevelopment: "build",
+					},
+					Ignore: []dependabotconfig.Ignore{
+						{DependencyName: "jquery", Versions: []string{"3.x"}},
+					},
+					Labels:                []string{"deps", "automated"},
+					Milestone:             intPtr(10),
+					OpenPullRequestsLimit: intPtr(5),
+					PullRequestBranchName: &dependabotconfig.PullRequestBranchName{Separator: "-"},
+					RebaseStrategy:        "disabled",
+					Reviewers:             []string{"lead-dev"},
+					TargetBranch:          "main",
+					VersioningStrategy:    "lockfile-only",
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — add new library-supported fields to a minimal config
+			// that only has package-ecosystem, directory, and schedule.interval.
+			fileName: "subtractive-add-library-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem:      "npm",
+					Directory:             "/",
+					RebaseStrategy:        "auto",
+					TargetBranch:          "develop",
+					VersioningStrategy:    "increase",
+					Milestone:             intPtr(3),
+					OpenPullRequestsLimit: intPtr(7),
+					Assignees:             []string{"dev1", "dev2"},
+					Reviewers:             []string{"lead"},
+					Labels:                []string{"deps"},
+					CommitMessage:         &dependabotconfig.CommitMessage{Prefix: "deps"},
+					PullRequestBranchName: &dependabotconfig.PullRequestBranchName{Separator: "/"},
+					Allow:                 []dependabotconfig.Allow{{DependencyName: "lodash"}},
+					Ignore:                []dependabotconfig.Ignore{{DependencyName: "webpack", Versions: []string{"5.x"}}},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — add schedule sub-fields (day, time, timezone) to a
+			// config that only has schedule.interval.
+			fileName: "subtractive-schedule-subfields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Day:              "wednesday",
+					Time:             "10:00",
+					Timezone:         "Asia/Kolkata",
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Test updating all 6 ExtendedUpdate-only fields in-place.
+			fileName: "subtractive-extended-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem:              "npm",
+					Directory:                     "/",
+					Registries:                    []string{"npm-private", "github-registry"},
+					ExcludePaths:                  []string{"dist/*", "build/*"},
+					Vendor:                        boolPtr(false),
+					InsecureExternalCodeExecution: "deny",
+					MultiEcosystemGroup:           "updated-group",
+					EnableBetaEcosystems:          boolPtr(true),
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Test adding all 6 ExtendedUpdate-only fields to a minimal config.
+			fileName: "subtractive-add-extended-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem:              "npm",
+					Directory:                     "/",
+					Registries:                    []string{"npm-private", "github-registry"},
+					ExcludePaths:                  []string{"dist/*", "build/*"},
+					Vendor:                        boolPtr(false),
+					InsecureExternalCodeExecution: "deny",
+					MultiEcosystemGroup:           "updated-group",
+					EnableBetaEcosystems:          boolPtr(true),
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Realistic multi-ecosystem config: updates 3 existing ecosystems
+			// (bundler, docker, github-actions) with a mix of scalar, list, block,
+			// and boolean field changes, and adds a brand-new npm ecosystem.
+			// Verifies comments, blank lines, and top-level registries are preserved.
+			fileName: "subtractive-complex-multi-ecosystem.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "bundler",
+					Directory:        "/manager",
+					Interval:         "weekly",
+					Day:              "monday",
+					CoolDown: &CoolDown{
+						DefaultDays:     3,
+						SemverMajorDays: 14,
+						SemverMinorDays: 5,
+					},
+					InsecureExternalCodeExecution: "deny",
+					Labels:                        []string{"dependabot-gem-upgrade", "security"},
+					OpenPullRequestsLimit:         intPtr(0),
+					CommitMessage: &dependabotconfig.CommitMessage{
+						Prefix:  "[DEPS] ",
+						Include: "scope",
+					},
+					TargetBranch: "develop",
+					Vendor:       boolPtr(true),
+				},
+				{
+					PackageEcosystem:      "docker",
+					Directory:             "/.github",
+					Interval:              "weekly",
+					Assignees:             []string{"infra-team", "devops-lead"},
+					Reviewers:             []string{"platform-team"},
+					OpenPullRequestsLimit: intPtr(3),
+					RebaseStrategy:        "auto",
+				},
+				{
+					PackageEcosystem:      "github-actions",
+					Directory:             "/",
+					OpenPullRequestsLimit: intPtr(5),
+					CommitMessage: &dependabotconfig.CommitMessage{
+						Prefix:  "[CI] ",
+						Include: "scope",
+					},
+					TargetBranch: "main",
+					Ignore: []dependabotconfig.Ignore{
+						{DependencyName: "actions/checkout", Versions: []string{">= 5"}},
+					},
+				},
+				{
+					PackageEcosystem:      "npm",
+					Directory:             "/frontend",
+					Interval:              "weekly",
+					Labels:                []string{"dependabot-npm-upgrade"},
+					OpenPullRequestsLimit: intPtr(5),
+					CommitMessage: &dependabotconfig.CommitMessage{
+						Prefix:  "[DEPS] ",
+						Include: "scope",
+					},
+					Ignore: []dependabotconfig.Ignore{
+						{DependencyName: "typescript", Versions: []string{"5.x"}},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — update an existing directories list (plural).
+			fileName: "subtractive-directories-update.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/frontend",
+					Directories:      []string{"/frontend", "/backend", "/shared"},
+				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — add directories to a config that only has directory (singular).
+			fileName: "subtractive-directories-add.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Directories:      []string{"/frontend", "/backend"},
 				},
 			},
 			isChanged: true,

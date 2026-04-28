@@ -1,0 +1,37 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+      day: monday
+      time: "09:00"
+      timezone: America/New_York
+    allow:
+      - dependency-name: lodash
+      - dependency-name: express
+        dependency-type: production
+    assignees:
+      - user1
+      - user2
+    commit-message:
+      prefix: "deps"
+      include: scope
+    ignore:
+      - dependency-name: webpack
+        versions:
+          - "4.x"
+          - "5.x"
+    labels:
+      - dependencies
+      - npm
+    milestone: 5
+    open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: /
+    rebase-strategy: auto
+    reviewers:
+      - reviewer1
+      - reviewer2
+    target-branch: develop
+    versioning-strategy: increase
