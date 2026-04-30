@@ -20,47 +20,47 @@ func TestConfigDependabotFile(t *testing.T) {
 	}{
 		{
 			fileName:   "Without-github-action.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}, {"npm", "/app", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}, {PackageEcosystem: "npm", Directory: "/app", Interval: "daily"}},
 			isChanged:  true,
 		},
 		{
 			fileName:   "With-github-action.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
 			isChanged:  false,
 		},
 		{
 			fileName:   "File-not-exit.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
 			isChanged:  true,
 		},
 		{
 			fileName:   "Same-ecosystem-different-directory.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}, {"npm", "/sample", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}, {PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
 			isChanged:  true,
 		},
 		{
 			fileName:   "No-Indentation.yml",
-			Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
 			isChanged:  true,
 		},
 		{
 			fileName:   "High-Indentation.yml",
-			Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
 			isChanged:  true,
 		},
 		{
 			fileName:   "extra-slash.yml",
-			Ecosystems: []Ecosystem{{"npm", "/sample", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/sample", Interval: "daily"}},
 			isChanged:  false,
 		},
 		{
 			fileName:   "npm-with-registries-and-groups.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
 			isChanged:  true,
 		},
 		{
 			fileName:   "rich-attributes-additive.yml",
-			Ecosystems: []Ecosystem{{"github-actions", "/", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"}},
 			isChanged:  true,
 		},
 	}
@@ -200,6 +200,67 @@ func TestGroups(t *testing.T) {
 			},
 			subtractive: false,
 			isChanged:   false,
+		},
+		{
+			// Additive — existing entry uses directories (plural); the requested directory is
+			// already in the list → no duplicate entry created, output unchanged.
+			inputFileName:  "directories-no-duplicate.yml",
+			outputFileName: "directories-no-duplicate.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "github-actions", Directory: "/", Interval: "daily"},
+			},
+			subtractive: false,
+			isChanged:   false,
+		},
+		{
+			// Additive — existing docker entry uses directories (plural); new directory
+			// not in the list → appended to existing directories instead of new entry.
+			inputFileName:  "directories-append.yml",
+			outputFileName: "directories-append.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "docker", Directory: "/services", Interval: "daily"},
+			},
+			subtractive: false,
+			isChanged:   true,
+		},
+		{
+			// Additive — two ecosystems each using directories (plural):
+			//   docker: already has cooldown in config; request sends different cooldown + same interval
+			//     → only /services appended, existing cooldown (default-days:5, semver-major-days:30) untouched.
+			//   npm: no cooldown in config; request sends cooldown + different interval (daily vs weekly)
+			//     → only /backend appended, no cooldown added, interval stays weekly.
+			// Verifies that in additive mode only directories are appended; cooldown and interval
+			// updates on existing entries belong to subtractive mode. Also checks that registries,
+			// comments, and labels are fully preserved.
+			inputFileName:  "directories-append-with-cooldown.yml",
+			outputFileName: "directories-append-with-cooldown.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "docker", Directory: "/services", Interval: "daily", CoolDown: &CoolDown{DefaultDays: 10}},
+				{PackageEcosystem: "npm", Directory: "/backend", Interval: "daily", CoolDown: &CoolDown{DefaultDays: 3}},
+			},
+			subtractive: false,
+			isChanged:   true,
+		},
+		{
+			// Additive — three docker directories appended to the same docker entry,
+			// three npm directories appended to the same npm entry, plus a new pip
+			// ecosystem that doesn't exist in the config (gets added as new entry).
+			// Verifies collect-then-apply dedup, sorted index processing across
+			// multiple entries, and new entry insertion with registries, comments,
+			// and labels preserved.
+			inputFileName:  "directories-append-multiple.yml",
+			outputFileName: "directories-append-multiple.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "docker", Directory: "/api", Interval: "daily"},
+				{PackageEcosystem: "docker", Directory: "/shared", Interval: "daily"},
+				{PackageEcosystem: "docker", Directory: "/workers", Interval: "daily"},
+				{PackageEcosystem: "npm", Directory: "/backend", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/api-client", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/common", Interval: "weekly"},
+				{PackageEcosystem: "pip", Directory: "/backend", Interval: "weekly"},
+			},
+			subtractive: false,
+			isChanged:   true,
 		},
 	}
 
@@ -609,6 +670,89 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 			isChanged: true,
 		},
 		{
+			// Subtractive — existing entry uses directories (plural); interval update
+			// must match via directories and update in place, not create a duplicate entry.
+			fileName: "subtractive-directories-interval.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "github-actions", Directory: "/", Interval: "weekly"},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — existing entry uses directories (plural) but requested directory
+			// is not in the list; directory must be appended and interval updated in place,
+			// not create a separate new entry.
+			fileName: "subtractive-directories-append.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "github-actions", Directory: "/", Interval: "weekly"},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — existing entry uses directories (plural); requested directory
+			// is already in the list; cooldown block must be added to the matched entry.
+			fileName: "subtractive-directories-add-cooldown.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "github-actions", Directory: "/", CoolDown: &CoolDown{DefaultDays: 5}},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — existing entry uses directories (plural); requested directory
+			// is not in the list; directory must be appended and cooldown block added,
+			// all on the existing entry.
+			fileName: "subtractive-directories-append-with-cooldown.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "github-actions", Directory: "/", CoolDown: &CoolDown{DefaultDays: 5}},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — realistic config with registries, comments, and labels; two ecosystems
+			// each using directories (plural) with directory not in list:
+			//   docker: already has cooldown; request sends updated cooldown + same interval
+			//     → /services appended, cooldown updated (default-days:5→10, semver-major-days:30→60).
+			//   npm: no cooldown; request sends cooldown + different interval (weekly→daily)
+			//     → /backend appended, cooldown block added, interval changed to daily.
+			// github-actions (singular directory) is untouched. Registries, comments, and labels preserved.
+			fileName: "subtractive-directories-append-with-cooldown-rich.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "docker", Directory: "/services", Interval: "daily", CoolDown: &CoolDown{DefaultDays: 10, SemverMajorDays: 60}},
+				{PackageEcosystem: "npm", Directory: "/backend", Interval: "daily", CoolDown: &CoolDown{DefaultDays: 3}},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — real-world shaped config: github-actions + nuget + docker (singular
+			// directories) alongside npm which uses directories (plural) with no existing cooldown.
+			// github-actions uses directories (plural), / already in list → cooldown added in place.
+			// npm uses directories (plural), /temp not in list → /temp appended, cooldown + groups added.
+			// nuget and docker (singular directory) are left untouched.
+			fileName: "subtractive-directories-append-existing-cooldown.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/temp",
+					CoolDown:         &CoolDown{DefaultDays: 7, SemverMajorDays: 30, SemverMinorDays: 14, SemverPatchDays: 5},
+					Interval:         "weekly",
+					Groups: map[string]Group{
+						"dev-dependencies":        {AppliesTo: "version-updates", Patterns: []string{"*"}, DependencyType: "development"},
+						"production-dependencies": {AppliesTo: "version-updates", Patterns: []string{"*"}, DependencyType: "production"},
+					},
+				},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "monthly",
+					CoolDown:         &CoolDown{DefaultDays: 14},
+					Groups: map[string]Group{"actions": {
+						Patterns: []string{"*"},
+					}},
+				},
+			},
+			isChanged: true,
+		},
+		{
 			// Subtractive — rich config with schedule.day/time/timezone, assignees,
 			// reviewers, labels, milestone, open-pull-requests-limit, target-branch,
 			// commit-message, rebase-strategy, versioning-strategy; verifies all
@@ -624,6 +768,24 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 						"all": {Patterns: []string{"react", "angular"}},
 					},
 				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — three docker directories appended to docker entry,
+			// three npm directories appended to npm entry, plus a new pip ecosystem
+			// (gets added). Docker interval changed from daily to weekly.
+			// Verifies merged replaceSequence across multiple entries, new entry
+			// insertion, and preservation of registries, comments, and labels.
+			fileName: "subtractive-directories-append-multiple.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "docker", Directory: "/api", Interval: "weekly"},
+				{PackageEcosystem: "docker", Directory: "/shared", Interval: "weekly"},
+				{PackageEcosystem: "docker", Directory: "/workers", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/backend", Interval: "daily"},
+				{PackageEcosystem: "npm", Directory: "/api-client", Interval: "daily"},
+				{PackageEcosystem: "npm", Directory: "/common", Interval: "daily"},
+				{PackageEcosystem: "pip", Directory: "/backend", Interval: "weekly"},
 			},
 			isChanged: true,
 		},
@@ -674,7 +836,7 @@ func TestErrorHandling(t *testing.T) {
 	t.Run("invalid YAML content", func(t *testing.T) {
 		req := UpdateDependabotConfigRequest{
 			Content:    ":\n  :\n    - [invalid",
-			Ecosystems: []Ecosystem{{"npm", "/", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/", Interval: "daily"}},
 		}
 		inputJSON, _ := json.Marshal(req)
 		_, err := UpdateDependabotConfig(string(inputJSON))
@@ -701,7 +863,7 @@ func TestErrorHandling(t *testing.T) {
 	t.Run("subtractive with empty content", func(t *testing.T) {
 		req := UpdateDependabotConfigRequest{
 			Content:     "",
-			Ecosystems:  []Ecosystem{{"npm", "/", "daily", nil, nil}},
+			Ecosystems:  []Ecosystem{{PackageEcosystem: "npm", Directory: "/", Interval: "daily"}},
 			Subtractive: true,
 		}
 		inputJSON, _ := json.Marshal(req)
@@ -717,7 +879,7 @@ func TestErrorHandling(t *testing.T) {
 	t.Run("additive with content missing updates key", func(t *testing.T) {
 		req := UpdateDependabotConfigRequest{
 			Content:    "version: 2\n",
-			Ecosystems: []Ecosystem{{"npm", "/", "daily", nil, nil}},
+			Ecosystems: []Ecosystem{{PackageEcosystem: "npm", Directory: "/", Interval: "daily"}},
 		}
 		inputJSON, _ := json.Marshal(req)
 		_, err := UpdateDependabotConfig(string(inputJSON))
@@ -729,7 +891,7 @@ func TestErrorHandling(t *testing.T) {
 	t.Run("subtractive with content missing updates key", func(t *testing.T) {
 		req := UpdateDependabotConfigRequest{
 			Content:     "version: 2\n",
-			Ecosystems:  []Ecosystem{{"npm", "/", "daily", nil, nil}},
+			Ecosystems:  []Ecosystem{{PackageEcosystem: "npm", Directory: "/", Interval: "daily"}},
 			Subtractive: true,
 		}
 		inputJSON, _ := json.Marshal(req)
