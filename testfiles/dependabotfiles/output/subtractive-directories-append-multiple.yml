@@ -1,0 +1,47 @@
+version: 2
+registries:
+  docker-hub:
+    type: docker-registry
+    url: https://registry.hub.docker.com
+    username: octocat
+    password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+updates:
+  # Docker images — scanned across multiple service roots
+  - package-ecosystem: docker
+    directories:
+      - /
+      - /app
+      - /api
+      - /shared
+      - /workers
+    schedule:
+      interval: weekly
+    labels:
+      - "docker"
+      - "dependencies"
+  # GitHub Actions kept up to date
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Keep CI actions up to date automatically
+    labels:
+      - "ci"
+  # npm packages across frontend services
+  - package-ecosystem: npm
+    directories:
+      - /frontend
+      - /admin
+      - /shared-ui
+      - /backend
+      - /api-client
+      - /common
+    schedule:
+      interval: daily
+    labels:
+      - "javascript"
+
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly

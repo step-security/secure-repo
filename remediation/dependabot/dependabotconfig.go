@@ -217,6 +217,11 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		updatesLastLine := findLastLine(updatesNode)
 		lineOffset := 0
 
+		// First pass: collect directories to append per existing config entry.
+		// This avoids calling replaceSequence multiple times on the same YAML
+		// node, which would corrupt line positions.
+		dirsToAppend := map[int][]string{} // cfg.Updates index -> dirs to add
+		var newEntries []Ecosystem
 		for _, Update := range updateDependabotConfigRequest.Ecosystems {
 			updateAlreadyExist := false
 			for _, update := range cfg.Updates {
@@ -227,57 +232,70 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 			}
 
 			if !updateAlreadyExist {
-				// If an existing entry uses directories (plural) for the same ecosystem,
-				// append the new directory to that list instead of creating a new entry.
-				appendedToDirectories := false
+				appended := false
 				for i, update := range cfg.Updates {
 					if update.PackageEcosystem == Update.PackageEcosystem && len(update.Directories) > 0 {
-						entryNode := updatesNode.Content[i]
-						dirsNode := findMappingValue(entryNode, "directories")
-						if dirsNode != nil {
-							newDirs := append(update.Directories, Update.Directory)
-							newLines, netChange, ch := replaceSequence(inputLines, dirsNode, newDirs, lineOffset)
-							if ch {
-								inputLines = newLines
-								lineOffset += netChange
-								response.IsChanged = true
-							}
-							appendedToDirectories = true
-						}
+						dirsToAppend[i] = append(dirsToAppend[i], Update.Directory)
+						appended = true
 						break
 					}
 				}
+				if !appended {
+					newEntries = append(newEntries, Update)
+				}
+			}
+		}
 
-				if !appendedToDirectories {
-					item := ExtendedUpdate{
-						Update: dependabot.Update{
-							PackageEcosystem: Update.PackageEcosystem,
-							Directory:        Update.Directory,
-							Schedule:         dependabot.Schedule{Interval: Update.Interval},
-						},
-						Directories: Update.Directories,
-						Groups:      Update.Groups,
-						CoolDown:    Update.CoolDown,
-					}
-					items := []ExtendedUpdate{item}
-					addedItem, err := yaml.Marshal(items)
-					if err != nil {
-						return nil, fmt.Errorf("failed to marshal update items: %v", err)
-					}
-					data, err := addIndentation(string(addedItem), indentation)
-					if err != nil {
-						return nil, fmt.Errorf("failed to add indentation: %v", err)
-					}
-
-					// Trim trailing newline to avoid double blank lines when content
-					// follows after the updates section (e.g. registries block).
-					dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
-					insertAt := updatesLastLine + lineOffset
-					inputLines = insertAfterLine(inputLines, insertAt, dataLines)
-					lineOffset += len(dataLines)
+		// Apply collected directory appends — one replaceSequence call per entry.
+		// Sort indices so we process top-to-bottom; lineOffset stays correct.
+		sortedIndices := make([]int, 0, len(dirsToAppend))
+		for i := range dirsToAppend {
+			sortedIndices = append(sortedIndices, i)
+		}
+		sort.Ints(sortedIndices)
+		for _, i := range sortedIndices {
+			dirs := dirsToAppend[i]
+			entryNode := updatesNode.Content[i]
+			dirsNode := findMappingValue(entryNode, "directories")
+			if dirsNode != nil {
+				newDirs := uniqueStrings(append(cfg.Updates[i].Directories, dirs...))
+				newLines, netChange, ch := replaceSequence(inputLines, dirsNode, newDirs, lineOffset)
+				if ch {
+					inputLines = newLines
+					lineOffset += netChange
 					response.IsChanged = true
 				}
 			}
+		}
+
+		for _, Update := range newEntries {
+			item := ExtendedUpdate{
+				Update: dependabot.Update{
+					PackageEcosystem: Update.PackageEcosystem,
+					Directory:        Update.Directory,
+					Schedule:         dependabot.Schedule{Interval: Update.Interval},
+				},
+				Directories: Update.Directories,
+				Groups:      Update.Groups,
+				CoolDown:    Update.CoolDown,
+			}
+			items := []ExtendedUpdate{item}
+			addedItem, err := yaml.Marshal(items)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal update items: %v", err)
+			}
+			data, err := addIndentation(string(addedItem), indentation)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add indentation: %v", err)
+			}
+
+			// Trim trailing newline to avoid double blank lines when content
+			// follows after the updates section (e.g. registries block).
+			dataLines := strings.Split(strings.TrimRight(data, "\n"), "\n")
+			insertAt := updatesLastLine + lineOffset
+			inputLines = insertAfterLine(inputLines, insertAt, dataLines)
+			lineOffset += len(dataLines)
+			response.IsChanged = true
 		}
 
 		response.FinalOutput = strings.Join(inputLines, "\n")
@@ -996,4 +1014,17 @@ func addIndentation(data string, indentation int) (string, error) {
 	}
 
 	return finalData.String(), nil
+}
+
+// uniqueStrings removes duplicate strings from a slice while preserving order.
+func uniqueStrings(s []string) []string {
+	seen := map[string]bool{}
+	result := make([]string, 0, len(s))
+	for _, v := range s {
+		if !seen[v] {
+			seen[v] = true
+			result = append(result, v)
+		}
+	}
+	return result
 }
