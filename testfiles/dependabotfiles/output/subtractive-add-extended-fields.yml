@@ -1,0 +1,32 @@
+version: 2
+
+registries:
+  npm-private:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    # token for private npm registry
+    token: ${{secrets.NPM_TOKEN}}
+
+  github-registry:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    # token for github packages
+    token: ${{secrets.GITHUB_TOKEN}}
+
+updates:
+  - package-ecosystem: npm # ecosystem type
+    directory: / # root directory
+
+    schedule:
+      # check for updates daily
+      interval: daily
+    registries:
+      - npm-private
+      - github-registry
+    exclude-paths:
+      - dist/*
+      - build/*
+    vendor: false
+    insecure-external-code-execution: deny
+    multi-ecosystem-group: updated-group
+    enable-beta-ecosystems: true

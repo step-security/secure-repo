@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+      day: wednesday
+      time: "10:00"
+      timezone: Asia/Kolkata
