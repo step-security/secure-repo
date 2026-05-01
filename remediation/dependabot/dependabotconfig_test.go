@@ -246,6 +246,27 @@ func TestGroups(t *testing.T) {
 			subtractive: false,
 			isChanged:   true,
 		},
+		{
+			// Additive — three docker directories appended to the same docker entry,
+			// three npm directories appended to the same npm entry, plus a new pip
+			// ecosystem that doesn't exist in the config (gets added as new entry).
+			// Verifies collect-then-apply dedup, sorted index processing across
+			// multiple entries, and new entry insertion with registries, comments,
+			// and labels preserved.
+			inputFileName:  "directories-append-multiple.yml",
+			outputFileName: "directories-append-multiple.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "docker", Directory: "/api", Interval: "daily"},
+				{PackageEcosystem: "docker", Directory: "/shared", Interval: "daily"},
+				{PackageEcosystem: "docker", Directory: "/workers", Interval: "daily"},
+				{PackageEcosystem: "npm", Directory: "/backend", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/api-client", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/common", Interval: "weekly"},
+				{PackageEcosystem: "pip", Directory: "/backend", Interval: "weekly"},
+			},
+			subtractive: false,
+			isChanged:   true,
+		},
 	}
 
 	for _, test := range tests {
@@ -826,6 +847,24 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 						"all": {Patterns: []string{"react", "angular"}},
 					},
 				},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — three docker directories appended to docker entry,
+			// three npm directories appended to npm entry, plus a new pip ecosystem
+			// (gets added). Docker interval changed from daily to weekly.
+			// Verifies merged replaceSequence across multiple entries, new entry
+			// insertion, and preservation of registries, comments, and labels.
+			fileName: "subtractive-directories-append-multiple.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "docker", Directory: "/api", Interval: "weekly"},
+				{PackageEcosystem: "docker", Directory: "/shared", Interval: "weekly"},
+				{PackageEcosystem: "docker", Directory: "/workers", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/backend", Interval: "daily"},
+				{PackageEcosystem: "npm", Directory: "/api-client", Interval: "daily"},
+				{PackageEcosystem: "npm", Directory: "/common", Interval: "daily"},
+				{PackageEcosystem: "pip", Directory: "/backend", Interval: "weekly"},
 			},
 			isChanged: true,
 		},
