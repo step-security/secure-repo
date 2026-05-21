@@ -23,14 +23,10 @@ updates:
       prefix: "deps"
       include: scope
     groups:
-      # Group all production deps together to reduce PR noise
-      production-deps:
+      # Group all deps together to reduce PR noise
+      everything:
         patterns:
           - "*"
-        dependency-type: production
-        update-types:
-          - minor
-          - patch
     ignore:
       - dependency-name: webpack
         update-types:
