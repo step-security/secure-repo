@@ -154,6 +154,84 @@ func TestGroups(t *testing.T) {
 			isChanged:   true,
 		},
 		{
+			// Subtractive — existing group has different name (docker) than API group (all)
+			// but identical config (patterns: ["*"]); new group is skipped as duplicate.
+			inputFileName:  "group-existing-different-name.yml",
+			outputFileName: "group-existing-different-name.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"*"}},
+					},
+				},
+			},
+			subtractive: true,
+			isChanged:   false,
+		},
+		{
+			// Subtractive — multi-ecosystem: npm has group "prod-updates" with patterns: ["*"],
+			// API sends "all" with patterns: ["*"] → skipped (duplicate); but cooldown is updated.
+			// pip has group "django" with specific patterns, API sends "all" with patterns: ["*"]
+			// → added (not equivalent). Verifies dedup + non-dedup in same request, with
+			// registries, comments, cooldown, ignore, and labels preserved.
+			inputFileName:  "group-skip-duplicate-multi-ecosystem.yml",
+			outputFileName: "group-skip-duplicate-multi-ecosystem.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"*"}},
+					},
+					CoolDown: &CoolDown{DefaultDays: 3},
+				},
+				{
+					PackageEcosystem: "pip",
+					Directory:        "/backend",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"*"}},
+					},
+				},
+			},
+			subtractive: true,
+			isChanged:   true,
+		},
+		{
+			// Customer issue: docker has group "docker" with patterns: ["*"], npm has group
+			// "npm-prod" with patterns: ["*"], github-actions has no groups. API sends "all"
+			// with patterns: ["*"] for all three → docker and npm skip (duplicate),
+			// github-actions gets the new group added.
+			inputFileName:  "group-skip-customer-issue.yml",
+			outputFileName: "group-skip-customer-issue.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "docker",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"*"}},
+					},
+				},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"*"}},
+					},
+				},
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"*"}},
+					},
+				},
+			},
+			subtractive: true,
+			isChanged:   true,
+		},
+		{
 			// Subtractive — all slice fields (patterns, exclude-patterns, update-types) updated;
 			// dependency-type string left unchanged since it is not specified.
 			inputFileName:  "group-prs-modify-slices.yml",
