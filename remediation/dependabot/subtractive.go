@@ -106,6 +106,12 @@ func applyGroupUpdates(groupsNode *yaml.Node, groups map[string]Group, lines *[]
 	nameIndent := getChildIndent(groupsNode)
 	fieldIndent := nameIndent + indentStep
 
+	// Collect all existing group configs for duplicate detection.
+	existingGroupConfigs := make([]Group, 0, len(groupsNode.Content)/2)
+	for i := 0; i+1 < len(groupsNode.Content); i += 2 {
+		existingGroupConfigs = append(existingGroupConfigs, groupFromYAMLNode(groupsNode.Content[i+1]))
+	}
+
 	// Process existing groups in file order.
 	processedGroups := make(map[string]bool)
 	for i := 0; i+1 < len(groupsNode.Content); i += 2 {
@@ -214,11 +220,22 @@ func applyGroupUpdates(groupsNode *yaml.Node, groups map[string]Group, lines *[]
 		addScalar("group-by", ecoGroup.GroupBy)
 	}
 
-	// Add new groups (sorted for deterministic output).
+	// Add new groups (sorted for deterministic output), skipping duplicates.
 	var newGroupNames []string
 	for name := range groups {
 		if !processedGroups[name] {
-			newGroupNames = append(newGroupNames, name)
+			// Check if any existing group already has an equivalent configuration.
+			candidate := groups[name]
+			isDuplicate := false
+			for _, existingCfg := range existingGroupConfigs {
+				if groupsEquivalent(existingCfg, candidate) {
+					isDuplicate = true
+					break
+				}
+			}
+			if !isDuplicate {
+				newGroupNames = append(newGroupNames, name)
+			}
 		}
 	}
 	sort.Strings(newGroupNames)
