@@ -215,6 +215,92 @@ func buildNewGroupsBlock(groups map[string]Group, keyIndent, indentStep int) []s
 	return result
 }
 
+// stringsFromSeqNode extracts a []string from a YAML sequence node.
+// Works for both block style (- a\n- b) and flow style ([a, b]).
+func stringsFromSeqNode(node *yaml.Node) []string {
+	if node == nil || node.Kind != yaml.SequenceNode {
+		return nil
+	}
+	result := make([]string, 0, len(node.Content))
+	for _, item := range node.Content {
+		if item.Kind == yaml.ScalarNode {
+			result = append(result, item.Value)
+		}
+	}
+	return result
+}
+
+// groupFromYAMLNode extracts a Group struct from a YAML mapping node.
+func groupFromYAMLNode(node *yaml.Node) Group {
+	if node == nil || node.Kind != yaml.MappingNode {
+		return Group{}
+	}
+	var g Group
+	for i := 0; i+1 < len(node.Content); i += 2 {
+		key := node.Content[i].Value
+		val := node.Content[i+1]
+		switch key {
+		case "applies-to":
+			g.AppliesTo = val.Value
+		case "patterns":
+			g.Patterns = stringsFromSeqNode(val)
+		case "exclude-patterns":
+			g.ExcludePatterns = stringsFromSeqNode(val)
+		case "dependency-type":
+			g.DependencyType = val.Value
+		case "update-types":
+			g.UpdateTypes = stringsFromSeqNode(val)
+		case "group-by":
+			g.GroupBy = val.Value
+		}
+	}
+	return g
+}
+
+// stringSlicesEqualSet returns true if two string slices contain the same
+// elements regardless of order.
+func stringSlicesEqualSet(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counts := make(map[string]int, len(a))
+	for _, s := range a {
+		counts[s]++
+	}
+	for _, s := range b {
+		counts[s]--
+		if counts[s] < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// groupsEquivalent returns true if the candidate group's non-empty fields
+// all match the corresponding fields in the existing group.
+// Slice fields are compared as unordered sets.
+func groupsEquivalent(existing, candidate Group) bool {
+	if candidate.AppliesTo != "" && existing.AppliesTo != candidate.AppliesTo {
+		return false
+	}
+	if candidate.DependencyType != "" && existing.DependencyType != candidate.DependencyType {
+		return false
+	}
+	if candidate.GroupBy != "" && existing.GroupBy != candidate.GroupBy {
+		return false
+	}
+	if len(candidate.Patterns) > 0 && !stringSlicesEqualSet(existing.Patterns, candidate.Patterns) {
+		return false
+	}
+	if len(candidate.ExcludePatterns) > 0 && !stringSlicesEqualSet(existing.ExcludePatterns, candidate.ExcludePatterns) {
+		return false
+	}
+	if len(candidate.UpdateTypes) > 0 && !stringSlicesEqualSet(existing.UpdateTypes, candidate.UpdateTypes) {
+		return false
+	}
+	return true
+}
+
 // buildObjectListBlock marshals a slice of structs and returns indented YAML lines
 // for "key:\n  - field: val\n  - field: val\n ...".
 func buildObjectListBlock(key string, items interface{}, keyIndent, indentStep int) []string {
