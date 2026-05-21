@@ -276,26 +276,25 @@ func stringSlicesEqualSet(a, b []string) bool {
 	return true
 }
 
-// groupsEquivalent returns true if the candidate group's non-empty fields
-// all match the corresponding fields in the existing group.
-// Slice fields are compared as unordered sets.
+// groupsEquivalent returns true if all fields of the two groups match exactly.
+// Slice fields are compared as unordered sets; scalar fields use ==.
 func groupsEquivalent(existing, candidate Group) bool {
-	if candidate.AppliesTo != "" && existing.AppliesTo != candidate.AppliesTo {
+	if existing.AppliesTo != candidate.AppliesTo {
 		return false
 	}
-	if candidate.DependencyType != "" && existing.DependencyType != candidate.DependencyType {
+	if existing.DependencyType != candidate.DependencyType {
 		return false
 	}
-	if candidate.GroupBy != "" && existing.GroupBy != candidate.GroupBy {
+	if existing.GroupBy != candidate.GroupBy {
 		return false
 	}
-	if len(candidate.Patterns) > 0 && !stringSlicesEqualSet(existing.Patterns, candidate.Patterns) {
+	if !stringSlicesEqualSet(existing.Patterns, candidate.Patterns) {
 		return false
 	}
-	if len(candidate.ExcludePatterns) > 0 && !stringSlicesEqualSet(existing.ExcludePatterns, candidate.ExcludePatterns) {
+	if !stringSlicesEqualSet(existing.ExcludePatterns, candidate.ExcludePatterns) {
 		return false
 	}
-	if len(candidate.UpdateTypes) > 0 && !stringSlicesEqualSet(existing.UpdateTypes, candidate.UpdateTypes) {
+	if !stringSlicesEqualSet(existing.UpdateTypes, candidate.UpdateTypes) {
 		return false
 	}
 	return true

@@ -154,8 +154,9 @@ func TestGroups(t *testing.T) {
 			isChanged:   true,
 		},
 		{
-			// Subtractive — existing group has different name (docker) than API group (all)
-			// but identical config (patterns: ["*"]); new group is skipped as duplicate.
+			// Subtractive — existing group "everything" has identical config to API group
+			// "all" (both have only patterns: ["*"] with no other fields); new group is
+			// skipped as a true duplicate.
 			inputFileName:  "group-existing-different-name.yml",
 			outputFileName: "group-existing-different-name.yml",
 			ecosystems: []Ecosystem{
@@ -171,10 +172,34 @@ func TestGroups(t *testing.T) {
 			isChanged:   false,
 		},
 		{
-			// Subtractive — multi-ecosystem: npm has group "prod-updates" with patterns: ["*"],
-			// API sends "all" with patterns: ["*"] → skipped (duplicate); but cooldown is updated.
+			// Subtractive — existing group "production-minor" has all fields populated
+			// (patterns, exclude-patterns, dependency-type, update-types) and the API
+			// candidate matches every field exactly; new group is skipped as duplicate.
+			inputFileName:  "group-skip-duplicate-all-fields.yml",
+			outputFileName: "group-skip-duplicate-all-fields.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Groups: map[string]Group{
+						"all": {
+							Patterns:        []string{"*"},
+							ExcludePatterns: []string{"@types/*"},
+							DependencyType:  "production",
+							UpdateTypes:     []string{"minor", "patch"},
+						},
+					},
+				},
+			},
+			subtractive: true,
+			isChanged:   false,
+		},
+		{
+			// Subtractive — multi-ecosystem: npm has group "prod-updates" with extra fields
+			// (dependency-type, update-types), API sends "all" with only patterns: ["*"]
+			// → added (fields don't match exactly); cooldown is also updated.
 			// pip has group "django" with specific patterns, API sends "all" with patterns: ["*"]
-			// → added (not equivalent). Verifies dedup + non-dedup in same request, with
+			// → added (not equivalent). Verifies both ecosystems get new groups, with
 			// registries, comments, cooldown, ignore, and labels preserved.
 			inputFileName:  "group-skip-duplicate-multi-ecosystem.yml",
 			outputFileName: "group-skip-duplicate-multi-ecosystem.yml",
@@ -199,10 +224,10 @@ func TestGroups(t *testing.T) {
 			isChanged:   true,
 		},
 		{
-			// Customer issue: docker has group "docker" with patterns: ["*"], npm has group
-			// "npm-prod" with patterns: ["*"], github-actions has no groups. API sends "all"
-			// with patterns: ["*"] for all three → docker and npm skip (duplicate),
-			// github-actions gets the new group added.
+			// Customer issue: docker has group "docker" with extra fields (update-types),
+			// npm has group "npm-prod" with extra fields (dependency-type), github-actions
+			// has no groups. API sends "all" with only patterns: ["*"] for all three →
+			// all three get the new group added (fields don't match exactly).
 			inputFileName:  "group-skip-customer-issue.yml",
 			outputFileName: "group-skip-customer-issue.yml",
 			ecosystems: []Ecosystem{
