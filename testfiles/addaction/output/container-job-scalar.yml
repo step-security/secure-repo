@@ -1,0 +1,14 @@
+name: "Container job workflow - scalar"
+
+on:
+  push:
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: node:18
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
