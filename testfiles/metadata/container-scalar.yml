@@ -1,0 +1,4 @@
+jobs:
+  build:
+    container: node:18
+    steps: []

@@ -1,0 +1,6 @@
+jobs:
+  build:
+    container:
+      image: node:18
+      options: --cpus 1
+    steps: []

@@ -399,22 +399,42 @@ func TestAddActionWithContainer(t *testing.T) {
 	const inputDirectory = "../../../testfiles/addaction/input"
 	const outputDirectory = "../../../testfiles/addaction/output"
 
-	// Test container job with skipContainerJobs = true
-	input, err := ioutil.ReadFile(path.Join(inputDirectory, "container-job.yml"))
-	if err != nil {
-		t.Fatalf("error reading test file")
+	tests := []struct {
+		name      string
+		inputFile string
+	}{
+		{
+			name:      "mapping style container skipped",
+			inputFile: "container-job.yml",
+		},
+		{
+			name:      "scalar style container skipped",
+			inputFile: "container-job-scalar.yml",
+		},
 	}
 
-	// Test: Skip container jobs when skipContainerJobs = true
-	got, gotUpdated, err := AddAction(string(input), HardenRunnerConfig{Config: defaultTestConfig}, false, false, true)
-	if err != nil {
-		t.Errorf("AddAction() with skipContainerJobs=true error = %v", err)
-	}
-	if gotUpdated {
-		t.Errorf("AddAction() with skipContainerJobs=true should not update container job")
-	}
-	if got != string(input) {
-		t.Errorf("AddAction() with skipContainerJobs=true should not modify the yaml")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			output, err := ioutil.ReadFile(path.Join(outputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading output file: %v", err)
+			}
+
+			got, gotUpdated, err := AddAction(string(input), HardenRunnerConfig{Config: defaultTestConfig}, false, false, true)
+			if err != nil {
+				t.Errorf("AddAction() with skipContainerJobs=true error = %v", err)
+			}
+			if gotUpdated {
+				t.Errorf("AddAction() with skipContainerJobs=true should not update container job")
+			}
+			if got != string(output) {
+				t.Errorf("AddAction() with skipContainerJobs=true should not modify the yaml")
+			}
+		})
 	}
 }
 

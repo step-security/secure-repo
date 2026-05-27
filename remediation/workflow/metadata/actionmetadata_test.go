@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -176,6 +177,44 @@ func TestKnowledgeBase(t *testing.T) {
 			log.Println(issue)
 		}
 		t.Fail()
+	}
+}
+
+func TestContainerUnmarshalYAML(t *testing.T) {
+	const inputDirectory = "../../../testfiles/metadata"
+
+	tests := []struct {
+		name          string
+		inputFile     string
+		expectedImage string
+	}{
+		{
+			name:          "scalar form",
+			inputFile:     "container-scalar.yml",
+			expectedImage: "node:18",
+		},
+		{
+			name:          "mapping form",
+			inputFile:     "container-mapping.yml",
+			expectedImage: "node:18",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading test file: %v", err)
+			}
+			var workflow Workflow
+			if err := yaml.Unmarshal(input, &workflow); err != nil {
+				t.Fatalf("unexpected parse error: %v", err)
+			}
+			job := workflow.Jobs["build"]
+			if job.Container.Image != tt.expectedImage {
+				t.Errorf("expected image %q, got %q", tt.expectedImage, job.Container.Image)
+			}
+		})
 	}
 }
 
