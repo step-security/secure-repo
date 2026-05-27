@@ -295,6 +295,50 @@ func TestSecureWorkflow(t *testing.T) {
 	}
 }
 
+func TestSecureWorkflowContainerJobScalar(t *testing.T) {
+	const inputDirectory = "../../testfiles/secureworkflow/input"
+	const outputDirectory = "../../testfiles/secureworkflow/output"
+
+	os.Setenv("KBFolder", "../../knowledge-base/actions")
+
+	input, err := ioutil.ReadFile(path.Join(inputDirectory, "container-job-scalar.yml"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	queryParams := map[string]string{
+		"skipHardenRunnerForContainers": "true",
+		"addProjectComment":             "false",
+	}
+
+	output, err := SecureWorkflow(queryParams, string(input), &mockDynamoDBClient{})
+	if err != nil {
+		t.Errorf("Error not expected: %v", err)
+	}
+
+	expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, "container-job-scalar.yml"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if output.FinalOutput != string(expectedOutput) {
+		t.Errorf("test failed container-job-scalar.yml did not match expected output\nExpected:\n%s\n\nGot:\n%s",
+			string(expectedOutput), output.FinalOutput)
+	}
+
+	if output.AddedHardenRunner {
+		t.Errorf("Harden runner should not be added for container job with skipHardenRunnerForContainers=true")
+	}
+
+	if !output.AddedPermissions {
+		t.Errorf("Permissions should be added")
+	}
+
+	if output.PinnedActions {
+		t.Errorf("No actions to pin in this workflow")
+	}
+}
+
 func TestSecureWorkflowContainerJob(t *testing.T) {
 	const inputDirectory = "../../testfiles/secureworkflow/input"
 	const outputDirectory = "../../testfiles/secureworkflow/output"
