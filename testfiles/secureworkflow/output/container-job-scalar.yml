@@ -1,0 +1,17 @@
+name: Test Workflow
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hello_world:
+    runs-on: ubuntu-latest
+    container: node:18
+
+    steps:
+      - name: Hello
+        shell: bash
+        run: echo "HI"

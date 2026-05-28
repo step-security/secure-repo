@@ -1,0 +1,37 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: friday
+      time: "14:00"
+      timezone: Europe/London
+    allow:
+      - dependency-name: react
+      - dependency-name: angular
+        dependency-type: development
+    assignees:
+      - user3
+      - user4
+      - user5
+    commit-message:
+      prefix: "chore"
+      include: scope
+      prefix-development: build
+    ignore:
+      - dependency-name: jquery
+        versions:
+          - 3.x
+    labels:
+      - deps
+      - automated
+    milestone: 10
+    open-pull-requests-limit: 5
+    pull-request-branch-name:
+      separator: -
+    rebase-strategy: disabled
+    reviewers:
+      - lead-dev
+    target-branch: main
+    versioning-strategy: lockfile-only

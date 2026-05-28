@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    registries:
+      - npm-private
+      - github-registry
+    exclude-paths:
+      - dist/*
+      - build/*
+    vendor: false
+    insecure-external-code-execution: deny
+    multi-ecosystem-group: updated-group
+    enable-beta-ecosystems: true

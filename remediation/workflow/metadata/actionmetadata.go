@@ -146,6 +146,24 @@ func (p *ActionScopePermissions) UnmarshalYAML(unmarshal func(interface{}) error
 
 }
 
+func (c *Container) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// Handle scalar form: container: node:18
+	var image string
+	if err := unmarshal(&image); err == nil {
+		c.Image = image
+		return nil
+	}
+
+	// Handle mapping form: container:\n  image: node:18
+	type ContainerAlias Container
+	var alias ContainerAlias
+	if err := unmarshal(&alias); err != nil {
+		return err
+	}
+	*c = Container(alias)
+	return nil
+}
+
 func (p *Permissions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	mstr := make(map[string]string)
 	if err := unmarshal(&mstr); err == nil {
