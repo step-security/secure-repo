@@ -1305,3 +1305,111 @@ func TestErrorHandling(t *testing.T) {
 		}
 	})
 }
+
+func TestDirectories(t *testing.T) {
+	const inputDirectory = "../../testfiles/dependabotfiles/input"
+	const outputDirectory = "../../testfiles/dependabotfiles/output"
+
+	tests := []struct {
+		inputFileName  string
+		outputFileName string
+		ecosystems     []Ecosystem
+		isChanged      bool
+	}{
+		{
+			// Subtractive — existing config has [/, /packages/ember-native-links, /packages/test-app].
+			// getEcosystemsForDependabot detects npm at all three paths and passes them as separate
+			// singular-Directory ecosystems. All three match the existing entry and merge into one
+			// replacement. Verifies that / is not dropped from the final directories list.
+			// Reproduces: https://github.com/Addepar/ember-native-links/pull/226
+			inputFileName:  "subtractive-directories-drops-root.yml",
+			outputFileName: "subtractive-directories-drops-root.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "npm", Directory: "/"},
+				{PackageEcosystem: "npm", Directory: "/packages/ember-native-links"},
+				{PackageEcosystem: "npm", Directory: "/packages/test-app"},
+			},
+			isChanged: false,
+		},
+		{
+			// Subtractive — rich config with comments and registries. Two ecosystems:
+			// npm: three singular-Directory ecos all match the existing directories entry
+			//   [/, /packages/ember-native-links, /packages/test-app] → / must not be dropped,
+			//   cooldown added to the matched entry.
+			// docker: /c (new) arrives before /a (existing) → /c goes !found→else seeding
+			//   [/a, /b, /c], then /a goes found→if and uniqueStrings deduplicates to [/a, /b, /c],
+			//   group added to the matched entry.
+			// Verifies comments and registries are fully preserved.
+			inputFileName:  "subtractive-directories-rich.yml",
+			outputFileName: "subtractive-directories-rich.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "npm", Directory: "/", CoolDown: &CoolDown{DefaultDays: 5}},
+				{PackageEcosystem: "npm", Directory: "/packages/ember-native-links", CoolDown: &CoolDown{DefaultDays: 5}},
+				{PackageEcosystem: "npm", Directory: "/packages/test-app", CoolDown: &CoolDown{DefaultDays: 5}},
+				{PackageEcosystem: "docker", Directory: "/c", Groups: map[string]Group{"all": {Patterns: []string{"*"}}}},
+				{PackageEcosystem: "docker", Directory: "/a", Groups: map[string]Group{"all": {Patterns: []string{"*"}}}},
+			},
+			isChanged: true,
+		},
+		{
+			// Subtractive — existing entry has directories: [/a, /b]. A new directory /c
+			// (not in existing) arrives before /a (already in existing). /c goes through
+			// !found→else, seeding the replacement with [/a, /b, /c]. Then /a goes through
+			// found→if and without uniqueStrings would append /a again → [/a, /b, /c, /a].
+			// Verifies uniqueStrings deduplicates the final list to [/a, /b, /c].
+			inputFileName:  "subtractive-directories-duplicate.yml",
+			outputFileName: "subtractive-directories-duplicate.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "npm", Directory: "/c", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/a", Interval: "weekly"},
+			},
+			isChanged: true,
+		},
+		{
+			// Reversed order variant of the duplicate case: /a (already in existing [/a, /b])
+			// arrives before /c (new). /a goes through found→else creating a replacement with
+			// only Directory="/a". Then /c goes through !found→if which must seed from the full
+			// YAML directories [/a, /b] — not just existing.eco.Directory — so /b is not dropped.
+			// Expected output is still [/a, /b, /c].
+			inputFileName:  "subtractive-directories-duplicate.yml",
+			outputFileName: "subtractive-directories-duplicate.yml",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "npm", Directory: "/a", Interval: "weekly"},
+				{PackageEcosystem: "npm", Directory: "/c", Interval: "weekly"},
+			},
+			isChanged: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.inputFileName, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, test.inputFileName))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req := UpdateDependabotConfigRequest{
+				Content:     string(input),
+				Ecosystems:  test.ecosystems,
+				Subtractive: true,
+			}
+			inputJSON, err := json.Marshal(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			output, err := UpdateDependabotConfig(string(inputJSON))
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			expectedOutput, err := ioutil.ReadFile(path.Join(outputDirectory, test.outputFileName))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(expectedOutput) != output.FinalOutput {
+				t.Errorf("output did not match expected\ngot:\n%s", output.FinalOutput)
+			}
+			if output.IsChanged != test.isChanged {
+				t.Errorf("IsChanged: expected %v got %v", test.isChanged, output.IsChanged)
+			}
+		})
+	}
+}

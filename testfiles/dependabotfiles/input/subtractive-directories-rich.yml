@@ -1,0 +1,27 @@
+version: 2
+# Monorepo dependabot configuration
+# managed by step-security
+
+registries:
+  npm-private:
+    type: npm-registry
+    url: https://registry.npmjs.org
+    token: ${{ secrets.NPM_TOKEN }}
+
+updates:
+  # npm packages - covers root and all sub-packages
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /packages/ember-native-links
+      - /packages/test-app
+    schedule:
+      interval: weekly
+
+  # docker images used in CI
+  - package-ecosystem: docker
+    directories:
+      - /a
+      - /b
+    schedule:
+      interval: daily
