@@ -550,7 +550,7 @@ func applyEntryReplacements(r entryReplacement, inputLines []string, lineOffset 
 		case "directories":
 			processed[key] = true
 			if len(r.eco.Directories) > 0 {
-				nl, nc, ch := replaceSequence(inputLines, valNode, r.eco.Directories, lineOffset)
+				nl, nc, ch := replaceSequence(inputLines, valNode, uniqueStrings(r.eco.Directories), lineOffset)
 				if ch {
 					inputLines = nl
 					lineOffset += nc
@@ -758,6 +758,11 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 				if idx, ok := replacementByNode[node]; ok {
 					// Merge: append this eco's directory to existing replacement's Directories.
 					existing := &replacements[idx]
+					// On the first merge, seed Directories with the initial eco's own Directory
+					// so it is not dropped when replaceSequence overwrites the list.
+					if len(existing.eco.Directories) == 0 && existing.eco.Directory != "" {
+						existing.eco.Directories = append(existing.eco.Directories, existing.eco.Directory)
+					}
 					if eco.Directory != "" {
 						existing.eco.Directories = append(existing.eco.Directories, eco.Directory)
 					}
@@ -780,6 +785,12 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 					node := updatesNode.Content[i]
 					if idx, ok := replacementByNode[node]; ok {
 						existing := &replacements[idx]
+						if len(existing.eco.Directories) == 0 {
+							// The existing replacement was created via the "found" path which
+							// only stored a singular Directory. Seed from the full YAML directories
+							// list so existing dirs are not lost regardless of eco order.
+							existing.eco.Directories = append(existing.eco.Directories, update.Directories...)
+						}
 						if eco.Directory != "" {
 							existing.eco.Directories = append(existing.eco.Directories, eco.Directory)
 						}
