@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /packages/ember-native-links
+      - /packages/test-app
+    schedule:
+      interval: weekly
