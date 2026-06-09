@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Security Scanner
-        uses: org/security-scanner@v3
+        uses: org/security-scanner@v2
         with:
           mode: strict
           scan-level: deep

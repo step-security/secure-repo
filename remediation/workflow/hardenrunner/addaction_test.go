@@ -212,6 +212,46 @@ func TestUpdateHardenRunnerConfig(t *testing.T) {
 			wantUpdated: false,
 			outputFile:  "updateConfigAlreadyMatches.yml",
 		},
+		{
+			name:      "subtractive takes new name and preserves pinned SHA",
+			inputFile: "updateConfigNameChange.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigNameChange.yml",
+		},
+		{
+			name:      "subtractive preserves pinned SHA when with: params change",
+			inputFile: "updateConfigPolicyStore.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    use-policy-store: true\n    api-key: ${{ secrets.NEW_POLICY_STORE_KEY }}",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigPolicyStore.yml",
+		},
+		{
+			name:      "subtractive preserves pinned SHA for step with no name key",
+			inputFile: "updateConfigNoName.yml",
+			config: HardenRunnerConfig{
+				Config:      "- uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigNoName.yml",
+		},
+		{
+			name:      "subtractive preserves pinned SHA when action path changes",
+			inputFile: "updateConfigActionPathChange.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/composite-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigActionPathChange.yml",
+		},
 	}
 
 	for _, tt := range tests {
@@ -379,6 +419,18 @@ func TestRunnerLabelFiltering(t *testing.T) {
 			},
 			wantUpdated: false,
 			unchanged:   true,
+		},
+		{
+			name:      "subtractive with label: matching job preserves pinned SHA, non-matching job unchanged",
+			inputFile: "labelSubtractiveTagPreserve.yml",
+			config: HardenRunnerConfig{
+				Config:           "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelSubtractiveTagPreserve.yml",
 		},
 	}
 

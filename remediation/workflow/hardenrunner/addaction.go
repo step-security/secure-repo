@@ -171,11 +171,20 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 	return out, updated, nil
 }
 
-func hardenRunnerConfigMatches(inputLines []string, hrStartLine, hrEndLine int, spaces, config string) bool {
+func hardenRunnerConfigMatches(inputLines []string, hrStartLine, hrEndLine int, spaces, config, existingTagOrSHA string) bool {
 	var newConfigLines []string
 	for _, line := range strings.Split(config, "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
+		}
+		if existingTagOrSHA != "" {
+			check := strings.TrimPrefix(strings.TrimSpace(line), "- ")
+			if strings.HasPrefix(check, "uses:") {
+				usesValue := strings.TrimSpace(strings.TrimPrefix(check, "uses:"))
+				if idx := strings.Index(usesValue, "@"); idx >= 0 {
+					line = strings.Replace(line, usesValue, usesValue[:idx]+"@"+existingTagOrSHA, 1)
+				}
+			}
 		}
 		newConfigLines = append(newConfigLines, spaces+line)
 	}
@@ -202,6 +211,7 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 
 	hrStartLine := -1
 	hrEndLine := len(inputLines)
+	existingTagOrSHA := ""
 
 	for i, stepNode := range stepsNode.Content {
 		isHR := false
@@ -215,6 +225,18 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 			continue
 		}
 		hrStartLine = stepNode.Line - 1 // convert to 0-indexed
+		// fetch existing tag or sha
+		for _, rawLine := range inputLines[hrStartLine:hrEndLine] {
+			trimmed := strings.TrimSpace(rawLine)
+			trimmed = strings.TrimPrefix(trimmed, "- ") // handle "- uses:" (step with no name:)
+			if strings.HasPrefix(trimmed, "uses:") {
+				usesValue := strings.TrimSpace(strings.TrimPrefix(trimmed, "uses:"))
+				if idx := strings.Index(usesValue, "@"); idx >= 0 {
+					existingTagOrSHA = usesValue[idx+1:]
+				}
+				break
+			}
+		}
 		if i+1 < len(stepsNode.Content) {
 			hrEndLine = stepsNode.Content[i+1].Line - 1
 		} else {
@@ -231,7 +253,7 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 				}
 			}
 		}
-		if hardenRunnerConfigMatches(inputLines, hrStartLine, hrEndLine, spaces, hardenRunnerConfig.Config) {
+		if hardenRunnerConfigMatches(inputLines, hrStartLine, hrEndLine, spaces, hardenRunnerConfig.Config, existingTagOrSHA) {
 			return inputYaml, false, nil
 		}
 		break
@@ -246,6 +268,16 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 	for _, line := range strings.Split(hardenRunnerConfig.Config, "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
+		}
+		// use the collected existing tag or sha
+		if existingTagOrSHA != "" {
+			check := strings.TrimPrefix(strings.TrimSpace(line), "- ")
+			if strings.HasPrefix(check, "uses:") {
+				usesValue := strings.TrimSpace(strings.TrimPrefix(check, "uses:"))
+				if idx := strings.Index(usesValue, "@"); idx >= 0 {
+					line = strings.Replace(line, usesValue, usesValue[:idx]+"@"+existingTagOrSHA, 1)
+				}
+			}
 		}
 		output = append(output, spaces+line)
 	}
