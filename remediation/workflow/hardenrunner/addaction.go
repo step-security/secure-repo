@@ -156,12 +156,16 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		}
 	}
 
-	if updated && pinActions && !hardenRunnerConfig.Subtractive {
+	if updated && pinActions {
 		action := getActionFromConfig(hardenRunnerConfig)
 		out, _, err = pin.PinActionWithPatFallback(action, out, nil, pinToImmutable, nil)
 		if err != nil {
 			return out, updated, err
 		}
+	}
+
+	if out == inputYaml {
+		updated = false
 	}
 
 	return out, updated, nil
