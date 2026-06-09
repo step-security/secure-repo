@@ -145,11 +145,14 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 			}
 			updated = true
 		} else if hardenRunnerConfig.Subtractive {
-			out, err = updateHardenRunnerConfig(out, jobName, hardenRunnerConfig)
+			var changed bool
+			out, changed, err = updateHardenRunnerConfig(out, jobName, hardenRunnerConfig)
 			if err != nil {
 				return out, updated, err
 			}
-			updated = true
+			if changed {
+				updated = true
+			}
 		}
 	}
 
@@ -164,18 +167,30 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 	return out, updated, nil
 }
 
-func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig) (string, error) {
+func hardenRunnerConfigMatches(inputLines []string, hrStartLine, hrEndLine int, spaces, config string) bool {
+	var newConfigLines []string
+	for _, line := range strings.Split(config, "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		newConfigLines = append(newConfigLines, spaces+line)
+	}
+	newConfigLines = append(newConfigLines, "")
+	return strings.Join(inputLines[hrStartLine:hrEndLine], "\n") == strings.Join(newConfigLines, "\n")
+}
+
+func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig) (string, bool, error) {
 	t := yaml.Node{}
 	err := yaml.Unmarshal([]byte(inputYaml), &t)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse yaml %v", err)
+		return "", false, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
 	jobNode := permissions.IterateNode(&t, "jobs", "!!map", 0)
 	jobNode = permissions.IterateNode(&t, jobName, "!!map", jobNode.Line)
 	stepsNode := permissions.IterateNode(&t, "steps", "!!seq", jobNode.Line)
 	if stepsNode == nil {
-		return "", fmt.Errorf("steps not found for job %s", jobName)
+		return "", false, fmt.Errorf("steps not found for job %s", jobName)
 	}
 
 	spaces := strings.Repeat(" ", stepsNode.Column-1)
@@ -212,11 +227,14 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 				}
 			}
 		}
+		if hardenRunnerConfigMatches(inputLines, hrStartLine, hrEndLine, spaces, hardenRunnerConfig.Config) {
+			return inputYaml, false, nil
+		}
 		break
 	}
 
 	if hrStartLine < 0 {
-		return inputYaml, nil
+		return inputYaml, false, nil
 	}
 
 	var output []string
@@ -230,7 +248,7 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 	output = append(output, "")
 	output = append(output, inputLines[hrEndLine:]...)
 
-	return strings.Join(output, "\n"), nil
+	return strings.Join(output, "\n"), true, nil
 }
 
 func addAction(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig) (string, error) {
