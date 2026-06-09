@@ -105,6 +105,13 @@ func TestCustomActionConfig(t *testing.T) {
 			wantUpdated: true,
 			outputFile:  "customActionAlreadyPresentSubtractive.yml",
 		},
+		{
+			name:        "subtractive all jobs already have custom action: no changes, no commit",
+			inputFile:   "customActionAllJobsPresent.yml",
+			config:      HardenRunnerConfig{Config: customConfig, Subtractive: true},
+			wantUpdated: false,
+			outputFile:  "customActionAllJobsPresent.yml",
+		},
 	}
 
 	for _, tt := range tests {
@@ -194,6 +201,16 @@ func TestUpdateHardenRunnerConfig(t *testing.T) {
 			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: true},
 			wantUpdated: true,
 			outputFile:  "updateConfigLastStep.yml",
+		},
+		{
+			name:      "subtractive config already matches pinned action: no changes, no commit",
+			inputFile: "updateConfigAlreadyMatches.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3\n  with:\n    use-policy-store: true\n    api-key: ${{ secrets.STEPSECURITY_POLICY_STORE_API_KEY }}",
+				Subtractive: true,
+			},
+			wantUpdated: false,
+			outputFile:  "updateConfigAlreadyMatches.yml",
 		},
 	}
 
