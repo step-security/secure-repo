@@ -243,7 +243,7 @@ func TestUpdateHardenRunnerConfig(t *testing.T) {
 			outputFile:  "updateConfigNoName.yml",
 		},
 		{
-			name:      "subtractive preserves pinned SHA when action path changes",
+			name:      "subtractive uses config tag when action path changes",
 			inputFile: "updateConfigActionPathChange.yml",
 			config: HardenRunnerConfig{
 				Config:      "- name: Harden the runner\n  uses: step-security/composite-runner@v2\n  with:\n    egress-policy: block",
@@ -567,4 +567,93 @@ func TestAddActionWithEmptyConfig(t *testing.T) {
 	if got != string(expected) {
 		t.Errorf("AddAction() with empty config mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
 	}
+}
+
+func TestUpdateHardenRunnerConfigComprehensive(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	customConfig := "- name: Harden the runner with custom action\n  uses: acme-corp/harden-runner@v2\n  with:\n    egress-policy: block"
+	hrConfig := "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block"
+
+	tests := []struct {
+		name        string
+		inputFile   string
+		config      HardenRunnerConfig
+		wantUpdated bool
+		outputFile  string
+	}{
+		{
+			name:      "custom config: hr→custom uses config tag, custom→custom preserves SHA, label mismatch skipped, no-action job gets step added",
+			inputFile: "customActionMultiJob.yml",
+			config: HardenRunnerConfig{
+				Config:           customConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "customActionMultiJob.yml",
+		},
+		{
+			name:      "hr config: build SHA preserved, test gets hr added alongside custom, label mismatch skipped, lint gets hr added",
+			inputFile: "hrConfigMultiJob.yml",
+			config: HardenRunnerConfig{
+				Config:           hrConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "hrConfigMultiJob.yml",
+		},
+		{
+			name:      "custom config: all jobs already match, no update",
+			inputFile: "customActionMultiJobMatches.yml",
+			config: HardenRunnerConfig{
+				Config:           customConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: false,
+			outputFile:  "customActionMultiJobMatches.yml",
+		},
+		{
+			name:      "hr config: all jobs already match, no update",
+			inputFile: "hrConfigMultiJobMatches.yml",
+			config: HardenRunnerConfig{
+				Config:           hrConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: false,
+			outputFile:  "hrConfigMultiJobMatches.yml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
+			if err != nil {
+				t.Errorf("AddAction() error = %v", err)
+			}
+			if gotUpdated != tt.wantUpdated {
+				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
+			}
+			expected, err := ioutil.ReadFile(path.Join(outputDirectory, tt.outputFile))
+			if err != nil {
+				t.Fatalf("error reading output file: %v", err)
+			}
+			if got != string(expected) {
+				t.Errorf("AddAction() output mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
+			}
+		})
+	}
+
 }
