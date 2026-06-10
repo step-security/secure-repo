@@ -105,6 +105,13 @@ func TestCustomActionConfig(t *testing.T) {
 			wantUpdated: true,
 			outputFile:  "customActionAlreadyPresentSubtractive.yml",
 		},
+		{
+			name:        "subtractive all jobs already have custom action: no changes, no commit",
+			inputFile:   "customActionAllJobsPresent.yml",
+			config:      HardenRunnerConfig{Config: customConfig, Subtractive: true},
+			wantUpdated: false,
+			outputFile:  "customActionAllJobsPresent.yml",
+		},
 	}
 
 	for _, tt := range tests {
@@ -194,6 +201,56 @@ func TestUpdateHardenRunnerConfig(t *testing.T) {
 			config:      HardenRunnerConfig{Config: blockConfig, Subtractive: true},
 			wantUpdated: true,
 			outputFile:  "updateConfigLastStep.yml",
+		},
+		{
+			name:      "subtractive config already matches pinned action: no changes, no commit",
+			inputFile: "updateConfigAlreadyMatches.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3\n  with:\n    use-policy-store: true\n    api-key: ${{ secrets.STEPSECURITY_POLICY_STORE_API_KEY }}",
+				Subtractive: true,
+			},
+			wantUpdated: false,
+			outputFile:  "updateConfigAlreadyMatches.yml",
+		},
+		{
+			name:      "subtractive takes new name and preserves pinned SHA",
+			inputFile: "updateConfigNameChange.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigNameChange.yml",
+		},
+		{
+			name:      "subtractive preserves pinned SHA when with: params change",
+			inputFile: "updateConfigPolicyStore.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    use-policy-store: true\n    api-key: ${{ secrets.NEW_POLICY_STORE_KEY }}",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigPolicyStore.yml",
+		},
+		{
+			name:      "subtractive preserves pinned SHA for step with no name key",
+			inputFile: "updateConfigNoName.yml",
+			config: HardenRunnerConfig{
+				Config:      "- uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigNoName.yml",
+		},
+		{
+			name:      "subtractive uses config tag when action path changes",
+			inputFile: "updateConfigActionPathChange.yml",
+			config: HardenRunnerConfig{
+				Config:      "- name: Harden the runner\n  uses: step-security/composite-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive: true,
+			},
+			wantUpdated: true,
+			outputFile:  "updateConfigActionPathChange.yml",
 		},
 	}
 
@@ -363,6 +420,18 @@ func TestRunnerLabelFiltering(t *testing.T) {
 			wantUpdated: false,
 			unchanged:   true,
 		},
+		{
+			name:      "subtractive with label: matching job preserves pinned SHA, non-matching job unchanged",
+			inputFile: "labelSubtractiveTagPreserve.yml",
+			config: HardenRunnerConfig{
+				Config:           "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block",
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelSubtractiveTagPreserve.yml",
+		},
 	}
 
 	for _, tt := range tests {
@@ -498,4 +567,93 @@ func TestAddActionWithEmptyConfig(t *testing.T) {
 	if got != string(expected) {
 		t.Errorf("AddAction() with empty config mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
 	}
+}
+
+func TestUpdateHardenRunnerConfigComprehensive(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	customConfig := "- name: Harden the runner with custom action\n  uses: acme-corp/harden-runner@v2\n  with:\n    egress-policy: block"
+	hrConfig := "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block"
+
+	tests := []struct {
+		name        string
+		inputFile   string
+		config      HardenRunnerConfig
+		wantUpdated bool
+		outputFile  string
+	}{
+		{
+			name:      "custom config: hr→custom uses config tag, custom→custom preserves SHA, label mismatch skipped, no-action job gets step added",
+			inputFile: "customActionMultiJob.yml",
+			config: HardenRunnerConfig{
+				Config:           customConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "customActionMultiJob.yml",
+		},
+		{
+			name:      "hr config: build SHA preserved, test gets hr added alongside custom, label mismatch skipped, lint gets hr added",
+			inputFile: "hrConfigMultiJob.yml",
+			config: HardenRunnerConfig{
+				Config:           hrConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "hrConfigMultiJob.yml",
+		},
+		{
+			name:      "custom config: all jobs already match, no update",
+			inputFile: "customActionMultiJobMatches.yml",
+			config: HardenRunnerConfig{
+				Config:           customConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: false,
+			outputFile:  "customActionMultiJobMatches.yml",
+		},
+		{
+			name:      "hr config: all jobs already match, no update",
+			inputFile: "hrConfigMultiJobMatches.yml",
+			config: HardenRunnerConfig{
+				Config:           hrConfig,
+				Subtractive:      true,
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: false,
+			outputFile:  "hrConfigMultiJobMatches.yml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
+			if err != nil {
+				t.Errorf("AddAction() error = %v", err)
+			}
+			if gotUpdated != tt.wantUpdated {
+				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
+			}
+			expected, err := ioutil.ReadFile(path.Join(outputDirectory, tt.outputFile))
+			if err != nil {
+				t.Fatalf("error reading output file: %v", err)
+			}
+			if got != string(expected) {
+				t.Errorf("AddAction() output mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
+			}
+		})
+	}
+
 }

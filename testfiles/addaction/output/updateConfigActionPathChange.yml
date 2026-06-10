@@ -1,0 +1,13 @@
+name: Publish
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner
+        uses: step-security/composite-runner@v2
+        with:
+          egress-policy: block
+
+      - uses: actions/checkout@v3
