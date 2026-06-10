@@ -74,7 +74,7 @@ func shouldSkipJob(jobLabels []string, allowedLabels []string) bool {
 // Falls back to HardenRunnerActionPath if no uses line is present.
 func getActionFromConfig(config HardenRunnerConfig) string {
 	for _, line := range strings.Split(config.Config, "\n") {
-		trimmed := strings.TrimSpace(line)
+		trimmed := strings.TrimPrefix(strings.TrimSpace(line), "- ")
 		if strings.HasPrefix(trimmed, "uses:") {
 			return strings.TrimSpace(strings.TrimPrefix(trimmed, "uses:"))
 		}
@@ -192,55 +192,63 @@ func hardenRunnerConfigMatches(inputLines []string, hrStartLine, hrEndLine int, 
 	return strings.Join(inputLines[hrStartLine:hrEndLine], "\n") == strings.Join(newConfigLines, "\n")
 }
 
-func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig) (string, bool, error) {
+// getHardenRunnerStepLines locates the harden-runner (or custom action) step in the job
+// and returns its start/end line indices, indentation spaces, existing action path, and existing tag/SHA.
+func getHardenRunnerStepLines(inputYaml, jobName, configActionPath string) (hrStartLine, hrEndLine int, spaces, existingActionPath, existingTagOrSHA string, err error) {
 	t := yaml.Node{}
-	err := yaml.Unmarshal([]byte(inputYaml), &t)
-	if err != nil {
-		return "", false, fmt.Errorf("unable to parse yaml %v", err)
+	if err = yaml.Unmarshal([]byte(inputYaml), &t); err != nil {
+		return -1, -1, "", "", "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 
 	jobNode := permissions.IterateNode(&t, "jobs", "!!map", 0)
 	jobNode = permissions.IterateNode(&t, jobName, "!!map", jobNode.Line)
 	stepsNode := permissions.IterateNode(&t, "steps", "!!seq", jobNode.Line)
 	if stepsNode == nil {
-		return "", false, fmt.Errorf("steps not found for job %s", jobName)
+		return -1, -1, "", "", "", fmt.Errorf("steps not found for job %s", jobName)
 	}
 
-	spaces := strings.Repeat(" ", stepsNode.Column-1)
+	spaces = strings.Repeat(" ", stepsNode.Column-1)
 	inputLines := strings.Split(inputYaml, "\n")
-
-	hrStartLine := -1
-	hrEndLine := len(inputLines)
-	existingTagOrSHA := ""
+	hrStartLine = -1
+	hrEndLine = len(inputLines)
 
 	for i, stepNode := range stepsNode.Content {
-		isHR := false
+		matched := false
 		for j := 0; j+1 < len(stepNode.Content); j += 2 {
-			if stepNode.Content[j].Value == "uses" && strings.HasPrefix(stepNode.Content[j+1].Value, HardenRunnerActionPath) {
-				isHR = true
-				break
+			if stepNode.Content[j].Value == "uses" {
+				usesVal := stepNode.Content[j+1].Value
+				if strings.HasPrefix(usesVal, HardenRunnerActionPath) || strings.HasPrefix(usesVal, configActionPath) {
+					matched = true
+					break
+				}
 			}
 		}
-		if !isHR {
+		if !matched {
 			continue
 		}
-		hrStartLine = stepNode.Line - 1 // convert to 0-indexed
-		// fetch existing tag or sha
-		for _, rawLine := range inputLines[hrStartLine:hrEndLine] {
-			trimmed := strings.TrimSpace(rawLine)
-			trimmed = strings.TrimPrefix(trimmed, "- ") // handle "- uses:" (step with no name:)
+
+		hrStartLine = stepNode.Line - 1
+
+		// extract existing action path and tag/SHA from the raw text
+		for _, rawLine := range inputLines[hrStartLine:] {
+			trimmed := strings.TrimPrefix(strings.TrimSpace(rawLine), "- ")
 			if strings.HasPrefix(trimmed, "uses:") {
 				usesValue := strings.TrimSpace(strings.TrimPrefix(trimmed, "uses:"))
 				if idx := strings.Index(usesValue, "@"); idx >= 0 {
+					existingActionPath = usesValue[:idx]
 					existingTagOrSHA = usesValue[idx+1:]
+				} else {
+					existingActionPath = usesValue
 				}
 				break
 			}
 		}
+
+		// compute hrEndLine
 		if i+1 < len(stepsNode.Content) {
 			hrEndLine = stepsNode.Content[i+1].Line - 1
 		} else {
-			// last step — scan forward until line is no longer part of this step
+			// last step — scan forward until a line is no longer part of this step
 			stepContentPrefix := spaces + " "
 			for j := hrStartLine + 1; j < len(inputLines); j++ {
 				line := inputLines[j]
@@ -253,29 +261,50 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 				}
 			}
 		}
-		if hardenRunnerConfigMatches(inputLines, hrStartLine, hrEndLine, spaces, hardenRunnerConfig.Config, existingTagOrSHA) {
-			return inputYaml, false, nil
-		}
 		break
 	}
 
+	return hrStartLine, hrEndLine, spaces, existingActionPath, existingTagOrSHA, nil
+}
+
+func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig) (string, bool, error) {
+	configAction := getActionFromConfig(hardenRunnerConfig)
+	configActionPath := strings.Split(configAction, "@")[0]
+
+	hrStartLine, hrEndLine, spaces, existingActionPath, existingTagOrSHA, err := getHardenRunnerStepLines(inputYaml, jobName, configActionPath)
+	if err != nil {
+		return "", false, err
+	}
 	if hrStartLine < 0 {
 		return inputYaml, false, nil
 	}
 
+	// preserve tag/SHA only when the action path is unchanged
+	tagToUse := ""
+	if existingActionPath == configActionPath {
+		tagToUse = existingTagOrSHA
+	}
+
+	inputLines := strings.Split(inputYaml, "\n")
+
+	// already up to date — nothing to do
+	if hardenRunnerConfigMatches(inputLines, hrStartLine, hrEndLine, spaces, hardenRunnerConfig.Config, tagToUse) {
+		return inputYaml, false, nil
+	}
+
+	// rebuild: lines before + new config (with tag grafted if same path) + lines after
 	var output []string
 	output = append(output, inputLines[:hrStartLine]...)
 	for _, line := range strings.Split(hardenRunnerConfig.Config, "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		// use the collected existing tag or sha
-		if existingTagOrSHA != "" {
+		if tagToUse != "" {
 			check := strings.TrimPrefix(strings.TrimSpace(line), "- ")
 			if strings.HasPrefix(check, "uses:") {
 				usesValue := strings.TrimSpace(strings.TrimPrefix(check, "uses:"))
 				if idx := strings.Index(usesValue, "@"); idx >= 0 {
-					line = strings.Replace(line, usesValue, usesValue[:idx]+"@"+existingTagOrSHA, 1)
+					line = strings.Replace(line, usesValue, usesValue[:idx]+"@"+tagToUse, 1)
 				}
 			}
 		}
