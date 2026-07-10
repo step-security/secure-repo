@@ -22,11 +22,11 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: step-security/secure-repo
 
@@ -38,14 +38,14 @@ jobs:
           repo : ${{inputs.repo}}
 
       - id: get-action
-        uses: actions/github-script@5d03ada4b0a753e9460b312e61cc4f8fdeacf163
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             var id = "${{github.event.issue.title}}".split(' ')[6]
             core.setOutput('id', id)
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{secrets.PAT}} #  need to use PAT since GITHUB_TOKEN does not initiate workflows
           commit-message: "added action-security.yml for ${{inputs.owner}}/${{inputs.repo}}"

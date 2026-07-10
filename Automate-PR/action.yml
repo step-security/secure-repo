@@ -17,5 +17,5 @@ inputs:
     
 
 runs:
-  using: node16
+  using: node24
   main: dist/src/index.js
