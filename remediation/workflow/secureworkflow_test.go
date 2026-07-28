@@ -5,11 +5,14 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/step-security/secure-repo/remediation/workflow/maintainedactions"
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"github.com/step-security/secure-repo/remediation/workflow/permissions"
+	"gopkg.in/yaml.v3"
 )
 
 func TestSecureWorkflow(t *testing.T) {
@@ -575,5 +578,67 @@ func TestSecureWorkflowRunnerLabels(t *testing.T) {
 
 	if !output.ReplacedRunnerLabels {
 		t.Errorf("Expected ReplacedRunnerLabels to be true, got false")
+	}
+}
+
+// Regression: a workflow using YAML anchors/aliases on steps must never come
+// back empty (an empty FinalOutput was previously committed as a wiped
+// workflow file in policy-driven PRs).
+func TestSecureWorkflowAnchoredAliasedStepsNeverEmpty(t *testing.T) {
+	input := `name: ci
+on: push
+jobs:
+  build:
+    permissions:
+      contents: read
+    runs-on: macos-latest
+    steps: &build_steps
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: make build
+  build-reproducible:
+    permissions:
+      contents: read
+    runs-on: macos-latest
+    steps: *build_steps
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: make test
+`
+	queryParams := map[string]string{
+		"pinActions":       "false",
+		"addPermissions":   "false",
+		"ignoreMissingKBs": "true",
+	}
+	resp, err := SecureWorkflow(queryParams, input, nil, []string{}, false)
+	if err != nil {
+		t.Fatalf("SecureWorkflow() error = %v, want nil", err)
+	}
+	if strings.TrimSpace(resp.FinalOutput) == "" {
+		t.Fatalf("SecureWorkflow() returned empty FinalOutput for anchored workflow")
+	}
+	workflow := metadata.Workflow{}
+	if yamlErr := yaml.Unmarshal([]byte(resp.FinalOutput), &workflow); yamlErr != nil {
+		t.Fatalf("SecureWorkflow() output is not valid YAML: %v\n%s", yamlErr, resp.FinalOutput)
+	}
+	if !resp.AddedHardenRunner {
+		t.Errorf("SecureWorkflow() AddedHardenRunner = false, want true")
+	}
+	for jobName, job := range workflow.Jobs {
+		found := false
+		for _, step := range job.Steps {
+			if strings.HasPrefix(step.Uses, HardenRunnerActionPath) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("job %s does not have harden-runner in FinalOutput", jobName)
+		}
 	}
 }

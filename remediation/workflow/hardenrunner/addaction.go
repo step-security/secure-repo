@@ -2,6 +2,7 @@ package hardenrunner
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
@@ -82,6 +83,48 @@ func getActionFromConfig(config HardenRunnerConfig) string {
 	return HardenRunnerActionPath
 }
 
+// getJobStepsNode locates the block-style steps sequence for jobName by walking
+// the jobs mapping directly. Line-based lookups (permissions.IterateNode) mis-resolve
+// YAML anchors and aliases: an aliased `steps: *anchor` node carries no !!seq tag,
+// so a line-based search skips it and matches a different job's steps sequence,
+// which corrupts the workflow when lines are spliced in at that position.
+// Returns nil when the job's steps cannot be safely edited by line splicing:
+//   - steps is an alias (*anchor) — the anchor job owns the shared content
+//   - steps is flow-style ([...]) or empty
+//   - the job itself is an alias, or the job/steps key is missing
+func getJobStepsNode(root *yaml.Node, jobName string) *yaml.Node {
+	jobsNode := permissions.IterateNode(root, "jobs", "!!map", 0)
+	if jobsNode == nil {
+		return nil
+	}
+	for i := 0; i+1 < len(jobsNode.Content); i += 2 {
+		if jobsNode.Content[i].Value != jobName {
+			continue
+		}
+		jobValue := jobsNode.Content[i+1]
+		if jobValue.Kind != yaml.MappingNode {
+			return nil
+		}
+		for j := 0; j+1 < len(jobValue.Content); j += 2 {
+			if jobValue.Content[j].Value != "steps" {
+				continue
+			}
+			stepsNode := jobValue.Content[j+1]
+			if stepsNode.Kind != yaml.SequenceNode || stepsNode.Style == yaml.FlowStyle || len(stepsNode.Content) == 0 {
+				return nil
+			}
+			return stepsNode
+		}
+		return nil
+	}
+	return nil
+}
+
+// leadingWhitespace returns the leading spaces/tabs of s.
+func leadingWhitespace(s string) string {
+	return s[:len(s)-len(strings.TrimLeft(s, " \t"))]
+}
+
 func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActions, pinToImmutable bool, skipContainerJobs bool) (string, bool, error) {
 	if hardenRunnerConfig.Config == "" {
 		hardenRunnerConfig.Config = DefaultHardenRunnerConfig
@@ -90,7 +133,7 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
 	if err != nil {
-		return "", updated, fmt.Errorf("unable to parse yaml %v", err)
+		return inputYaml, updated, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
 	// Extract the action path from the config to detect custom actions already present.
@@ -139,11 +182,14 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		}
 
 		if !alreadyPresent {
-			out, err = addAction(out, jobName, hardenRunnerConfig)
+			var changed bool
+			out, changed, err = addAction(out, jobName, hardenRunnerConfig)
 			if err != nil {
 				return out, updated, err
 			}
-			updated = true
+			if changed {
+				updated = true
+			}
 		} else if hardenRunnerConfig.Subtractive {
 			var changed bool
 			out, changed, err = updateHardenRunnerConfig(out, jobName, hardenRunnerConfig)
@@ -158,9 +204,14 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 
 	if updated && pinActions {
 		action := getActionFromConfig(hardenRunnerConfig)
-		out, _, err = pin.PinActionWithPatFallback(action, out, nil, pinToImmutable, nil)
-		if err != nil {
-			return out, updated, err
+		pinnedOut, _, pinErr := pin.PinActionWithPatFallback(action, out, nil, pinToImmutable, nil)
+		if pinErr != nil {
+			// Non-fatal: keep the unpinned harden-runner step rather than dropping
+			// the addition entirely (matches previous net behavior, where this
+			// error was discarded by the caller).
+			log.Printf("unable to pin harden runner action, keeping unpinned: %v", pinErr)
+		} else {
+			out = pinnedOut
 		}
 	}
 
@@ -200,15 +251,18 @@ func getHardenRunnerStepLines(inputYaml, jobName, configActionPath string) (hrSt
 		return -1, -1, "", "", "", fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	jobNode := permissions.IterateNode(&t, "jobs", "!!map", 0)
-	jobNode = permissions.IterateNode(&t, jobName, "!!map", jobNode.Line)
-	stepsNode := permissions.IterateNode(&t, "steps", "!!seq", jobNode.Line)
+	stepsNode := getJobStepsNode(&t, jobName)
 	if stepsNode == nil {
-		return -1, -1, "", "", "", fmt.Errorf("steps not found for job %s", jobName)
+		// Steps cannot be safely edited by line splicing (alias, flow style,
+		// or missing); report "not found" so the caller leaves the job as is.
+		return -1, -1, "", "", "", nil
 	}
 
-	spaces = strings.Repeat(" ", stepsNode.Column-1)
 	inputLines := strings.Split(inputYaml, "\n")
+	// Indentation from the first step's own line is anchor-safe: for
+	// `steps: &anchor` the sequence node reports the anchor's position on the
+	// `steps:` line itself, not the first step.
+	spaces = leadingWhitespace(inputLines[stepsNode.Content[0].Line-1])
 	hrStartLine = -1
 	hrEndLine = len(inputLines)
 
@@ -273,7 +327,7 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 
 	hrStartLine, hrEndLine, spaces, existingActionPath, existingTagOrSHA, err := getHardenRunnerStepLines(inputYaml, jobName, configActionPath)
 	if err != nil {
-		return "", false, err
+		return inputYaml, false, err
 	}
 	if hrStartLine < 0 {
 		return inputYaml, false, nil
@@ -316,31 +370,36 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 	return strings.Join(output, "\n"), true, nil
 }
 
-func addAction(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig) (string, error) {
+func addAction(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig) (string, bool, error) {
 	t := yaml.Node{}
 
 	err := yaml.Unmarshal([]byte(inputYaml), &t)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse yaml %v", err)
+		return inputYaml, false, fmt.Errorf("unable to parse yaml %v", err)
 	}
 
-	jobNode := permissions.IterateNode(&t, "jobs", "!!map", 0)
-
-	jobNode = permissions.IterateNode(&t, jobName, "!!map", jobNode.Line)
-
-	jobNode = permissions.IterateNode(&t, "steps", "!!seq", jobNode.Line)
-
-	if jobNode == nil {
-		return "", fmt.Errorf("jobName %s not found in the input yaml", jobName)
+	stepsNode := getJobStepsNode(&t, jobName)
+	if stepsNode == nil {
+		// Steps cannot be safely edited by line splicing (e.g. defined via a
+		// YAML alias, flow style, or missing); leave the job unchanged rather
+		// than risk corrupting the workflow. Alias jobs inherit the step from
+		// their anchor job.
+		return inputYaml, false, nil
 	}
 
+	// Insert immediately before the first step. The first step's own line is
+	// anchor-safe: for `steps: &anchor` the sequence node reports the anchor's
+	// position on the `steps:` line itself, not the first step.
+	insertLine := stepsNode.Content[0].Line // 1-based
 	inputLines := strings.Split(inputYaml, "\n")
-	var output []string
-	for i := 0; i < jobNode.Line-1; i++ {
-		output = append(output, inputLines[i])
+	if insertLine-1 >= len(inputLines) {
+		return inputYaml, false, fmt.Errorf("steps for job %s out of line range", jobName)
 	}
 
-	spaces := strings.Repeat(" ", jobNode.Column-1)
+	var output []string
+	output = append(output, inputLines[:insertLine-1]...)
+
+	spaces := leadingWhitespace(inputLines[insertLine-1])
 
 	for _, line := range strings.Split(hardenRunnerConfig.Config, "\n") {
 		if strings.TrimSpace(line) == "" {
@@ -350,9 +409,7 @@ func addAction(inputYaml, jobName string, hardenRunnerConfig HardenRunnerConfig)
 	}
 	output = append(output, "")
 
-	for i := jobNode.Line - 1; i < len(inputLines); i++ {
-		output = append(output, inputLines[i])
-	}
+	output = append(output, inputLines[insertLine-1:]...)
 
-	return strings.Join(output, "\n"), nil
+	return strings.Join(output, "\n"), true, nil
 }
