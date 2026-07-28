@@ -1,2 +1,0 @@
-name: Create a self-hosted Linux runner
-# GITHUB_TOKEN not used, needs to call /runners API
