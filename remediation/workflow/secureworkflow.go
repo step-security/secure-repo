@@ -3,6 +3,7 @@ package workflow
 import (
 	"encoding/json"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/step-security/secure-repo/remediation/workflow/hardenrunner"
@@ -156,10 +157,16 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	}
 
 	if replaceMaintainedActions {
-		secureWorkflowReponse.FinalOutput, replacedMaintainedActions, err = maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, maintainedActionsMap, replaceActionByMajorTag)
+		// Only take the stage's output on success — on error (e.g. a parse
+		// failure returning "") keep the last good FinalOutput so a single
+		// failing stage can never blank the workflow file.
+		maintainedOutput, replaced, err := maintainedactions.ReplaceActions(secureWorkflowReponse.FinalOutput, maintainedActionsMap, replaceActionByMajorTag)
 		if err != nil {
 			log.Printf("Error replacing maintained actions: %v", err)
 			secureWorkflowReponse.HasErrors = true
+		} else {
+			secureWorkflowReponse.FinalOutput = maintainedOutput
+			replacedMaintainedActions = replaced
 		}
 	}
 
@@ -167,10 +174,13 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 		if enableLogging {
 			log.Printf("Replacing runner labels")
 		}
-		secureWorkflowReponse.FinalOutput, replacedRunnerLabels, err = runnerlabel.ReplaceRunnerLabels(secureWorkflowReponse.FinalOutput, runnerLabelMap)
+		relabeledOutput, relabeled, err := runnerlabel.ReplaceRunnerLabels(secureWorkflowReponse.FinalOutput, runnerLabelMap)
 		if err != nil {
 			log.Printf("Error replacing runner labels: %v", err)
 			secureWorkflowReponse.HasErrors = true
+		} else {
+			secureWorkflowReponse.FinalOutput = relabeledOutput
+			replacedRunnerLabels = relabeled
 		}
 		if enableLogging {
 			log.Printf("Replaced runner labels: %v", replacedRunnerLabels)
@@ -208,10 +218,28 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 				log.Printf("Harden runner action is exempted from pinning")
 			}
 		}
-		secureWorkflowReponse.FinalOutput, addedHardenRunner, _ = hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, hardenRunnerConfig, pinHardenRunner, pinToImmutable, skipHardenRunnerForContainers)
+		// Do not discard AddAction's error: a parse failure used to silently
+		// blank FinalOutput here, wiping the customer's workflow file in the
+		// generated PR. On error, keep the last good FinalOutput.
+		hardenedOutput, added, err := hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, hardenRunnerConfig, pinHardenRunner, pinToImmutable, skipHardenRunnerForContainers)
+		if err != nil {
+			log.Printf("Error adding harden runner action: %v", err)
+			secureWorkflowReponse.HasErrors = true
+		} else {
+			secureWorkflowReponse.FinalOutput = hardenedOutput
+			addedHardenRunner = added
+		}
 		if enableLogging {
 			log.Printf("Added harden runner: %v", addedHardenRunner)
 		}
+	}
+
+	// Backstop invariant: never return an empty FinalOutput for a non-empty
+	// input — an empty result would be committed as a wiped workflow file.
+	if strings.TrimSpace(secureWorkflowReponse.FinalOutput) == "" && strings.TrimSpace(inputYaml) != "" {
+		log.Printf("SecureWorkflow produced empty output for non-empty input; restoring original input")
+		secureWorkflowReponse.FinalOutput = inputYaml
+		secureWorkflowReponse.HasErrors = true
 	}
 
 	// Setting appropriate flags

@@ -3,7 +3,11 @@ package hardenrunner
 import (
 	"io/ioutil"
 	"path"
+	"strings"
 	"testing"
+
+	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
+	"gopkg.in/yaml.v3"
 )
 
 const defaultTestConfig = DefaultHardenRunnerConfig
@@ -27,6 +31,7 @@ func TestAddAction(t *testing.T) {
 		{name: "already present 2", args: args{inputYaml: "alreadypresent_2.yml"}, want: "alreadypresent_2.yml", wantErr: false, wantUpdated: false},
 		{name: "reusable job", args: args{inputYaml: "reusablejob.yml"}, want: "reusablejob.yml", wantErr: false, wantUpdated: false},
 		{name: "job name in input", args: args{inputYaml: "jobNameInInput.yml"}, want: "jobNameInInput.yml", wantErr: false, wantUpdated: true},
+		{name: "anchored and aliased steps", args: args{inputYaml: "anchored-steps.yml"}, want: "anchored-steps.yml", wantErr: false, wantUpdated: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -656,4 +661,176 @@ func TestUpdateHardenRunnerConfigComprehensive(t *testing.T) {
 		})
 	}
 
+}
+
+// Regression tests for YAML anchor/alias handling. A workflow whose jobs share
+// steps via `steps: &anchor` / `steps: *anchor` used to be corrupted by the
+// line-splice insert (the alias node carries no !!seq tag, so the line-based
+// lookup matched a different job's steps), and the resulting parse error blanked
+// the whole file in the generated PR.
+func TestAddActionAnchoredAliasedSteps(t *testing.T) {
+	input := `name: ci
+on: push
+jobs:
+  build:
+    runs-on: macos-latest
+    steps: &build_steps
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: make build
+  build-reproducible:
+    runs-on: macos-latest
+    steps: *build_steps
+  build-linux:
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04
+    steps: &container_build_steps
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: make build
+  build-linux-reproducible:
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04
+    steps: *container_build_steps
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: make test
+`
+	out, updated, err := AddAction(input, HardenRunnerConfig{Config: defaultTestConfig}, false, false, false)
+	if err != nil {
+		t.Fatalf("AddAction() error = %v, want nil", err)
+	}
+	if !updated {
+		t.Fatalf("AddAction() updated = false, want true")
+	}
+	if strings.TrimSpace(out) == "" {
+		t.Fatalf("AddAction() returned empty output")
+	}
+
+	// Output must still be valid YAML.
+	workflow := metadata.Workflow{}
+	if err := yaml.Unmarshal([]byte(out), &workflow); err != nil {
+		t.Fatalf("AddAction() output is not valid YAML: %v", err)
+	}
+
+	// Every job must have harden-runner after alias resolution (alias jobs
+	// inherit it from their anchor job).
+	for jobName, job := range workflow.Jobs {
+		found := false
+		for _, step := range job.Steps {
+			if strings.HasPrefix(step.Uses, HardenRunnerActionPath) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("job %s does not have harden-runner after AddAction()", jobName)
+		}
+	}
+
+	// The alias lines themselves must be untouched (no direct insert into
+	// alias jobs) and harden-runner must appear exactly once per steps block:
+	// two anchors + one plain job = 3 inserts.
+	if !strings.Contains(out, "steps: *build_steps") || !strings.Contains(out, "steps: *container_build_steps") {
+		t.Errorf("alias steps lines were modified:\n%s", out)
+	}
+	if got := strings.Count(out, "uses: step-security/harden-runner"); got != 3 {
+		t.Errorf("harden-runner inserted %d times, want 3:\n%s", got, out)
+	}
+}
+
+// A job whose steps use flow style cannot be line-spliced safely; it must be
+// skipped without corrupting the rest of the workflow.
+func TestAddActionFlowStyleStepsSkipped(t *testing.T) {
+	input := `name: ci
+on: push
+jobs:
+  flow:
+    runs-on: ubuntu-latest
+    steps: [{name: Test, run: make test}]
+  block:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: make test
+`
+	out, updated, err := AddAction(input, HardenRunnerConfig{Config: defaultTestConfig}, false, false, false)
+	if err != nil {
+		t.Fatalf("AddAction() error = %v, want nil", err)
+	}
+	if !updated {
+		t.Fatalf("AddAction() updated = false, want true (block job should be updated)")
+	}
+	workflow := metadata.Workflow{}
+	if err := yaml.Unmarshal([]byte(out), &workflow); err != nil {
+		t.Fatalf("AddAction() output is not valid YAML: %v", err)
+	}
+	if got := strings.Count(out, "uses: step-security/harden-runner"); got != 1 {
+		t.Errorf("harden-runner inserted %d times, want 1 (flow job skipped):\n%s", got, out)
+	}
+}
+
+// Subtractive config updates must also be anchor/alias safe: the anchor job is
+// updated in place and the alias job is left untouched.
+func TestUpdateHardenRunnerConfigAnchoredSteps(t *testing.T) {
+	input := `name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: &build_steps
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+  build-reproducible:
+    runs-on: ubuntu-latest
+    steps: *build_steps
+`
+	config := HardenRunnerConfig{
+		Config:      "- name: Harden the runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block",
+		Subtractive: true,
+	}
+	out, updated, err := AddAction(input, config, false, false, false)
+	if err != nil {
+		t.Fatalf("AddAction() error = %v, want nil", err)
+	}
+	if !updated {
+		t.Fatalf("AddAction() updated = false, want true")
+	}
+	workflow := metadata.Workflow{}
+	if err := yaml.Unmarshal([]byte(out), &workflow); err != nil {
+		t.Fatalf("AddAction() output is not valid YAML: %v", err)
+	}
+	if got := strings.Count(out, "egress-policy: block"); got != 1 {
+		t.Errorf("updated config appears %d times, want 1:\n%s", got, out)
+	}
+	if strings.Contains(out, "egress-policy: audit") {
+		t.Errorf("old config still present:\n%s", out)
+	}
+	if !strings.Contains(out, "steps: *build_steps") {
+		t.Errorf("alias steps line was modified:\n%s", out)
+	}
+}
+
+// Errors must never blank the output: on any failure AddAction returns the
+// input unchanged, not an empty string.
+func TestAddActionInvalidYamlReturnsInput(t *testing.T) {
+	input := "name: ci\njobs:\n  build:\n    steps:\n  bad_indent: [unclosed"
+	out, updated, err := AddAction(input, HardenRunnerConfig{Config: defaultTestConfig}, false, false, false)
+	if err == nil {
+		t.Fatalf("AddAction() error = nil, want parse error")
+	}
+	if updated {
+		t.Errorf("AddAction() updated = true, want false")
+	}
+	if out != input {
+		t.Errorf("AddAction() on invalid yaml returned %q, want the input unchanged", out)
+	}
 }
