@@ -1,0 +1,11 @@
+name: 'github-status-action'
+github-token:
+  action-input:
+    input: authToken
+    is-default: false
+  permissions:
+    statuses: write
+    statuses-reason: to create status update for commits
+
+#Reference - https://github.com/Sibz/github-status-action/blob/67af1f4042a5a790681aad83c44008ca6cfab83d/src/main.ts#L8
+
