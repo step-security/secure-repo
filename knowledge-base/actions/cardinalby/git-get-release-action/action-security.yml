@@ -1,0 +1,7 @@
+name: "git-get-release-action"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    actions: read
+    actions-reason: to get information about release
+#Refernce: https://github.com/cardinalby/git-get-release-action/blob/dbe9106527abc9248cc57323d035fdd9057658e1/src/main.ts#L31
