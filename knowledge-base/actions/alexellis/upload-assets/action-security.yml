@@ -1,0 +1,10 @@
+name: 'Upload Release Assets'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to upload release assets
+    #Reference: https://github.com/alexellis/upload-assets/blob/9e94dcf277d4c86fdac84b857a6b4ea08f077f1e/dist/index.js
+    #https://github.com/alexellis/upload-assets/blob/9e94dcf277d4c86fdac84b857a6b4ea08f077f1e/src/lib.js
+    
+    

@@ -1,4 +1,4 @@
-name: 'Edit Release'
+name: "Edit Release"
 # irongut/EditRelease
 github-token:
   action-input:
