@@ -1,0 +1,10 @@
+name: "JUnit Report Action"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    checks: write
+    checks-reason: to annotate test results
+    #Reference: https://github.com/mikepenz/action-junit-report/blob/7e977792727942c3091dd66d60469d9944b43b97/src/main.ts
+    #https://github.com/mikepenz/action-junit-report/blob/0e0c47752e7b85a02bf53a5dda077d6b013bcff8/README.md
