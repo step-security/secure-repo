@@ -1,0 +1,6 @@
+name: 'GitHub Pages'
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to deploy code to github pages
