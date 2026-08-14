@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/v40/github"
@@ -12,6 +13,54 @@ import (
 
 type Release struct {
 	TagName string `json:"tag_name"`
+}
+
+// isConcreteSemver reports whether v pins at least a minor version
+// (e.g. "v4.2" or "v4.2.1"), as opposed to a bare major ("v4") or empty.
+// Only concrete versions can be meaningfully compared for downgrades.
+func isConcreteSemver(v string) bool {
+	v = strings.TrimPrefix(v, "v")
+	if i := strings.IndexAny(v, "-+"); i >= 0 {
+		v = v[:i]
+	}
+	if v == "" {
+		return false
+	}
+	return strings.Count(v, ".") >= 1
+}
+
+// parseSemverParts extracts [major, minor, patch] from a version string like
+// "v4.2.1". Missing components default to 0; prerelease/build metadata and any
+// non-numeric component are ignored (treated as 0).
+func parseSemverParts(v string) [3]int {
+	v = strings.TrimPrefix(v, "v")
+	if i := strings.IndexAny(v, "-+"); i >= 0 {
+		v = v[:i]
+	}
+	var out [3]int
+	for i, p := range strings.Split(v, ".") {
+		if i > 2 {
+			break
+		}
+		n, _ := strconv.Atoi(p)
+		out[i] = n
+	}
+	return out
+}
+
+// compareSemver returns -1 if a < b, 0 if equal, 1 if a > b, comparing only the
+// numeric major.minor.patch components.
+func compareSemver(a, b string) int {
+	pa, pb := parseSemverParts(a), parseSemverParts(b)
+	for i := 0; i < 3; i++ {
+		if pa[i] < pb[i] {
+			return -1
+		}
+		if pa[i] > pb[i] {
+			return 1
+		}
+	}
+	return 0
 }
 
 func getMajorVersion(version string) string {
@@ -151,4 +200,43 @@ func GetMajorTagIfExists(ownerRepo, majorVersion string) (string, bool, error) {
 		return "", false, nil
 	}
 	return "", false, fmt.Errorf("failed to check tag %s on %s: %w", majorVersion, ownerRepo, err)
+}
+
+// GetLatestTagForMajor returns the highest concrete semantic-version tag on
+// ownerRepo for the given majorVersion (e.g. majorVersion "v4" -> "v4.3.1").
+// It lists tags with the prefix "<majorVersion>." and picks the largest by
+// semver. Returns ("", nil) when no concrete tag exists for that major.
+func GetLatestTagForMajor(ownerRepo, majorVersion string) (string, error) {
+	splitOnSlash := strings.Split(ownerRepo, "/")
+	if len(splitOnSlash) < 2 {
+		return "", fmt.Errorf("invalid owner/repo format: %s", ownerRepo)
+	}
+	owner := splitOnSlash[0]
+	repo := splitOnSlash[1]
+
+	ctx := context.Background()
+	client := github.NewClient(nil)
+	if token := os.Getenv("PAT"); token != "" {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+		client = github.NewClient(oauth2.NewClient(ctx, ts))
+	}
+
+	refs, _, err := client.Git.ListMatchingRefs(ctx, owner, repo, &github.ReferenceListOptions{
+		Ref: "tags/" + majorVersion + ".",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	best := ""
+	for _, ref := range refs {
+		tag := strings.TrimPrefix(ref.GetRef(), "refs/tags/")
+		if !isConcreteSemver(tag) {
+			continue
+		}
+		if best == "" || compareSemver(tag, best) > 0 {
+			best = tag
+		}
+	}
+	return best, nil
 }
