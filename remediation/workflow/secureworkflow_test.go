@@ -15,6 +15,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// mockForkMajorTagVersion makes the fork's major tag resolve to forkVersion, as
+// the maintained-action downgrade check does (major tag -> commit -> version).
+func mockForkMajorTagVersion(forkRepo, majorTag, forkVersion string) {
+	base := "https://api.github.com/repos/" + forkRepo
+	httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorTag,
+		httpmock.NewStringResponder(200, `forksha-`+majorTag))
+	httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/`+forkVersion+`","object":{"sha":"forksha-`+majorTag+`","type":"commit"}}
+		]`))
+}
+
 func TestSecureWorkflow(t *testing.T) {
 	const inputDirectory = "../../testfiles/secureworkflow/input"
 	const outputDirectory = "../../testfiles/secureworkflow/output"
@@ -155,16 +167,13 @@ func TestSecureWorkflow(t *testing.T) {
 			{"ref":"refs/tags/v1.2.0","object":{"sha":"sha-tespkg-v1","type":"commit"}}
 		]`))
 
-	// ...and requires the fork to have that exact version, so the swap does not
-	// move the workflow to an older build.
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/ref/tags/v5.5.5",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5.5.5","object":{"sha":"g1","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/ref/tags/v5.3.0",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5.3.0","object":{"sha":"g2","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/ref/tags/v1.1.0",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1.1.0","object":{"sha":"g3","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/ref/tags/v1.2.0",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1.2.0","object":{"sha":"g4","type":"commit"}}`))
+	// ...and compares it against the version the fork's major tag resolves to, so
+	// the swap cannot move the workflow to an older build. Both sides must be
+	// mocked, otherwise the check errors out and falls back to replacing.
+	mockForkMajorTagVersion("step-security/action-semantic-pull-request", "v5", "v5.5.5")
+	mockForkMajorTagVersion("step-security/skip-duplicate-actions", "v5", "v5.3.0")
+	mockForkMajorTagVersion("step-security/git-restore-mtime-action", "v1", "v1.1.0")
+	mockForkMajorTagVersion("step-security/actions-cache", "v1", "v1.2.0")
 
 	// Mock PinActions calls for step-security/action-semantic-pull-request@v5
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/commits/v5",

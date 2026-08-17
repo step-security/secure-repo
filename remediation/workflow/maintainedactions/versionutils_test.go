@@ -75,6 +75,59 @@ func TestGetLatestRelease_PATRetryFails(t *testing.T) {
 	}
 }
 
+func TestCompareSemver(t *testing.T) {
+	cases := []struct {
+		a, b string
+		want int
+	}{
+		{"v4.2.1", "v4.1.0", 1},
+		{"v4.1.0", "v4.2.1", -1},
+		{"v4.2.0", "v4.2.0", 0},
+		{"v4.2", "v4.2.0", 0},        // missing patch defaults to 0
+		{"v0.6.2", "v0.5.7", 1},      // same major, newer minor
+		{"v4.10.0", "v4.9.0", 1},     // numeric, not lexical
+		{"v4.2.1-beta", "v4.2.1", 0}, // prerelease metadata ignored
+		{"4.2.1", "v4.2.1", 0},       // v-prefix optional
+	}
+	for _, c := range cases {
+		if got := compareSemver(c.a, c.b); got != c.want {
+			t.Errorf("compareSemver(%q, %q) = %d, want %d", c.a, c.b, got, c.want)
+		}
+	}
+}
+
+// VersionForMajorTag
+
+func TestVersionForMajorTag_Resolves(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v0",
+		httpmock.NewStringResponder(200, `headsha`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v0","object":{"sha":"headsha","type":"commit"}},
+			{"ref":"refs/tags/v0.6.2","object":{"sha":"headsha","type":"commit"}},
+			{"ref":"refs/tags/v0.5.7","object":{"sha":"oldsha","type":"commit"}}
+		]`))
+	v, err := VersionForMajorTag("owner/repo", "v0")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != "v0.6.2" {
+		t.Errorf("got %q, want v0.6.2", v)
+	}
+}
+
+func TestVersionForMajorTag_TagLookupFails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v0",
+		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	if _, err := VersionForMajorTag("owner/repo", "v0"); err == nil {
+		t.Fatal("expected error when the major tag cannot be resolved")
+	}
+}
+
 // GetTagFromSHA
 
 func TestGetTagFromSHA_InvalidRepo(t *testing.T) {
@@ -298,20 +351,29 @@ func TestResolveVersion_NoRef(t *testing.T) {
 	}
 }
 
+// mockForkMajorTagVersion makes the fork's major tag resolve to forkVersion.
+func mockForkMajorTagVersion(forkRepo, majorTag, forkVersion string) {
+	base := "https://api.github.com/repos/" + forkRepo
+	httpmock.RegisterResponder("GET", base+"/git/ref/tags/"+majorTag,
+		httpmock.NewStringResponder(200,
+			`{"ref":"refs/tags/`+majorTag+`","object":{"sha":"forksha","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorTag,
+		httpmock.NewStringResponder(200, `forksha`))
+	httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/`+forkVersion+`","object":{"sha":"forksha","type":"commit"}}
+		]`))
+}
+
 func TestResolveVersion_SHAResolved(t *testing.T) {
-	// SHA resolves to v5.2.0 and the fork has that exact version -> replace with v5.
+	// SHA resolves to v5.2.0; the fork's v5 is on v5.3.0 (newer) -> replace with v5.
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/orig/repo/git/matching-refs/tags/v",
 		httpmock.NewStringResponder(200, `[
 			{"ref":"refs/tags/v5.2.0","object":{"sha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","type":"commit"}}
 		]`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v5",
-		httpmock.NewStringResponder(200,
-			`{"ref":"refs/tags/v5","object":{"sha":"x","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v5.2.0",
-		httpmock.NewStringResponder(200,
-			`{"ref":"refs/tags/v5.2.0","object":{"sha":"y","type":"commit"}}`))
+	mockForkMajorTagVersion("new/repo", "v5", "v5.3.0")
 	uses := "orig/repo@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	v, err := resolveVersion(uses, "orig/repo", "new/repo", true)
 	if err != nil {
@@ -323,12 +385,10 @@ func TestResolveVersion_SHAResolved(t *testing.T) {
 }
 
 func TestResolveVersion_MajorTagResolvedThroughSHA(t *testing.T) {
-	// The workflow pins "@v4", which currently points at v4.2.1. The fork has v4
-	// but has not released v4.2.1, so replacing would move the workflow back.
+	// The workflow pins "@v4", which currently points at v4.2.1, while the fork's
+	// v4 is still on v4.1.0 -> replacing would move the workflow back.
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4","object":{"sha":"x","type":"commit"}}`))
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/orig/repo/commits/refs/tags/v4",
 		httpmock.NewStringResponder(200, `origsha`))
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/orig/repo/git/matching-refs/tags/v",
@@ -336,34 +396,56 @@ func TestResolveVersion_MajorTagResolvedThroughSHA(t *testing.T) {
 			{"ref":"refs/tags/v4","object":{"sha":"origsha","type":"commit"}},
 			{"ref":"refs/tags/v4.2.1","object":{"sha":"origsha","type":"commit"}}
 		]`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4.2.1",
-		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	mockForkMajorTagVersion("new/repo", "v4", "v4.1.0")
 	if _, err := resolveVersion("orig/repo@v4", "orig/repo", "new/repo", true); err == nil {
-		t.Fatal("expected skip when the fork lacks the version the major tag points at")
+		t.Fatal("expected skip when the fork's major tag is on an older version")
 	}
 }
 
-func TestResolveVersion_ForkMissingVersionSkips(t *testing.T) {
-	// Concrete "@v4.2.1" that the fork has not released -> skip.
+func TestResolveVersion_ForkOlderSkips(t *testing.T) {
+	// Workflow is on v4.2.1; the fork's v4 is on v4.1.0 -> downgrade, skip.
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4","object":{"sha":"x","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4.2.1",
-		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	mockForkMajorTagVersion("new/repo", "v4", "v4.1.0")
 	if _, err := resolveVersion("orig/repo@v4.2.1", "orig/repo", "new/repo", true); err == nil {
-		t.Fatal("expected skip when fork lacks the version")
+		t.Fatal("expected skip when the fork is on an older version")
 	}
 }
 
-func TestResolveVersion_ForkHasVersionReplaces(t *testing.T) {
-	// Concrete "@v4.2.1" that the fork does have -> replace with the major tag.
+func TestResolveVersion_ForkNewerReplaces(t *testing.T) {
+	// The fork does not have v4.2.1 itself, but its v4 is on the newer v4.3.0.
+	// Exact-version matching would wrongly skip this; comparing versions replaces.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mockForkMajorTagVersion("new/repo", "v4", "v4.3.0")
+	v, err := resolveVersion("orig/repo@v4.2.1", "orig/repo", "new/repo", true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != "v4" {
+		t.Errorf("got %q, want v4", v)
+	}
+}
+
+func TestResolveVersion_ForkVersionUnknownSkips(t *testing.T) {
+	// The fork has the major tag, but the version it points at cannot be
+	// determined -> skip rather than risk a downgrade.
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4",
 		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4","object":{"sha":"x","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4.2.1",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4.2.1","object":{"sha":"y","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/commits/refs/tags/v4",
+		httpmock.NewStringResponder(500, `{"message":"boom"}`))
+	if _, err := resolveVersion("orig/repo@v4.2.1", "orig/repo", "new/repo", true); err == nil {
+		t.Fatal("expected skip when the fork's version cannot be determined")
+	}
+}
+
+func TestResolveVersion_ForkEqualReplaces(t *testing.T) {
+	// Same version on both sides -> not a downgrade, replace.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mockForkMajorTagVersion("new/repo", "v4", "v4.2.1")
 	v, err := resolveVersion("orig/repo@v4.2.1", "orig/repo", "new/repo", true)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

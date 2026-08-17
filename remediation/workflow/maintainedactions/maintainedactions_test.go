@@ -62,15 +62,13 @@ func TestReplaceActions(t *testing.T) {
 			{"ref":"refs/tags/v1.8.0","object":{"sha":"sha-tespkg-v1","type":"commit"}}
 		]`))
 
-	// The forks have those exact versions, so the replacement is not a downgrade.
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/ref/tags/v5.5.3",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5.5.3","object":{"sha":"e1","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/ref/tags/v5.3.1",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5.3.1","object":{"sha":"e2","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/ref/tags/v1.3.0",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1.3.0","object":{"sha":"e3","type":"commit"}}`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/ref/tags/v1.8.0",
-		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1.8.0","object":{"sha":"e4","type":"commit"}}`))
+	// The forks' major tags resolve to the same versions, so replacing is not a
+	// downgrade. (Both sides must be mocked, otherwise the downgrade check errors
+	// out and silently falls back to replacing.)
+	mockForkMajorTagVersion("step-security/action-semantic-pull-request", "v5", "v5.5.3")
+	mockForkMajorTagVersion("step-security/skip-duplicate-actions", "v5", "v5.3.1")
+	mockForkMajorTagVersion("step-security/git-restore-mtime-action", "v1", "v1.3.0")
+	mockForkMajorTagVersion("step-security/actions-cache", "v1", "v1.8.0")
 
 	tests := []struct {
 		name        string

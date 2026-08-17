@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/v40/github"
@@ -25,6 +26,40 @@ func isConcreteSemver(v string) bool {
 		return false
 	}
 	return strings.Count(v, ".") >= 1
+}
+
+// parseSemverParts extracts [major, minor, patch] from a version string like
+// "v4.2.1". Missing components default to 0; prerelease/build metadata and any
+// non-numeric component are ignored (treated as 0).
+func parseSemverParts(v string) [3]int {
+	v = strings.TrimPrefix(v, "v")
+	if i := strings.IndexAny(v, "-+"); i >= 0 {
+		v = v[:i]
+	}
+	var out [3]int
+	for i, p := range strings.Split(v, ".") {
+		if i > 2 {
+			break
+		}
+		n, _ := strconv.Atoi(p)
+		out[i] = n
+	}
+	return out
+}
+
+// compareSemver returns -1 if a < b, 0 if equal, 1 if a > b, comparing only the
+// numeric major.minor.patch components.
+func compareSemver(a, b string) int {
+	pa, pb := parseSemverParts(a), parseSemverParts(b)
+	for i := 0; i < 3; i++ {
+		if pa[i] < pb[i] {
+			return -1
+		}
+		if pa[i] > pb[i] {
+			return 1
+		}
+	}
+	return 0
 }
 
 func getMajorVersion(version string) string {
@@ -172,45 +207,16 @@ func GetSHAFromTag(ownerRepo, tag string) (string, error) {
 	return sha, nil
 }
 
-// TagExists reports whether ownerRepo has a tag exactly matching tag (e.g. "v5"
-// or "v5.2.0"). Returns (false, nil) when the tag is absent (404) and
-// (false, err) for unexpected API failures.
-func TagExists(ownerRepo, tag string) (bool, error) {
-	splitOnSlash := strings.Split(ownerRepo, "/")
-	if len(splitOnSlash) < 2 {
-		return false, fmt.Errorf("invalid owner/repo format: %s", ownerRepo)
+// VersionForMajorTag returns the concrete semantic version that a major tag on
+// ownerRepo currently points at (e.g. "v0" -> "v0.6.2"), by resolving the tag to
+// its commit and reading the concrete tag on that commit. This is the version a
+// workflow using the major tag actually runs.
+func VersionForMajorTag(ownerRepo, majorTag string) (string, error) {
+	sha, err := GetSHAFromTag(ownerRepo, majorTag)
+	if err != nil {
+		return "", fmt.Errorf("unable to resolve tag %s on %s to a commit SHA: %w", majorTag, ownerRepo, err)
 	}
-	owner := splitOnSlash[0]
-	repo := splitOnSlash[1]
-
-	ctx := context.Background()
-	client := github.NewClient(nil)
-
-	_, resp, err := client.Git.GetRef(ctx, owner, repo, "refs/tags/"+tag)
-	if err == nil {
-		return true, nil
-	}
-	if resp != nil && resp.StatusCode == 404 {
-		return false, nil
-	}
-
-	// First attempt failed for a non-404 reason — retry with token.
-	token := os.Getenv("PAT")
-	if token == "" {
-		return false, nil
-	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-	tc := oauth2.NewClient(ctx, ts)
-	client = github.NewClient(tc)
-
-	_, resp, err = client.Git.GetRef(ctx, owner, repo, "refs/tags/"+tag)
-	if err == nil {
-		return true, nil
-	}
-	if resp != nil && resp.StatusCode == 404 {
-		return false, nil
-	}
-	return false, fmt.Errorf("failed to check tag %s on %s: %w", tag, ownerRepo, err)
+	return tagForSHA(ownerRepo, sha)
 }
 
 // GetMajorTagIfExists checks whether ownerRepo has a tag exactly matching
@@ -218,12 +224,39 @@ func TagExists(ownerRepo, tag string) (bool, error) {
 // exists, ("", false, nil) when it is absent (404), and ("", false, err) for
 // unexpected API failures.
 func GetMajorTagIfExists(ownerRepo, majorVersion string) (string, bool, error) {
-	exists, err := TagExists(ownerRepo, majorVersion)
-	if err != nil {
-		return "", false, err
+	splitOnSlash := strings.Split(ownerRepo, "/")
+	if len(splitOnSlash) < 2 {
+		return "", false, fmt.Errorf("invalid owner/repo format: %s", ownerRepo)
 	}
-	if !exists {
+	owner := splitOnSlash[0]
+	repo := splitOnSlash[1]
+
+	ctx := context.Background()
+	client := github.NewClient(nil)
+
+	_, resp, err := client.Git.GetRef(ctx, owner, repo, "refs/tags/"+majorVersion)
+	if err == nil {
+		return majorVersion, true, nil
+	}
+	if resp != nil && resp.StatusCode == 404 {
 		return "", false, nil
 	}
-	return majorVersion, true, nil
+
+	// First attempt failed for a non-404 reason — retry with token.
+	token := os.Getenv("PAT")
+	if token == "" {
+		return "", false, nil
+	}
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(ctx, ts)
+	client = github.NewClient(tc)
+
+	_, resp, err = client.Git.GetRef(ctx, owner, repo, "refs/tags/"+majorVersion)
+	if err == nil {
+		return majorVersion, true, nil
+	}
+	if resp != nil && resp.StatusCode == 404 {
+		return "", false, nil
+	}
+	return "", false, fmt.Errorf("failed to check tag %s on %s: %w", majorVersion, ownerRepo, err)
 }
