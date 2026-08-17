@@ -88,23 +88,6 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	if err != nil || !exists {
 		return "", fmt.Errorf("major tag %s not found on %s", majorVersion, newAction)
 	}
-
-	// No-downgrade guard (major-tag path only). Maintained forks can lag behind
-	// the upstream action, so a major-only match is not enough: replacing a
-	// concrete "v4.2.1" with the fork's floating "v4" (which may point at, say,
-	// 4.1.0) would silently downgrade the customer. When the original ref is a
-	// concrete semantic version, compare against the fork's current version for
-	// this major and skip the replacement if it would be a downgrade. If the
-	// original is a bare major/SHA-derived major, or the fork's concrete version
-	// can't be determined, fall back to replacing (major match is sufficient).
-	if isConcreteSemver(version) {
-		forkVersion, verr := GetLatestTagForMajor(newAction, majorVersion)
-		if verr == nil && forkVersion != "" && compareSemver(forkVersion, version) < 0 {
-			return "", fmt.Errorf("skipping replacement of %s: %s@%s would downgrade from %s to %s",
-				originalUses, newAction, tag, version, forkVersion)
-		}
-	}
-
 	return tag, nil
 }
 
