@@ -70,24 +70,57 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 		return "", fmt.Errorf("no ref found in %s", originalUses)
 	}
 	ref := parts[1]
-	var version string
-	var err error
-	if len(ref) == 40 && pin.IsAllHex(ref) {
-		version, err = GetMajorTagFromSHA(actionName, ref)
+	pinnedBySHA := len(ref) == 40 && pin.IsAllHex(ref)
+
+	// A tag ref states its own major version. A SHA carries none, so it has to be
+	// resolved to the tag on that commit first.
+	semanticVersion := ""
+	majorVersion := getMajorVersion(ref)
+	if pinnedBySHA {
+		var err error
+		semanticVersion, err = tagForSHA(actionName, ref)
 		if err != nil {
-			return "", fmt.Errorf("unable to resolve SHA %s to major tag: %w", ref, err)
+			return "", err
 		}
-		if version == "" {
-			return "", fmt.Errorf("unable to resolve SHA %s to major tag", ref)
-		}
-	} else {
-		version = ref
+		majorVersion = getMajorVersion(semanticVersion)
 	}
-	majorVersion := getMajorVersion(version)
+
+	// The replacement is written as the major tag, so the fork must have it.
+	// Checked before resolving the concrete version: if there is no matching
+	// major to replace with, the version is irrelevant.
 	tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
 	if err != nil || !exists {
 		return "", fmt.Errorf("major tag %s not found on %s", majorVersion, newAction)
 	}
+
+	// Resolve the concrete version the original is actually pinned to. A major
+	// tag such as "v4" is resolved through its commit SHA to the version it
+	// currently points at (e.g. "v4.2.1").
+	if !pinnedBySHA {
+		semanticVersion = ref
+		if !isConcreteSemver(ref) {
+			sha, err := GetSHAFromTag(actionName, ref)
+			if err != nil {
+				return "", fmt.Errorf("unable to resolve tag %s to a commit SHA: %w", ref, err)
+			}
+			semanticVersion, err = tagForSHA(actionName, sha)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	// Maintained forks can lag behind the upstream action, so a matching major is
+	// not enough: pointing the workflow at the fork's major tag when the fork has
+	// not released the version the workflow is on would move it backwards.
+	// Require the fork to have that exact version.
+	if isConcreteSemver(semanticVersion) {
+		forkHasVersion, err := TagExists(newAction, semanticVersion)
+		if err == nil && !forkHasVersion {
+			return "", fmt.Errorf("%s does not have version %s yet", newAction, semanticVersion)
+		}
+	}
+
 	return tag, nil
 }
 

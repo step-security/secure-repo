@@ -32,6 +32,46 @@ func TestReplaceActions(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/ref/tags/v1",
 		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1","object":{"sha":"dddddddddddddddddddddddddddddddddddddddd","type":"commit"}}`))
 
+	// Resolving each original action's major tag to the concrete version it points
+	// at: major tag -> commit SHA -> concrete tag on that commit.
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/amannn/action-semantic-pull-request/commits/refs/tags/v5",
+		httpmock.NewStringResponder(200, `sha-amannn-v5`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/amannn/action-semantic-pull-request/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v5.5.3","object":{"sha":"sha-amannn-v5","type":"commit"}}
+		]`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fkirc/skip-duplicate-actions/commits/refs/tags/v5",
+		httpmock.NewStringResponder(200, `sha-fkirc-v5`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fkirc/skip-duplicate-actions/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v5.3.1","object":{"sha":"sha-fkirc-v5","type":"commit"}}
+		]`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/chetan/git-restore-mtime-action/commits/refs/tags/v1",
+		httpmock.NewStringResponder(200, `sha-chetan-v1`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/chetan/git-restore-mtime-action/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v1.3.0","object":{"sha":"sha-chetan-v1","type":"commit"}}
+		]`))
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/tespkg/actions-cache/commits/refs/tags/v1",
+		httpmock.NewStringResponder(200, `sha-tespkg-v1`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/tespkg/actions-cache/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v1.8.0","object":{"sha":"sha-tespkg-v1","type":"commit"}}
+		]`))
+
+	// The forks have those exact versions, so the replacement is not a downgrade.
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/git/ref/tags/v5.5.3",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5.5.3","object":{"sha":"e1","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/skip-duplicate-actions/git/ref/tags/v5.3.1",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v5.3.1","object":{"sha":"e2","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/git-restore-mtime-action/git/ref/tags/v1.3.0",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1.3.0","object":{"sha":"e3","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/ref/tags/v1.8.0",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1.8.0","object":{"sha":"e4","type":"commit"}}`))
+
 	tests := []struct {
 		name        string
 		inputFile   string

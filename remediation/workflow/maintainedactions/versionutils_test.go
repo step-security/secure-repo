@@ -75,25 +75,25 @@ func TestGetLatestRelease_PATRetryFails(t *testing.T) {
 	}
 }
 
-// GetMajorTagFromSHA
+// GetTagFromSHA
 
-func TestGetMajorTagFromSHA_InvalidRepo(t *testing.T) {
-	if _, err := GetMajorTagFromSHA("no-slash", "abc"); err == nil {
+func TestGetTagFromSHA_InvalidRepo(t *testing.T) {
+	if _, err := GetTagFromSHA("no-slash", "abc"); err == nil {
 		t.Fatal("expected error for invalid owner/repo")
 	}
 }
 
-func TestGetMajorTagFromSHA_ListError(t *testing.T) {
+func TestGetTagFromSHA_ListError(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
 		httpmock.NewStringResponder(500, `{"message":"boom"}`))
-	if _, err := GetMajorTagFromSHA("owner/repo", "anything"); err == nil {
+	if _, err := GetTagFromSHA("owner/repo", "anything"); err == nil {
 		t.Fatal("expected error from ListMatchingRefs failure")
 	}
 }
 
-func TestGetMajorTagFromSHA_CommitMatch(t *testing.T) {
+func TestGetTagFromSHA_CommitMatch(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
@@ -101,16 +101,52 @@ func TestGetMajorTagFromSHA_CommitMatch(t *testing.T) {
 			{"ref":"refs/tags/v2.0.0","object":{"sha":"aaaa","type":"commit"}},
 			{"ref":"refs/tags/v5.1.0","object":{"sha":"bbbb","type":"commit"}}
 		]`))
-	v, err := GetMajorTagFromSHA("owner/repo", "bbbb")
+	v, err := GetTagFromSHA("owner/repo", "bbbb")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if v != "v5" {
-		t.Errorf("got %q, want v5", v)
+	if v != "v5.1.0" {
+		t.Errorf("got %q, want v5.1.0 (full tag)", v)
 	}
 }
 
-func TestGetMajorTagFromSHA_AnnotatedTagMatch(t *testing.T) {
+func TestGetTagFromSHA_PrefersConcreteOverBareMajor(t *testing.T) {
+	// A release commit is tagged with both "v4" and "v4.2.1"; the concrete
+	// version is what the workflow is effectively pinned to.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v4","object":{"sha":"same","type":"commit"}},
+			{"ref":"refs/tags/v4.2.1","object":{"sha":"same","type":"commit"}}
+		]`))
+	v, err := GetTagFromSHA("owner/repo", "same")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != "v4.2.1" {
+		t.Errorf("got %q, want v4.2.1", v)
+	}
+}
+
+func TestGetTagFromSHA_BareMajorFallback(t *testing.T) {
+	// Only a bare major points at the commit -> returned as the fallback.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v4","object":{"sha":"same","type":"commit"}}
+		]`))
+	v, err := GetTagFromSHA("owner/repo", "same")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != "v4" {
+		t.Errorf("got %q, want v4 (bare-major fallback)", v)
+	}
+}
+
+func TestGetTagFromSHA_AnnotatedTagMatch(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
@@ -119,16 +155,16 @@ func TestGetMajorTagFromSHA_AnnotatedTagMatch(t *testing.T) {
 		]`))
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v3.0.0",
 		httpmock.NewStringResponder(200, `commitsha`))
-	v, err := GetMajorTagFromSHA("owner/repo", "commitsha")
+	v, err := GetTagFromSHA("owner/repo", "commitsha")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if v != "v3" {
-		t.Errorf("got %q, want v3", v)
+	if v != "v3.0.0" {
+		t.Errorf("got %q, want v3.0.0", v)
 	}
 }
 
-func TestGetMajorTagFromSHA_AnnotatedDerefError(t *testing.T) {
+func TestGetTagFromSHA_AnnotatedDerefError(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
@@ -138,23 +174,23 @@ func TestGetMajorTagFromSHA_AnnotatedDerefError(t *testing.T) {
 		]`))
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v3.0.0",
 		httpmock.NewStringResponder(500, `{"message":"boom"}`))
-	v, err := GetMajorTagFromSHA("owner/repo", "match")
+	v, err := GetTagFromSHA("owner/repo", "match")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if v != "v4" {
-		t.Errorf("got %q, want v4 (deref error should be skipped, not fatal)", v)
+	if v != "v4.0.0" {
+		t.Errorf("got %q, want v4.0.0 (deref error should be skipped, not fatal)", v)
 	}
 }
 
-func TestGetMajorTagFromSHA_NoMatch(t *testing.T) {
+func TestGetTagFromSHA_NoMatch(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/git/matching-refs/tags/v",
 		httpmock.NewStringResponder(200, `[
 			{"ref":"refs/tags/v2.0.0","object":{"sha":"aaaa","type":"commit"}}
 		]`))
-	v, err := GetMajorTagFromSHA("owner/repo", "nomatch")
+	v, err := GetTagFromSHA("owner/repo", "nomatch")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -163,7 +199,7 @@ func TestGetMajorTagFromSHA_NoMatch(t *testing.T) {
 	}
 }
 
-func TestGetMajorTagFromSHA_WithPAT(t *testing.T) {
+func TestGetTagFromSHA_WithPAT(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	t.Setenv("PAT", "fake-token")
@@ -171,12 +207,12 @@ func TestGetMajorTagFromSHA_WithPAT(t *testing.T) {
 		httpmock.NewStringResponder(200, `[
 			{"ref":"refs/tags/v1.0.0","object":{"sha":"match","type":"commit"}}
 		]`))
-	v, err := GetMajorTagFromSHA("owner/repo", "match")
+	v, err := GetTagFromSHA("owner/repo", "match")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if v != "v1" {
-		t.Errorf("got %q, want v1", v)
+	if v != "v1.0.0" {
+		t.Errorf("got %q, want v1.0.0", v)
 	}
 }
 
@@ -263,6 +299,7 @@ func TestResolveVersion_NoRef(t *testing.T) {
 }
 
 func TestResolveVersion_SHAResolved(t *testing.T) {
+	// SHA resolves to v5.2.0 and the fork has that exact version -> replace with v5.
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/orig/repo/git/matching-refs/tags/v",
@@ -272,6 +309,9 @@ func TestResolveVersion_SHAResolved(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v5",
 		httpmock.NewStringResponder(200,
 			`{"ref":"refs/tags/v5","object":{"sha":"x","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v5.2.0",
+		httpmock.NewStringResponder(200,
+			`{"ref":"refs/tags/v5.2.0","object":{"sha":"y","type":"commit"}}`))
 	uses := "orig/repo@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	v, err := resolveVersion(uses, "orig/repo", "new/repo", true)
 	if err != nil {
@@ -279,6 +319,72 @@ func TestResolveVersion_SHAResolved(t *testing.T) {
 	}
 	if v != "v5" {
 		t.Errorf("got %q, want v5", v)
+	}
+}
+
+func TestResolveVersion_MajorTagResolvedThroughSHA(t *testing.T) {
+	// The workflow pins "@v4", which currently points at v4.2.1. The fork has v4
+	// but has not released v4.2.1, so replacing would move the workflow back.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4","object":{"sha":"x","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/orig/repo/commits/refs/tags/v4",
+		httpmock.NewStringResponder(200, `origsha`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/orig/repo/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v4","object":{"sha":"origsha","type":"commit"}},
+			{"ref":"refs/tags/v4.2.1","object":{"sha":"origsha","type":"commit"}}
+		]`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4.2.1",
+		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	if _, err := resolveVersion("orig/repo@v4", "orig/repo", "new/repo", true); err == nil {
+		t.Fatal("expected skip when the fork lacks the version the major tag points at")
+	}
+}
+
+func TestResolveVersion_ForkMissingVersionSkips(t *testing.T) {
+	// Concrete "@v4.2.1" that the fork has not released -> skip.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4","object":{"sha":"x","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4.2.1",
+		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	if _, err := resolveVersion("orig/repo@v4.2.1", "orig/repo", "new/repo", true); err == nil {
+		t.Fatal("expected skip when fork lacks the version")
+	}
+}
+
+func TestResolveVersion_ForkHasVersionReplaces(t *testing.T) {
+	// Concrete "@v4.2.1" that the fork does have -> replace with the major tag.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4","object":{"sha":"x","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4.2.1",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4.2.1","object":{"sha":"y","type":"commit"}}`))
+	v, err := resolveVersion("orig/repo@v4.2.1", "orig/repo", "new/repo", true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != "v4" {
+		t.Errorf("got %q, want v4", v)
+	}
+}
+
+func TestResolveVersion_NoMajorTagSkipsVersionLookup(t *testing.T) {
+	// The fork has no matching major tag, so nothing further is looked up: only
+	// the major-tag check is mocked, and any extra call would fail the test.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v3",
+		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	if _, err := resolveVersion("orig/repo@v3.1.0", "orig/repo", "new/repo", true); err == nil {
+		t.Fatal("expected error when fork has no matching major tag")
+	}
+	if n := httpmock.GetTotalCallCount(); n != 1 {
+		t.Errorf("made %d API calls, want 1 (no version resolution once the major is missing)", n)
 	}
 }
 
