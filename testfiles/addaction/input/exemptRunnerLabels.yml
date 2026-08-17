@@ -1,0 +1,15 @@
+name: test-exempt-runner-labels
+on:
+  push:
+jobs:
+  gpu-build:
+    runs-on: gpu-large
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "gpu build"
+
+  standard-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "standard build"

@@ -522,6 +522,13 @@ func TestExemptRunnerLabels(t *testing.T) {
 			},
 			unchanged: true,
 		},
+		{
+			name:        "multi-job fixture: exempt runner skipped, non-exempt job gets harden-runner",
+			inputFile:   "exemptRunnerLabels.yml",
+			config:      HardenRunnerConfig{ExemptRunnerLabels: []string{"gpu-*"}},
+			wantUpdated: true,
+			outputFile:  "exemptRunnerLabels.yml",
+		},
 	}
 
 	for _, tt := range tests {
