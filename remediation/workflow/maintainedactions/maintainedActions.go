@@ -76,6 +76,8 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	// resolved to the tag on that commit first.
 	semanticVersion := ""
 	majorVersion := getMajorVersion(ref)
+	// above two are for the usual case
+
 	if pinnedBySHA {
 		var err error
 		semanticVersion, err = tagForSHA(actionName, ref)
@@ -88,7 +90,7 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	// The replacement is written as the major tag, so the fork must have it.
 	// Checked before resolving the concrete version: if there is no matching
 	// major to replace with, the version is irrelevant.
-	tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
+	forkMajorTag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
 	if err != nil || !exists {
 		return "", fmt.Errorf("major tag %s not found on %s", majorVersion, newAction)
 	}
@@ -99,6 +101,10 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	if !pinnedBySHA {
 		semanticVersion = ref
 		if !isConcreteSemver(ref) {
+			// A major tag such as "v5". Anything else without a minor version
+			// (a branch, "latest", a short SHA) cannot reach this point: the
+			// major-tag check above would not have found a matching tag on the
+			// fork for it, so the replacement was already skipped.
 			sha, err := GetSHAFromTag(actionName, ref)
 			if err != nil {
 				return "", fmt.Errorf("unable to resolve tag %s to a commit SHA: %w", ref, err)
@@ -111,17 +117,22 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	}
 
 	// Maintained forks can lag behind the upstream action, so a matching major is
-	// not enough: pointing the workflow at the fork's major tag when the fork has
-	// not released the version the workflow is on would move it backwards.
-	// Require the fork to have that exact version.
+	// not enough: the fork's major tag may point at an older release than the one
+	// the workflow is on, even within the same major. Compare against the version
+	// the fork's major tag actually resolves to — that is what the workflow would
+	// run — and skip the replacement when it is older. If that version cannot be
+	// determined, skip as well rather than risk a downgrade.
 	if isConcreteSemver(semanticVersion) {
-		forkHasVersion, err := TagExists(newAction, semanticVersion)
-		if err == nil && !forkHasVersion {
-			return "", fmt.Errorf("%s does not have version %s yet", newAction, semanticVersion)
+		forkVersion, err := VersionForMajorTag(newAction, forkMajorTag)
+		if err != nil {
+			return "", fmt.Errorf("unable to determine which version %s@%s points at: %w", newAction, forkMajorTag, err)
+		}
+		if compareSemver(forkVersion, semanticVersion) < 0 {
+			return "", fmt.Errorf("%s@%s is on %s, older than %s", newAction, forkMajorTag, forkVersion, semanticVersion)
 		}
 	}
 
-	return tag, nil
+	return forkMajorTag, nil
 }
 
 // ReplaceActions replaces original actions with Step Security actions in a workflow.
