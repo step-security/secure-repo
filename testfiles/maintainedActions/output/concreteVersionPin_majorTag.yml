@@ -1,0 +1,10 @@
+name: Semantic PR
+on: pull_request
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/action-semantic-pull-request@v5
+        with:
+          types: feat,fix,chore
