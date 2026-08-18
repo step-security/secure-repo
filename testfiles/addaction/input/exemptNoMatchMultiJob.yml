@@ -1,0 +1,15 @@
+name: test-exempt-no-match
+on:
+  push:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "lint"
+
+  package:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "package"
