@@ -529,6 +529,25 @@ func TestExemptRunnerLabels(t *testing.T) {
 			wantUpdated: true,
 			outputFile:  "exemptRunnerLabels.yml",
 		},
+		{
+			// Scenario 1: exempt list is present but nothing matches any job's
+			// runner, so harden-runner is added to every job by default.
+			name:        "exempt list present but no job matches adds harden-runner to all jobs",
+			inputFile:   "exemptNoMatchMultiJob.yml",
+			config:      HardenRunnerConfig{ExemptRunnerLabels: []string{"windows-*"}},
+			wantUpdated: true,
+			outputFile:  "exemptNoMatchMultiJob.yml",
+		},
+		{
+			// Scenario 2: matching any single label in a runs-on list (here the
+			// middle label, not the first) skips that job, while the other jobs
+			// whose runners do not match still get harden-runner added.
+			name:        "exempt matches one of several runs-on labels skips only that job",
+			inputFile:   "exemptMatchArrayLabel.yml", // build: [self-hosted, linux, arm64]; lint/package: non-matching
+			config:      HardenRunnerConfig{ExemptRunnerLabels: []string{"linux"}},
+			wantUpdated: true,
+			outputFile:  "exemptMatchArrayLabel.yml",
+		},
 	}
 
 	for _, tt := range tests {
