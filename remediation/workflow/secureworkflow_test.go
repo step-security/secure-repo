@@ -15,15 +15,36 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// mockForkMajorTagVersion makes the fork's major tag resolve to forkVersion, as
-// the maintained-action downgrade check does (major tag -> commit -> version).
-func mockForkMajorTagVersion(forkRepo, majorTag, forkVersion string) {
-	base := "https://api.github.com/repos/" + forkRepo
+// mockUpstreamMajorTagVersion makes the original action's major tag resolve to
+// version, the way ReplaceActions works out what the workflow is really on.
+func mockUpstreamMajorTagVersion(repo, majorTag, sha, version string) {
+	base := "https://api.github.com/repos/" + repo
 	httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorTag,
-		httpmock.NewStringResponder(200, `forksha-`+majorTag))
+		httpmock.NewStringResponder(200, sha))
 	httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",
 		httpmock.NewStringResponder(200, `[
-			{"ref":"refs/tags/`+forkVersion+`","object":{"sha":"forksha-`+majorTag+`","type":"commit"}}
+			{"ref":"refs/tags/v0.9.0","object":{"sha":"`+sha+`-old1","type":"commit"}},
+			{"ref":"refs/tags/v1.0.0","object":{"sha":"`+sha+`-old2","type":"commit"}},
+			{"ref":"refs/tags/`+majorTag+`","object":{"sha":"`+sha+`","type":"commit"}},
+			{"ref":"refs/tags/`+version+`","object":{"sha":"`+sha+`","type":"commit"}}
+		]`))
+}
+
+// mockForkMajorTagVersion makes the fork's major tag resolve to forkVersion, as
+// the maintained-action downgrade check does (major tag -> commit -> version).
+// The listing carries older releases on other commits too, as a real repository
+// would, so the lookup has to pick the tag on the major tag's own commit.
+func mockForkMajorTagVersion(forkRepo, majorTag, forkVersion string) {
+	base := "https://api.github.com/repos/" + forkRepo
+	sha := "forksha-" + majorTag
+	httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorTag,
+		httpmock.NewStringResponder(200, sha))
+	httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v0.9.0","object":{"sha":"`+sha+`-old1","type":"commit"}},
+			{"ref":"refs/tags/v1.0.0","object":{"sha":"`+sha+`-old2","type":"commit"}},
+			{"ref":"refs/tags/`+majorTag+`","object":{"sha":"`+sha+`","type":"commit"}},
+			{"ref":"refs/tags/`+forkVersion+`","object":{"sha":"`+sha+`","type":"commit"}}
 		]`))
 }
 
@@ -139,33 +160,10 @@ func TestSecureWorkflow(t *testing.T) {
 
 	// ReplaceActions resolves each original action's major tag to the concrete
 	// version it points at (tag -> commit SHA -> concrete tag on that commit)...
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/amannn/action-semantic-pull-request/commits/refs/tags/v5",
-		httpmock.NewStringResponder(200, `sha-amannn-v5`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/amannn/action-semantic-pull-request/git/matching-refs/tags/v",
-		httpmock.NewStringResponder(200, `[
-			{"ref":"refs/tags/v5.5.5","object":{"sha":"sha-amannn-v5","type":"commit"}}
-		]`))
-
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fkirc/skip-duplicate-actions/commits/refs/tags/v5",
-		httpmock.NewStringResponder(200, `sha-fkirc-v5`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fkirc/skip-duplicate-actions/git/matching-refs/tags/v",
-		httpmock.NewStringResponder(200, `[
-			{"ref":"refs/tags/v5.3.0","object":{"sha":"sha-fkirc-v5","type":"commit"}}
-		]`))
-
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/chetan/git-restore-mtime-action/commits/refs/tags/v1",
-		httpmock.NewStringResponder(200, `sha-chetan-v1`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/chetan/git-restore-mtime-action/git/matching-refs/tags/v",
-		httpmock.NewStringResponder(200, `[
-			{"ref":"refs/tags/v1.1.0","object":{"sha":"sha-chetan-v1","type":"commit"}}
-		]`))
-
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/tespkg/actions-cache/commits/refs/tags/v1",
-		httpmock.NewStringResponder(200, `sha-tespkg-v1`))
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/tespkg/actions-cache/git/matching-refs/tags/v",
-		httpmock.NewStringResponder(200, `[
-			{"ref":"refs/tags/v1.2.0","object":{"sha":"sha-tespkg-v1","type":"commit"}}
-		]`))
+	mockUpstreamMajorTagVersion("amannn/action-semantic-pull-request", "v5", "sha-amannn-v5", "v5.5.5")
+	mockUpstreamMajorTagVersion("fkirc/skip-duplicate-actions", "v5", "sha-fkirc-v5", "v5.3.0")
+	mockUpstreamMajorTagVersion("chetan/git-restore-mtime-action", "v1", "sha-chetan-v1", "v1.1.0")
+	mockUpstreamMajorTagVersion("tespkg/actions-cache", "v1", "sha-tespkg-v1", "v1.2.0")
 
 	// ...and compares it against the version the fork's major tag resolves to, so
 	// the swap cannot move the workflow to an older build. Both sides must be
