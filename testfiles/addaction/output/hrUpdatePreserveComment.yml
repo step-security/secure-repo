@@ -1,0 +1,20 @@
+name: ci
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          use-policy-store: true
+          api-key: ${{ secrets.STEP_SECURITY_API_KEY }}
+
+      # changed-files works checkout-less only on pull_request (GitHub API mode).
+      # On push it diffs before..after in the local repo and errors without a
+      # checkout, so this step must not be dropped.
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ env.SHA }}
