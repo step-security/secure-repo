@@ -45,6 +45,23 @@ func TestReplaceActions_DowngradeGuard(t *testing.T) {
 			]`))
 	}
 
+	// mockUpstreamMajorBranchVersion: the workflow's major version is published as
+	// a BRANCH, not a tag, so the tag lookup 404s and the branch head is used
+	// instead. arduino/setup-task and JarvusInnovations/background-action do this.
+	mockUpstreamMajorBranchVersion := func(repo, majorRef, version string) {
+		base := "https://api.github.com/repos/" + repo
+		httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorRef,
+			httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+		httpmock.RegisterResponder("GET", base+"/commits/refs/heads/"+majorRef,
+			httpmock.NewStringResponder(200, `branchheadsha`))
+		httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",
+			httpmock.NewStringResponder(200, `[
+				{"ref":"refs/tags/v1.0.0","object":{"sha":"upstreamold1","type":"commit"}},
+				{"ref":"refs/tags/v2.0.0","object":{"sha":"upstreamold2","type":"commit"}},
+				{"ref":"refs/tags/`+version+`","object":{"sha":"branchheadsha","type":"commit"}}
+			]`))
+	}
+
 	// mockForkMajorTag: the fork has the major tag (the gate) and it resolves to
 	// forkVersion. An empty forkVersion makes that resolution fail.
 	mockForkMajorTag := func(forkRepo, majorTag, forkVersion string) {
@@ -101,6 +118,19 @@ func TestReplaceActions_DowngradeGuard(t *testing.T) {
 			setupMocks: func() {
 				mockUpstreamMajorTagVersion("dorny/paths-filter", "v3", "v3.0.2")
 				mockForkMajorTag("step-security/paths-filter", "v3", "v3.0.1")
+			},
+		},
+		{
+			// arduino/setup-task publishes "v3" as a branch, not a tag. The tag
+			// lookup 404s, the branch head gives v3.0.0, and the fork is on the
+			// same version -> replaced.
+			name:       "major version published as a branch is replaced",
+			inputFile:  "branchMajorPin_majorTag.yml",
+			outputFile: "branchMajorPin_majorTag.yml",
+			actionMap:  map[string]string{"arduino/setup-task": "step-security/arduino-setup-task"},
+			setupMocks: func() {
+				mockUpstreamMajorBranchVersion("arduino/setup-task", "v3", "v3.0.0")
+				mockForkMajorTag("step-security/arduino-setup-task", "v3", "v3.0.0")
 			},
 		},
 		{
