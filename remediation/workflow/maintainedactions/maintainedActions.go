@@ -106,7 +106,7 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 			// point: the major-tag check above would not have found a matching tag
 			// on the fork for it, so the replacement was already skipped.
 			sha, err := GetSHAFromTag(actionName, ref)
-			if isNotFound(err) {
+			if isRefNotFound(err) {
 				// No such tag. Some actions publish the floating major as a
 				// branch instead, so try that before giving up. Any other
 				// failure is passed through rather than retried as a branch.

@@ -13,12 +13,17 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// isNotFound reports whether err is a GitHub 404, so callers can tell "this ref
-// does not exist" apart from a transport or rate-limit failure.
-func isNotFound(err error) bool {
+// isRefNotFound reports whether err means "this ref does not exist", so callers
+// can tell that apart from a transport or rate-limit failure. Looking up a
+// missing ref answers 404 on most endpoints, but /commits/{ref} answers
+// 422 ("No commit found for SHA: refs/tags/v3"), so both count.
+func isRefNotFound(err error) bool {
 	var errResp *github.ErrorResponse
 	if errors.As(err, &errResp) && errResp.Response != nil {
-		return errResp.Response.StatusCode == http.StatusNotFound
+		switch errResp.Response.StatusCode {
+		case http.StatusNotFound, http.StatusUnprocessableEntity:
+			return true
+		}
 	}
 	return false
 }

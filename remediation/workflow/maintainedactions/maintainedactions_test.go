@@ -50,8 +50,10 @@ func TestReplaceActions_DowngradeGuard(t *testing.T) {
 	// instead. arduino/setup-task and JarvusInnovations/background-action do this.
 	mockUpstreamMajorBranchVersion := func(repo, majorRef, version string) {
 		base := "https://api.github.com/repos/" + repo
+		// GitHub answers 422 (not 404) for a missing ref on /commits/{ref}.
 		httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorRef,
-			httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+			httpmock.NewStringResponder(422,
+				`{"message":"No commit found for SHA: refs/tags/`+majorRef+`"}`))
 		httpmock.RegisterResponder("GET", base+"/commits/refs/heads/"+majorRef,
 			httpmock.NewStringResponder(200, `branchheadsha`))
 		httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",

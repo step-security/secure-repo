@@ -128,24 +128,31 @@ func TestVersionForMajorTag_TagLookupFails(t *testing.T) {
 	}
 }
 
-func TestIsNotFound(t *testing.T) {
+func TestIsRefNotFound(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v9",
 		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	// What GitHub actually returns for a missing ref on /commits/{ref}.
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v7",
+		httpmock.NewStringResponder(422, `{"message":"No commit found for SHA: refs/tags/v7"}`))
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v8",
 		httpmock.NewStringResponder(500, `{"message":"boom"}`))
 
 	_, err := GetSHAFromTag("owner/repo", "v9")
-	if !isNotFound(err) {
-		t.Errorf("isNotFound(404 error) = false, want true (err=%v)", err)
+	if !isRefNotFound(err) {
+		t.Errorf("isRefNotFound(404 error) = false, want true (err=%v)", err)
+	}
+	_, err = GetSHAFromTag("owner/repo", "v7")
+	if !isRefNotFound(err) {
+		t.Errorf("isRefNotFound(422 error) = false, want true (err=%v)", err)
 	}
 	_, err = GetSHAFromTag("owner/repo", "v8")
-	if isNotFound(err) {
-		t.Errorf("isNotFound(500 error) = true, want false")
+	if isRefNotFound(err) {
+		t.Errorf("isRefNotFound(500 error) = true, want false")
 	}
-	if isNotFound(nil) {
-		t.Error("isNotFound(nil) = true, want false")
+	if isRefNotFound(nil) {
+		t.Error("isRefNotFound(nil) = true, want false")
 	}
 }
 
