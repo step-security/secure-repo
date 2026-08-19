@@ -239,7 +239,8 @@ func hardenRunnerConfigMatches(inputLines []string, hrStartLine, hrEndLine int, 
 		}
 		newConfigLines = append(newConfigLines, spaces+line)
 	}
-	newConfigLines = append(newConfigLines, "")
+	// hrEndLine now bounds the step's own lines exactly (no trailing blank/comment),
+	// so compare the region against the config lines directly.
 	return strings.Join(inputLines[hrStartLine:hrEndLine], "\n") == strings.Join(newConfigLines, "\n")
 }
 
@@ -266,7 +267,7 @@ func getHardenRunnerStepLines(inputYaml, jobName, configActionPath string) (hrSt
 	hrStartLine = -1
 	hrEndLine = len(inputLines)
 
-	for i, stepNode := range stepsNode.Content {
+	for _, stepNode := range stepsNode.Content {
 		matched := false
 		for j := 0; j+1 < len(stepNode.Content); j += 2 {
 			if stepNode.Content[j].Value == "uses" {
@@ -298,22 +299,27 @@ func getHardenRunnerStepLines(inputYaml, jobName, configActionPath string) (hrSt
 			}
 		}
 
-		// compute hrEndLine
-		if i+1 < len(stepsNode.Content) {
-			hrEndLine = stepsNode.Content[i+1].Line - 1
-		} else {
-			// last step — scan forward until a line is no longer part of this step
-			stepContentPrefix := spaces + " "
-			for j := hrStartLine + 1; j < len(inputLines); j++ {
-				line := inputLines[j]
-				if strings.TrimSpace(line) == "" {
-					continue
-				}
-				if !strings.HasPrefix(line, stepContentPrefix) {
-					hrEndLine = j
-					break
-				}
+		// hrEndLine is the line just after the harden-runner step's own content.
+		// Blank lines and comments never extend the region: the end is set only by
+		// the last real (deeper-indented, non-blank, non-comment) property line, and
+		// the scan stops at the next sibling step or a dedent. This keeps any trailing
+		// blank line or comment - which belongs to the following step - out of the
+		// region so re-rendering the step never deletes it or adds a stray blank.
+		stepContentPrefix := spaces + " "
+		hrEndLine = hrStartLine + 1
+		for j := hrStartLine + 1; j < len(inputLines); j++ {
+			line := inputLines[j]
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+				// blank or comment: does not extend the step; skip without ending
+				continue
 			}
+			if !strings.HasPrefix(line, stepContentPrefix) {
+				// a sibling step ("- ...") or a dedent: end of this step
+				break
+			}
+			// a real property line of this step
+			hrEndLine = j + 1
 		}
 		break
 	}
@@ -364,7 +370,10 @@ func updateHardenRunnerConfig(inputYaml, jobName string, hardenRunnerConfig Hard
 		}
 		output = append(output, spaces+line)
 	}
-	output = append(output, "")
+	// hrEndLine points at the first line after the step's own content, so the tail
+	// (including any original blank line and comment) is preserved verbatim. Do not
+	// inject a blank line here, that is what previously dropped comments / added
+	// stray blank lines.
 	output = append(output, inputLines[hrEndLine:]...)
 
 	return strings.Join(output, "\n"), true, nil
