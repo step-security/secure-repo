@@ -1,0 +1,15 @@
+name: ci
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: block
+
+      # This comment belongs to the checkout step and must survive the update.
+      - name: Checkout
+        uses: actions/checkout@v4
