@@ -101,13 +101,19 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	if !pinnedBySHA {
 		semanticVersion = ref
 		if !isConcreteSemver(ref) {
-			// A major tag such as "v5". Anything else without a minor version
-			// (a branch, "latest", a short SHA) cannot reach this point: the
-			// major-tag check above would not have found a matching tag on the
-			// fork for it, so the replacement was already skipped.
+			// A major version such as "v5". Anything else without a minor version
+			// (a branch name like "main", "latest", a short SHA) cannot reach this
+			// point: the major-tag check above would not have found a matching tag
+			// on the fork for it, so the replacement was already skipped.
 			sha, err := GetSHAFromTag(actionName, ref)
+			if isNotFound(err) {
+				// No such tag. Some actions publish the floating major as a
+				// branch instead, so try that before giving up. Any other
+				// failure is passed through rather than retried as a branch.
+				sha, err = GetSHAFromBranch(actionName, ref)
+			}
 			if err != nil {
-				return "", fmt.Errorf("unable to resolve tag %s to a commit SHA: %w", ref, err)
+				return "", fmt.Errorf("unable to resolve %s to a commit SHA as a tag or a branch: %w", ref, err)
 			}
 			semanticVersion, err = tagForSHA(actionName, sha)
 			if err != nil {
