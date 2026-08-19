@@ -128,6 +128,59 @@ func TestVersionForMajorTag_TagLookupFails(t *testing.T) {
 	}
 }
 
+func TestIsNotFound(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v9",
+		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/tags/v8",
+		httpmock.NewStringResponder(500, `{"message":"boom"}`))
+
+	_, err := GetSHAFromTag("owner/repo", "v9")
+	if !isNotFound(err) {
+		t.Errorf("isNotFound(404 error) = false, want true (err=%v)", err)
+	}
+	_, err = GetSHAFromTag("owner/repo", "v8")
+	if isNotFound(err) {
+		t.Errorf("isNotFound(500 error) = true, want false")
+	}
+	if isNotFound(nil) {
+		t.Error("isNotFound(nil) = true, want false")
+	}
+}
+
+// GetSHAFromBranch
+
+func TestGetSHAFromBranch_Resolves(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/heads/v3",
+		httpmock.NewStringResponder(200, `branchheadsha`))
+	sha, err := GetSHAFromBranch("owner/repo", "v3")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if sha != "branchheadsha" {
+		t.Errorf("got %q, want branchheadsha", sha)
+	}
+}
+
+func TestGetSHAFromBranch_NotFound(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/commits/refs/heads/v3",
+		httpmock.NewStringResponder(404, `{"message":"Not Found"}`))
+	if _, err := GetSHAFromBranch("owner/repo", "v3"); err == nil {
+		t.Fatal("expected error when the branch does not exist")
+	}
+}
+
+func TestGetSHAFromBranch_InvalidRepo(t *testing.T) {
+	if _, err := GetSHAFromBranch("no-slash", "v3"); err == nil {
+		t.Fatal("expected error for invalid owner/repo")
+	}
+}
+
 // GetTagFromSHA
 
 func TestGetTagFromSHA_InvalidRepo(t *testing.T) {
@@ -388,6 +441,23 @@ func TestResolveVersion_SHAResolved(t *testing.T) {
 	}
 	if v != "v5" {
 		t.Errorf("got %q, want v5", v)
+	}
+}
+
+func TestResolveVersion_TagLookupNon404DoesNotTryBranch(t *testing.T) {
+	// The tag lookup fails with a 500, not a 404, so the branch fallback must not
+	// be attempted — only the two mocked calls happen and the error propagates.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/new/repo/git/ref/tags/v4",
+		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v4","object":{"sha":"x","type":"commit"}}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/orig/repo/commits/refs/tags/v4",
+		httpmock.NewStringResponder(500, `{"message":"boom"}`))
+	if _, err := resolveVersion("orig/repo@v4", "orig/repo", "new/repo", true); err == nil {
+		t.Fatal("expected error when the tag lookup fails with a non-404")
+	}
+	if n := httpmock.GetTotalCallCount(); n != 2 {
+		t.Errorf("made %d API calls, want 2 (no branch fallback on a non-404)", n)
 	}
 }
 

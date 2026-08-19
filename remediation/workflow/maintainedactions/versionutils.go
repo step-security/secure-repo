@@ -2,7 +2,9 @@ package maintainedactions
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -10,6 +12,16 @@ import (
 	"github.com/google/go-github/v40/github"
 	"golang.org/x/oauth2"
 )
+
+// isNotFound reports whether err is a GitHub 404, so callers can tell "this ref
+// does not exist" apart from a transport or rate-limit failure.
+func isNotFound(err error) bool {
+	var errResp *github.ErrorResponse
+	if errors.As(err, &errResp) && errResp.Response != nil {
+		return errResp.Response.StatusCode == http.StatusNotFound
+	}
+	return false
+}
 
 type Release struct {
 	TagName string `json:"tag_name"`
@@ -201,6 +213,33 @@ func GetSHAFromTag(ownerRepo, tag string) (string, error) {
 	}
 
 	sha, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, "refs/tags/"+tag, "")
+	if err != nil {
+		return "", err
+	}
+	return sha, nil
+}
+
+// GetSHAFromBranch resolves a branch (e.g. "v3") on ownerRepo to the commit SHA
+// at its head. Most actions publish their floating major version as a tag, but
+// some use a branch instead — arduino/setup-task and
+// JarvusInnovations/background-action both do — so this is the fallback when the
+// tag lookup comes back 404.
+func GetSHAFromBranch(ownerRepo, branch string) (string, error) {
+	splitOnSlash := strings.Split(ownerRepo, "/")
+	if len(splitOnSlash) < 2 {
+		return "", fmt.Errorf("invalid owner/repo format: %s", ownerRepo)
+	}
+	owner := splitOnSlash[0]
+	repo := splitOnSlash[1]
+
+	ctx := context.Background()
+	client := github.NewClient(nil)
+	if token := os.Getenv("PAT"); token != "" {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+		client = github.NewClient(oauth2.NewClient(ctx, ts))
+	}
+
+	sha, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, "refs/heads/"+branch, "")
 	if err != nil {
 		return "", err
 	}
