@@ -15,6 +15,39 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// mockUpstreamMajorTagVersion makes the original action's major tag resolve to
+// version, the way ReplaceActions works out what the workflow is really on.
+func mockUpstreamMajorTagVersion(repo, majorTag, sha, version string) {
+	base := "https://api.github.com/repos/" + repo
+	httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorTag,
+		httpmock.NewStringResponder(200, sha))
+	httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v0.9.0","object":{"sha":"`+sha+`-old1","type":"commit"}},
+			{"ref":"refs/tags/v1.0.0","object":{"sha":"`+sha+`-old2","type":"commit"}},
+			{"ref":"refs/tags/`+majorTag+`","object":{"sha":"`+sha+`","type":"commit"}},
+			{"ref":"refs/tags/`+version+`","object":{"sha":"`+sha+`","type":"commit"}}
+		]`))
+}
+
+// mockForkMajorTagVersion makes the fork's major tag resolve to forkVersion, as
+// the maintained-action downgrade check does (major tag -> commit -> version).
+// The listing carries older releases on other commits too, as a real repository
+// would, so the lookup has to pick the tag on the major tag's own commit.
+func mockForkMajorTagVersion(forkRepo, majorTag, forkVersion string) {
+	base := "https://api.github.com/repos/" + forkRepo
+	sha := "forksha-" + majorTag
+	httpmock.RegisterResponder("GET", base+"/commits/refs/tags/"+majorTag,
+		httpmock.NewStringResponder(200, sha))
+	httpmock.RegisterResponder("GET", base+"/git/matching-refs/tags/v",
+		httpmock.NewStringResponder(200, `[
+			{"ref":"refs/tags/v0.9.0","object":{"sha":"`+sha+`-old1","type":"commit"}},
+			{"ref":"refs/tags/v1.0.0","object":{"sha":"`+sha+`-old2","type":"commit"}},
+			{"ref":"refs/tags/`+majorTag+`","object":{"sha":"`+sha+`","type":"commit"}},
+			{"ref":"refs/tags/`+forkVersion+`","object":{"sha":"`+sha+`","type":"commit"}}
+		]`))
+}
+
 func TestSecureWorkflow(t *testing.T) {
 	const inputDirectory = "../../testfiles/secureworkflow/input"
 	const outputDirectory = "../../testfiles/secureworkflow/output"
@@ -124,6 +157,21 @@ func TestSecureWorkflow(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/actions-cache/git/ref/tags/v1",
 		httpmock.NewStringResponder(200, `{"ref":"refs/tags/v1","object":{"sha":"dddddddddddddddddddddddddddddddddddddddd","type":"commit"}}`))
+
+	// ReplaceActions resolves each original action's major tag to the concrete
+	// version it points at (tag -> commit SHA -> concrete tag on that commit)...
+	mockUpstreamMajorTagVersion("amannn/action-semantic-pull-request", "v5", "sha-amannn-v5", "v5.5.5")
+	mockUpstreamMajorTagVersion("fkirc/skip-duplicate-actions", "v5", "sha-fkirc-v5", "v5.3.0")
+	mockUpstreamMajorTagVersion("chetan/git-restore-mtime-action", "v1", "sha-chetan-v1", "v1.1.0")
+	mockUpstreamMajorTagVersion("tespkg/actions-cache", "v1", "sha-tespkg-v1", "v1.2.0")
+
+	// ...and compares it against the version the fork's major tag resolves to, so
+	// the swap cannot move the workflow to an older build. Both sides must be
+	// mocked, otherwise the check errors out and falls back to replacing.
+	mockForkMajorTagVersion("step-security/action-semantic-pull-request", "v5", "v5.5.5")
+	mockForkMajorTagVersion("step-security/skip-duplicate-actions", "v5", "v5.3.0")
+	mockForkMajorTagVersion("step-security/git-restore-mtime-action", "v1", "v1.1.0")
+	mockForkMajorTagVersion("step-security/actions-cache", "v1", "v1.2.0")
 
 	// Mock PinActions calls for step-security/action-semantic-pull-request@v5
 	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/action-semantic-pull-request/commits/v5",

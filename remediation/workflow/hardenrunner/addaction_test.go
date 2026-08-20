@@ -469,6 +469,117 @@ func TestRunnerLabelFiltering(t *testing.T) {
 	}
 }
 
+func TestExemptRunnerLabels(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	tests := []struct {
+		name        string
+		inputFile   string
+		config      HardenRunnerConfig
+		wantUpdated bool
+		outputFile  string
+		unchanged   bool // if true, output should equal input (harden-runner not added)
+	}{
+		{
+			name:      "exact exempt match skips harden-runner",
+			inputFile: "labelScalar.yml", // runs-on: ubuntu-latest
+			config:    HardenRunnerConfig{ExemptRunnerLabels: []string{"ubuntu-latest"}},
+			unchanged: true,
+		},
+		{
+			name:      "wildcard exempt match skips harden-runner",
+			inputFile: "labelScalar.yml",
+			config:    HardenRunnerConfig{ExemptRunnerLabels: []string{"ubuntu-*"}},
+			unchanged: true,
+		},
+		{
+			name:      "case-insensitive exempt match skips harden-runner",
+			inputFile: "labelScalar.yml",
+			config:    HardenRunnerConfig{ExemptRunnerLabels: []string{"UBUNTU-LATEST"}},
+			unchanged: true,
+		},
+		{
+			name:      "exempt matches a label in the runs-on array",
+			inputFile: "labelArray.yml",
+			config:    HardenRunnerConfig{ExemptRunnerLabels: []string{"ubuntu-latest"}},
+			unchanged: true,
+		},
+		{
+			name:        "exempt no match still adds harden-runner",
+			inputFile:   "labelScalar.yml",
+			config:      HardenRunnerConfig{ExemptRunnerLabels: []string{"windows-*"}},
+			wantUpdated: true,
+			outputFile:  "labelScalar.yml",
+		},
+		{
+			name:      "exempt takes precedence over the runner-labels allow-list",
+			inputFile: "labelScalar.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner:   true,
+				RunnerLabels:       []string{"ubuntu-latest"}, // allow-list would add HR
+				ExemptRunnerLabels: []string{"ubuntu-*"},      // but exempt wins → skipped
+			},
+			unchanged: true,
+		},
+		{
+			name:        "multi-job fixture: exempt runner skipped, non-exempt job gets harden-runner",
+			inputFile:   "exemptRunnerLabels.yml",
+			config:      HardenRunnerConfig{ExemptRunnerLabels: []string{"gpu-*"}},
+			wantUpdated: true,
+			outputFile:  "exemptRunnerLabels.yml",
+		},
+		{
+			// Scenario 1: exempt list is present but nothing matches any job's
+			// runner, so harden-runner is added to every job by default.
+			name:        "exempt list present but no job matches adds harden-runner to all jobs",
+			inputFile:   "exemptNoMatchMultiJob.yml",
+			config:      HardenRunnerConfig{ExemptRunnerLabels: []string{"windows-*"}},
+			wantUpdated: true,
+			outputFile:  "exemptNoMatchMultiJob.yml",
+		},
+		{
+			// Scenario 2: matching any single label in a runs-on list (here the
+			// middle label, not the first) skips that job, while the other jobs
+			// whose runners do not match still get harden-runner added.
+			name:        "exempt matches one of several runs-on labels skips only that job",
+			inputFile:   "exemptMatchArrayLabel.yml", // build: [self-hosted, linux, arm64]; lint/package: non-matching
+			config:      HardenRunnerConfig{ExemptRunnerLabels: []string{"linux"}},
+			wantUpdated: true,
+			outputFile:  "exemptMatchArrayLabel.yml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
+			if err != nil {
+				t.Errorf("AddAction() error = %v", err)
+			}
+			if gotUpdated != tt.wantUpdated {
+				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
+			}
+			if tt.unchanged {
+				if got != string(input) {
+					t.Errorf("AddAction() expected no changes (exempt) but output differs from input\nGot:\n%s\nWant:\n%s", got, string(input))
+				}
+			} else if tt.outputFile != "" {
+				expected, err := ioutil.ReadFile(path.Join(outputDirectory, tt.outputFile))
+				if err != nil {
+					t.Fatalf("error reading output file: %v", err)
+				}
+				if got != string(expected) {
+					t.Errorf("AddAction() output mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
+				}
+			}
+		})
+	}
+}
+
 func TestAddActionWithContainer(t *testing.T) {
 	const inputDirectory = "../../../testfiles/addaction/input"
 	const outputDirectory = "../../../testfiles/addaction/output"
