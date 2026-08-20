@@ -3,6 +3,7 @@ package hardenrunner
 import (
 	"fmt"
 	"log"
+	"path"
 	"strings"
 
 	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
@@ -22,6 +23,11 @@ type HardenRunnerConfig struct {
 	Subtractive      bool     `json:"subtractive"`
 	SkipHardenRunner bool     `json:"skipHardenRunner"`
 	RunnerLabels     []string `json:"runnerLabels"`
+	// ExemptRunnerLabels lists runner-label glob patterns (path.Match syntax, e.g.
+	// "gpu-*"). When any of a job's runs-on labels matches any pattern, Harden-Runner
+	// is NOT added to that job. This is an exclusion that takes precedence over the
+	// RunnerLabels allow-list and applies regardless of SkipHardenRunner.
+	ExemptRunnerLabels []string `json:"exemptRunnerLabels,omitempty"`
 }
 
 // getJobRunsOnLabels extracts the runs-on labels from a job's yaml.Node.
@@ -69,6 +75,21 @@ func shouldSkipJob(jobLabels []string, allowedLabels []string) bool {
 		}
 	}
 	return true
+}
+
+// isExemptJob returns true if any of the job's runs-on labels matches any of the
+// exempt patterns. Patterns use path.Match glob syntax (e.g. "gpu-*", "arm64-?");
+// a pattern with no wildcard is an exact match. Matching is case-insensitive. Used
+// to skip adding Harden-Runner to jobs whose runner is explicitly exempted.
+func isExemptJob(jobLabels []string, exemptPatterns []string) bool {
+	for _, jl := range jobLabels {
+		for _, pat := range exemptPatterns {
+			if matched, err := path.Match(strings.ToLower(pat), strings.ToLower(jl)); err == nil && matched {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // getActionFromConfig parses the "uses:" line from the Config yaml string.
@@ -140,9 +161,10 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 	configAction := getActionFromConfig(hardenRunnerConfig)
 	configActionPath := strings.Split(configAction, "@")[0]
 
-	// Build a map of jobName → yaml.Node for runs-on label lookup
+	// Build a map of jobName → yaml.Node for runs-on label lookup. Needed for the
+	// RunnerLabels allow-list and/or the ExemptRunnerLabels exclusion.
 	jobNodeMap := map[string]*yaml.Node{}
-	if hardenRunnerConfig.SkipHardenRunner && len(hardenRunnerConfig.RunnerLabels) > 0 {
+	if (hardenRunnerConfig.SkipHardenRunner && len(hardenRunnerConfig.RunnerLabels) > 0) || len(hardenRunnerConfig.ExemptRunnerLabels) > 0 {
 		t := yaml.Node{}
 		if err := yaml.Unmarshal([]byte(inputYaml), &t); err == nil {
 			jobsNode := permissions.IterateNode(&t, "jobs", "!!map", 0)
@@ -164,6 +186,16 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		// Skip adding action for jobs running in containers if skipContainerJobs is true
 		if skipContainerJobs && job.Container.Image != "" {
 			continue
+		}
+		// Skip jobs whose runner is exempted. This is an exclusion (glob match on the
+		// job's runs-on labels), takes precedence over the RunnerLabels allow-list, and
+		// applies regardless of SkipHardenRunner.
+		if len(hardenRunnerConfig.ExemptRunnerLabels) > 0 {
+			if jn, ok := jobNodeMap[jobName]; ok {
+				if isExemptJob(getJobRunsOnLabels(jn), hardenRunnerConfig.ExemptRunnerLabels) {
+					continue
+				}
+			}
 		}
 		// Skip jobs whose runs-on label doesn't match the allowed labels
 		if hardenRunnerConfig.SkipHardenRunner && len(hardenRunnerConfig.RunnerLabels) > 0 {
