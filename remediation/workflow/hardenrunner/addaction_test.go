@@ -945,3 +945,98 @@ func TestAddActionInvalidYamlReturnsInput(t *testing.T) {
 		t.Errorf("AddAction() on invalid yaml returned %q, want the input unchanged", out)
 	}
 }
+
+// TestHardenRunnerUpdateBoundary covers the reported issue where a subtractive update
+// of an already-present harden-runner step produced no-value PRs: a comment sitting
+// between the harden-runner step and the next step was deleted, or a blank line was
+// added where none existed. The step region must be bounded by the step's own content
+// only, so trailing blank lines and comments (which belong to the next step) are always
+// preserved, and re-applying an identical config is a no-op.
+func TestHardenRunnerUpdateBoundary(t *testing.T) {
+	const inputDirectory = "../../../testfiles/addaction/input"
+	const outputDirectory = "../../../testfiles/addaction/output"
+
+	// Configs that already match the workflow's step (used for the no-op cases).
+	policyStoreCfg := "- name: Harden Runner\n  uses: step-security/harden-runner@v2\n  with:\n    use-policy-store: true\n    api-key: ${{ secrets.STEP_SECURITY_API_KEY }}"
+	auditCfg := "- name: Harden Runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: audit"
+	// Config that differs (audit -> block), so the step is genuinely updated.
+	blockCfg := "- name: Harden Runner\n  uses: step-security/harden-runner@v2\n  with:\n    egress-policy: block"
+
+	tests := []struct {
+		name        string
+		inputFile   string
+		config      HardenRunnerConfig
+		wantUpdated bool
+		outputFile  string
+	}{
+		{
+			// Identical config, trailing blank + comment before the next step:
+			// must be a no-op and the comment must survive.
+			name:        "identical config with trailing comment is a no-op",
+			inputFile:   "hrUpdatePreserveComment.yml",
+			config:      HardenRunnerConfig{Config: policyStoreCfg, Subtractive: true},
+			wantUpdated: false,
+			outputFile:  "hrUpdatePreserveComment.yml",
+		},
+		{
+			// Identical config, next step immediately after (no blank line):
+			// must be a no-op and must not add a stray blank line.
+			name:        "identical config with no blank before next step is a no-op",
+			inputFile:   "hrUpdateNoBlankBeforeNext.yml",
+			config:      HardenRunnerConfig{Config: auditCfg, Subtractive: true},
+			wantUpdated: false,
+			outputFile:  "hrUpdateNoBlankBeforeNext.yml",
+		},
+		{
+			// Changed config with a trailing comment: the step updates but the
+			// comment and blank line that belong to the next step are preserved.
+			name:        "changed config preserves the trailing comment",
+			inputFile:   "hrUpdateChangedPreservesComment.yml",
+			config:      HardenRunnerConfig{Config: blockCfg, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "hrUpdateChangedPreservesComment.yml",
+		},
+		{
+			// A comment inside the step's own body is replaced along with the step
+			// (it is re-rendered from config), while the trailing comment survives.
+			name:        "comment inside the step body does not truncate the step",
+			inputFile:   "hrUpdateCommentInsideStep.yml",
+			config:      HardenRunnerConfig{Config: blockCfg, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "hrUpdateCommentInsideStep.yml",
+		},
+		{
+			// Multi-job: the job that already has harden-runner (matching config) is
+			// left untouched with its trailing comment preserved, while the other job
+			// has no harden-runner and must get it added as its first step.
+			name:        "multi-job: existing job unchanged with comment, other job gets harden-runner added",
+			inputFile:   "hrUpdateMultiJobMixed.yml",
+			config:      HardenRunnerConfig{Config: auditCfg, Subtractive: true},
+			wantUpdated: true,
+			outputFile:  "hrUpdateMultiJobMixed.yml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := ioutil.ReadFile(path.Join(inputDirectory, tt.inputFile))
+			if err != nil {
+				t.Fatalf("error reading input file: %v", err)
+			}
+			got, gotUpdated, err := AddAction(string(input), tt.config, false, false, false)
+			if err != nil {
+				t.Fatalf("AddAction() error = %v", err)
+			}
+			if gotUpdated != tt.wantUpdated {
+				t.Errorf("AddAction() updated = %v, wantUpdated %v", gotUpdated, tt.wantUpdated)
+			}
+			expected, err := ioutil.ReadFile(path.Join(outputDirectory, tt.outputFile))
+			if err != nil {
+				t.Fatalf("error reading output file: %v", err)
+			}
+			if got != string(expected) {
+				t.Errorf("AddAction() output mismatch\nGot:\n%s\nWant:\n%s", got, string(expected))
+			}
+		})
+	}
+}
