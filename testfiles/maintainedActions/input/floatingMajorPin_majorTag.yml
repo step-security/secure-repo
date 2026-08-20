@@ -1,0 +1,12 @@
+name: Paths Filter
+on: pull_request
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            src:
+              - 'src/**'

@@ -70,25 +70,75 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 		return "", fmt.Errorf("no ref found in %s", originalUses)
 	}
 	ref := parts[1]
-	var version string
-	var err error
-	if len(ref) == 40 && pin.IsAllHex(ref) {
-		version, err = GetMajorTagFromSHA(actionName, ref)
+	pinnedBySHA := len(ref) == 40 && pin.IsAllHex(ref)
+
+	// A tag ref states its own major version. A SHA carries none, so it has to be
+	// resolved to the tag on that commit first.
+	semanticVersion := ""
+	majorVersion := getMajorVersion(ref)
+	// above two are for the usual case
+
+	if pinnedBySHA {
+		var err error
+		semanticVersion, err = tagForSHA(actionName, ref)
 		if err != nil {
-			return "", fmt.Errorf("unable to resolve SHA %s to major tag: %w", ref, err)
+			return "", err
 		}
-		if version == "" {
-			return "", fmt.Errorf("unable to resolve SHA %s to major tag", ref)
-		}
-	} else {
-		version = ref
+		majorVersion = getMajorVersion(semanticVersion)
 	}
-	majorVersion := getMajorVersion(version)
-	tag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
+
+	// The replacement is written as the major tag, so the fork must have it.
+	// Checked before resolving the concrete version: if there is no matching
+	// major to replace with, the version is irrelevant.
+	forkMajorTag, exists, err := GetMajorTagIfExists(newAction, majorVersion)
 	if err != nil || !exists {
 		return "", fmt.Errorf("major tag %s not found on %s", majorVersion, newAction)
 	}
-	return tag, nil
+
+	// Resolve the concrete version the original is actually pinned to. A major
+	// tag such as "v4" is resolved through its commit SHA to the version it
+	// currently points at (e.g. "v4.2.1").
+	if !pinnedBySHA {
+		semanticVersion = ref
+		if !isConcreteSemver(ref) {
+			// A major version such as "v5". Anything else without a minor version
+			// (a branch name like "main", "latest", a short SHA) cannot reach this
+			// point: the major-tag check above would not have found a matching tag
+			// on the fork for it, so the replacement was already skipped.
+			sha, err := GetSHAFromTag(actionName, ref)
+			if isRefNotFound(err) {
+				// No such tag. Some actions publish the floating major as a
+				// branch instead, so try that before giving up. Any other
+				// failure is passed through rather than retried as a branch.
+				sha, err = GetSHAFromBranch(actionName, ref)
+			}
+			if err != nil {
+				return "", fmt.Errorf("unable to resolve %s to a commit SHA as a tag or a branch: %w", ref, err)
+			}
+			semanticVersion, err = tagForSHA(actionName, sha)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	// Maintained forks can lag behind the upstream action, so a matching major is
+	// not enough: the fork's major tag may point at an older release than the one
+	// the workflow is on, even within the same major. Compare against the version
+	// the fork's major tag actually resolves to — that is what the workflow would
+	// run — and skip the replacement when it is older. If that version cannot be
+	// determined, skip as well rather than risk a downgrade.
+	if isConcreteSemver(semanticVersion) {
+		forkVersion, err := VersionForMajorTag(newAction, forkMajorTag)
+		if err != nil {
+			return "", fmt.Errorf("unable to determine which version %s@%s points at: %w", newAction, forkMajorTag, err)
+		}
+		if compareSemver(forkVersion, semanticVersion) < 0 {
+			return "", fmt.Errorf("%s@%s is on %s, older than %s", newAction, forkMajorTag, forkVersion, semanticVersion)
+		}
+	}
+
+	return forkMajorTag, nil
 }
 
 // ReplaceActions replaces original actions with Step Security actions in a workflow.
