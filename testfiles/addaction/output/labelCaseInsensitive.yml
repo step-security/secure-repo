@@ -1,0 +1,14 @@
+name: test-label-case-insensitive
+on:
+  push:
+jobs:
+  build:
+    runs-on: Ubuntu-Latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v3
+      - run: echo "build"

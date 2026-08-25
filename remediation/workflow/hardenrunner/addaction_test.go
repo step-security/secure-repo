@@ -306,6 +306,39 @@ func TestRunnerLabelFiltering(t *testing.T) {
 			outputFile:  "labelScalar.yml",
 		},
 		{
+			// self-hosted-* matches the job's runs-on self-hosted-linux-x64.
+			name:      "wildcard label matches",
+			inputFile: "labelWildcard.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"self-hosted-*"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelWildcard.yml",
+		},
+		{
+			// config "ubuntu-latest" matches the job's runs-on "Ubuntu-Latest".
+			name:      "case-insensitive label matches",
+			inputFile: "labelCaseInsensitive.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-latest"},
+			},
+			wantUpdated: true,
+			outputFile:  "labelCaseInsensitive.yml",
+		},
+		{
+			// ubuntu-* does not match the job's runs-on macos-13, so it is skipped.
+			name:      "wildcard label does not match",
+			inputFile: "labelWildcardNoMatch.yml",
+			config: HardenRunnerConfig{
+				SkipHardenRunner: true,
+				RunnerLabels:     []string{"ubuntu-*"},
+			},
+			wantUpdated: false,
+			unchanged:   true,
+		},
+		{
 			name:      "label does not match",
 			inputFile: "labelNoMatch.yml",
 			config: HardenRunnerConfig{
