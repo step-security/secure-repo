@@ -64,12 +64,14 @@ func extractLabels(node *yaml.Node) []string {
 	return nil
 }
 
-// shouldSkipJob returns true if none of the job's runs-on labels match the allowed labels.
+// shouldSkipJob returns true if none of the job's runs-on labels match the allowed
+// labels. An allowed label is a glob pattern (path.Match semantics), so wildcards
+// like "self-hosted-*" or "gpu-?" are supported, and matching is case-insensitive.
+// A malformed pattern simply does not match rather than erroring.
 func shouldSkipJob(jobLabels []string, allowedLabels []string) bool {
 	for _, jl := range jobLabels {
 		for _, al := range allowedLabels {
-			// TODO CHECK CASE INSENSITIVE MATCHING
-			if jl == al {
+			if matched, err := path.Match(strings.ToLower(al), strings.ToLower(jl)); err == nil && matched {
 				return false
 			}
 		}

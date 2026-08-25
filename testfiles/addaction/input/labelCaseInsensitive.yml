@@ -1,0 +1,9 @@
+name: test-label-case-insensitive
+on:
+  push:
+jobs:
+  build:
+    runs-on: Ubuntu-Latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "build"
