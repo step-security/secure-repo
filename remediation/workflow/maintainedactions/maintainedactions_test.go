@@ -112,11 +112,13 @@ func TestReplaceActions_DowngradeGuard(t *testing.T) {
 			},
 		},
 		{
-			// "@v3" currently points at v3.0.2, but the fork's v3 is on v3.0.1.
-			// A major-only comparison would have missed this.
-			name:      "floating major pointing at newer version is not replaced",
-			inputFile: "floatingMajorPin_majorTag.yml",
-			actionMap: map[string]string{"dorny/paths-filter": "step-security/paths-filter"},
+			// "@v3" currently points at v3.0.2 while the fork's v3 is on v3.0.1:
+			// a patch-only lag. A patch downgrade is acceptable (same major.minor),
+			// so this is replaced.
+			name:       "floating major on an older patch is replaced",
+			inputFile:  "floatingMajorPin_majorTag.yml",
+			outputFile: "floatingMajorPin_majorTag.yml",
+			actionMap:  map[string]string{"dorny/paths-filter": "step-security/paths-filter"},
 			setupMocks: func() {
 				mockUpstreamMajorTagVersion("dorny/paths-filter", "v3", "v3.0.2")
 				mockForkMajorTag("step-security/paths-filter", "v3", "v3.0.1")
