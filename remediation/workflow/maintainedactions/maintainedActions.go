@@ -126,14 +126,15 @@ func resolveVersion(originalUses, actionName, newAction string, replaceByMajorTa
 	// not enough: the fork's major tag may point at an older release than the one
 	// the workflow is on, even within the same major. Compare against the version
 	// the fork's major tag actually resolves to — that is what the workflow would
-	// run — and skip the replacement when it is older. If that version cannot be
-	// determined, skip as well rather than risk a downgrade.
+	// run — and skip the replacement when it is on an older minor (or major). A
+	// patch-level downgrade is accepted, so only major.minor is compared. If that
+	// version cannot be determined, skip as well rather than risk a downgrade.
 	if isConcreteSemver(semanticVersion) {
 		forkVersion, err := VersionForMajorTag(newAction, forkMajorTag)
 		if err != nil {
 			return "", fmt.Errorf("unable to determine which version %s@%s points at: %w", newAction, forkMajorTag, err)
 		}
-		if compareSemver(forkVersion, semanticVersion) < 0 {
+		if compareMajorMinor(forkVersion, semanticVersion) < 0 {
 			return "", fmt.Errorf("%s@%s is on %s, older than %s", newAction, forkMajorTag, forkVersion, semanticVersion)
 		}
 	}

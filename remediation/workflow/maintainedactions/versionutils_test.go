@@ -96,6 +96,25 @@ func TestCompareSemver(t *testing.T) {
 	}
 }
 
+func TestCompareMajorMinor(t *testing.T) {
+	cases := []struct {
+		a, b string
+		want int
+	}{
+		{"v4.2.1", "v4.2.3", 0},  // patch-only difference is treated as equal
+		{"v4.2.0", "v4.2.9", 0},  // patch downgrade accepted (not older)
+		{"v4.1.0", "v4.2.0", -1}, // minor downgrade is older
+		{"v4.2.0", "v4.1.9", 1},  // newer minor beats older patch
+		{"v3.0.0", "v4.0.0", -1}, // major downgrade is older
+		{"v4.2", "v4.2.5", 0},    // missing patch defaults to 0
+	}
+	for _, c := range cases {
+		if got := compareMajorMinor(c.a, c.b); got != c.want {
+			t.Errorf("compareMajorMinor(%q, %q) = %d, want %d", c.a, c.b, got, c.want)
+		}
+	}
+}
+
 // VersionForMajorTag
 
 func TestVersionForMajorTag_Resolves(t *testing.T) {

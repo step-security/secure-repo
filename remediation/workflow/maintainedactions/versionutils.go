@@ -86,6 +86,23 @@ func compareSemver(a, b string) int {
 	return 0
 }
 
+// compareMajorMinor is like compareSemver but ignores the patch component, so a
+// patch-level difference (e.g. v4.2.3 vs v4.2.1) compares equal while a minor or
+// major difference still orders. Used where a patch downgrade is acceptable but a
+// minor/major downgrade is not.
+func compareMajorMinor(a, b string) int {
+	pa, pb := parseSemverParts(a), parseSemverParts(b)
+	for i := 0; i < 2; i++ {
+		if pa[i] < pb[i] {
+			return -1
+		}
+		if pa[i] > pb[i] {
+			return 1
+		}
+	}
+	return 0
+}
+
 func getMajorVersion(version string) string {
 	hasVPrefix := strings.HasPrefix(version, "v")
 	version = strings.TrimPrefix(version, "v")
