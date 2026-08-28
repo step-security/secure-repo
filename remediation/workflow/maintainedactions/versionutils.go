@@ -8,10 +8,17 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/google/go-github/v40/github"
 	"golang.org/x/oauth2"
 )
+
+// maxTagDerefWorkers bounds how many annotated-tag dereference calls
+// (GetCommitSHA1) run concurrently while resolving a SHA to its tag. It keeps a
+// repo with hundreds of tags from opening hundreds of simultaneous GitHub API
+// connections while still cutting wall-clock time by an order of magnitude.
+const maxTagDerefWorkers = 10
 
 // isRefNotFound reports whether err means "this ref does not exist", so callers
 // can tell that apart from a transport or rate-limit failure. Looking up a
@@ -137,6 +144,12 @@ func GetLatestRelease(ownerRepo string) (string, error) {
 // workflow is effectively pinned to. Falls back to the bare major when no
 // concrete tag points at the commit.
 // Returns ("", nil) if no matching tag is found.
+//
+// Annotated tags each need their own GetCommitSHA1 call to dereference to a
+// commit; a repo with many tags would make that loop dominate wall-clock time.
+// Those dereferences are fanned out across a bounded worker pool, and the first
+// worker to find a concrete-semver match cancels the shared context, which
+// signals every other in-flight and queued worker to stop early.
 func GetTagFromSHA(ownerRepo, sha string) (string, error) {
 	splitOnSlash := strings.Split(ownerRepo, "/")
 	if len(splitOnSlash) < 2 {
@@ -145,44 +158,92 @@ func GetTagFromSHA(ownerRepo, sha string) (string, error) {
 	owner := splitOnSlash[0]
 	repo := splitOnSlash[1]
 
-	ctx := context.Background()
-	client := github.NewClient(nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
+	client := github.NewClient(nil)
 	token := os.Getenv("PAT")
 	if token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		client = github.NewClient(oauth2.NewClient(ctx, ts))
 	}
 
-	refs, _, err := client.Git.ListMatchingRefs(ctx, owner, repo, &github.ReferenceListOptions{
-		Ref: "tags/v",
-	})
-	if err != nil {
-		return "", err
+	// Page through every "tags/v*" ref so a match on a later page is not missed.
+	var refs []*github.Reference
+	opts := &github.ReferenceListOptions{
+		Ref:         "tags/v",
+		ListOptions: github.ListOptions{PerPage: 100},
+	}
+	for {
+		page, resp, err := client.Git.ListMatchingRefs(ctx, owner, repo, opts)
+		if err != nil {
+			return "", err
+		}
+		refs = append(refs, page...)
+		if resp == nil || resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
 
-	fallback := ""
-	for _, ref := range refs {
-		var refSHA string
-		if ref.GetObject().GetType() == "commit" {
-			refSHA = ref.GetObject().GetSHA()
-		} else {
-			// annotated tag — dereference to get the commit SHA
-			refSHA, _, err = client.Repositories.GetCommitSHA1(ctx, owner, repo, ref.GetRef(), "")
-			if err != nil {
-				continue
-			}
-		}
-		if refSHA != sha {
-			continue
-		}
-		tag := strings.TrimPrefix(ref.GetRef(), "refs/tags/")
+	var (
+		mu       sync.Mutex
+		concrete string
+		fallback string
+		wg       sync.WaitGroup
+		sem      = make(chan struct{}, maxTagDerefWorkers)
+	)
+
+	// record a matching tag: a concrete semver wins and cancels the remaining
+	// work (the broadcast signal); a bare major is only kept as a fallback.
+	record := func(tag string) {
+		mu.Lock()
+		defer mu.Unlock()
 		if isConcreteSemver(tag) {
-			return tag, nil
-		}
-		if fallback == "" {
+			if concrete == "" {
+				concrete = tag
+			}
+			cancel()
+		} else if fallback == "" {
 			fallback = tag
 		}
+	}
+
+	for _, ref := range refs {
+		// A concrete match already cancelled the context: stop scheduling.
+		if ctx.Err() != nil {
+			break
+		}
+		// Lightweight (commit) refs carry the SHA inline, no API call needed.
+		if ref.GetObject().GetType() == "commit" {
+			if ref.GetObject().GetSHA() == sha {
+				record(strings.TrimPrefix(ref.GetRef(), "refs/tags/"))
+			}
+			continue
+		}
+		// Annotated tag: dereference to a commit SHA in a bounded worker.
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(ref *github.Reference) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			if ctx.Err() != nil {
+				return
+			}
+			refSHA, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, ref.GetRef(), "")
+			if err != nil {
+				return
+			}
+			if refSHA == sha {
+				record(strings.TrimPrefix(ref.GetRef(), "refs/tags/"))
+			}
+		}(ref)
+	}
+
+	wg.Wait()
+
+	if concrete != "" {
+		return concrete, nil
 	}
 	return fallback, nil
 }
