@@ -1,0 +1,9 @@
+name: "arduino/arduino-lint-action"
+github-token:
+  action-input:
+    input: token
+    is-default: true
+  permissions:
+    actions: read
+    actions-reason: to download assets and get tags  
+    #Reference:https://github.com/arduino/arduino-lint-action/blob/e26fd2724ebc5d1b5f0c32aa575c9f68fab8ab4f/src/installer.ts #L 67
