@@ -1,0 +1,10 @@
+name: "Report Arduino Sketch Size Deltas"
+github-token:
+  action-input:
+    input: GITHUB_TOKEN
+    is-default: true
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to comment on PRs
+#Reference: https://github.com/arduino/report-size-deltas/blob/a90f8c7d8e03492c4e9c7b579e80d9ee94e21301/reportsizedeltas/reportsizedeltas.py#L125
+# https://github.com/arduino/report-size-deltas/blob/a90f8c7d8e03492c4e9c7b579e80d9ee94e21301/reportsizedeltas/tests/test_reportsizedeltas.py#L912
