@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - "/"
+      - "/app"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "some-org*/*"
+  - package-ecosystem: pip
+    directory: '/services'
+    schedule:
+      interval: 'daily'
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      all:
+        patterns: ["actions/*"]

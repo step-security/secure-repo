@@ -50,6 +50,45 @@ func marshalYAMLValue(v string) string {
 	return strings.TrimRight(string(b), "\n")
 }
 
+// sequenceScalarStyles records the quoting the file used for each item of a sequence.
+//
+// Keyed by value, not index: the replacement list can add, drop or reorder items, so an
+// index carries no relationship to the original. Value keying means an item that
+// survives the update keeps the formatting the customer wrote, while a genuinely new
+// item falls through to the emitter's default.
+func sequenceScalarStyles(seqNode *yaml.Node) map[string]yaml.Style {
+	styles := make(map[string]yaml.Style)
+	if seqNode == nil {
+		return styles
+	}
+	for _, item := range seqNode.Content {
+		if item.Kind == yaml.ScalarNode && item.Style != 0 {
+			styles[item.Value] = item.Style
+		}
+	}
+	return styles
+}
+
+// marshalYAMLValueWithStyle renders v, re-using the quoting the file already used for
+// that exact value. Without it a quoted item such as `- "/app"` is rewritten as the
+// plain `- /app`: identical value, but it lands as a modified line in the remediation
+// PR and defeats the unchanged-block short-circuits, which compare raw text.
+//
+// Values containing a quote, backslash or newline fall back to marshalYAMLValue, since
+// re-wrapping those by hand would need the escaping rules the emitter already implements.
+func marshalYAMLValueWithStyle(v string, styles map[string]yaml.Style) string {
+	if strings.ContainsAny(v, "\"'\\\n") {
+		return marshalYAMLValue(v)
+	}
+	switch styles[v] {
+	case yaml.DoubleQuotedStyle:
+		return `"` + v + `"`
+	case yaml.SingleQuotedStyle:
+		return "'" + v + "'"
+	}
+	return marshalYAMLValue(v)
+}
+
 // insertAfterLine inserts newLines into lines after the given 1-indexed line number.
 func insertAfterLine(lines []string, afterLine int, newLines []string) []string {
 	idx := afterLine // 1-indexed line N → insert at 0-indexed position N
@@ -99,9 +138,10 @@ func replaceSequence(lines []string, seqNode *yaml.Node, newValues []string, lin
 		if closeIdx <= actualOpen {
 			return lines, 0, false
 		}
+		styles := sequenceScalarStyles(seqNode)
 		quotedVals := make([]string, len(newValues))
 		for i, v := range newValues {
-			quotedVals[i] = marshalYAMLValue(v)
+			quotedVals[i] = marshalYAMLValueWithStyle(v, styles)
 		}
 		newSeq := "[" + strings.Join(quotedVals, ", ") + "]"
 		oldSeq := line[actualOpen : closeIdx+1]
@@ -122,9 +162,10 @@ func replaceSequence(lines []string, seqNode *yaml.Node, newValues []string, lin
 	lastItemLine := findLastLine(seqNode) - 1 + lineOffset
 	itemIndent := seqNode.Column - 1 // spaces before the '-'
 
+	styles := sequenceScalarStyles(seqNode)
 	newItemLines := make([]string, len(newValues))
 	for i, v := range newValues {
-		newItemLines[i] = strings.Repeat(" ", itemIndent) + "- " + marshalYAMLValue(v)
+		newItemLines[i] = strings.Repeat(" ", itemIndent) + "- " + marshalYAMLValueWithStyle(v, styles)
 	}
 
 	// Check if content is actually different

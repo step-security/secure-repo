@@ -8,9 +8,9 @@ updates:
       all:
         patterns:
           - angular*
-          - react*
+          - "react*"
         exclude-patterns:
-          - lodash
+          - "lodash"
           - axios
         dependency-type: production
         update-types:
