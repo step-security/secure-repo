@@ -550,6 +550,82 @@ func TestUpdateSubtractiveFields(t *testing.T) {
 		isChanged  bool
 	}{
 		{
+			// Quote-style fidelity, no-op case. Covers all three rewrite paths in one
+			// file: block sequences (directories), plain scalars (interval) and object
+			// lists (ignore), in double quotes, single quotes and flow style.
+			//
+			// The emitter picks its own quoting when Go values are encoded directly, so
+			// `- dependency-name: "some-org*/*"` came back as the plain
+			// `- dependency-name: some-org*/*`. Identical value, but it landed as a
+			// modified line in the remediation PR and defeated the unchanged-block
+			// short-circuits, which compare raw text. Every configured value here
+			// matches the file, so the output must be byte-identical and isChanged
+			// false.
+			fileName: "subtractive-quote-styles-noop.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Directories:      []string{"/", "/app"},
+					Interval:         "weekly",
+					Ignore: []dependabotconfig.Ignore{
+						{DependencyName: "some-org*/*"},
+						{DependencyName: "another-org/pkg"},
+					},
+				},
+				{
+					PackageEcosystem: "pip",
+					Directory:        "/services",
+					Interval:         "daily",
+					Ignore: []dependabotconfig.Ignore{
+						{DependencyName: "legacy-*"},
+					},
+				},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "monthly",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"actions/*", "step-security/*"}},
+					},
+				},
+			},
+			isChanged: false,
+		},
+		{
+			// The counterpart: real updates must still apply while surviving values keep
+			// the quoting the file used. Guards against "fixing" the churn by
+			// suppressing legitimate content changes. Newly added values have no
+			// recorded style, so they render with the emitter's default.
+			fileName: "subtractive-quote-styles-updated.yml",
+			ecosystems: []Ecosystem{
+				{
+					PackageEcosystem: "npm",
+					Directory:        "/",
+					Directories:      []string{"/", "/app", "/tools"},
+					Interval:         "weekly",
+					Ignore: []dependabotconfig.Ignore{
+						{DependencyName: "some-org*/*"},
+						{DependencyName: "new-org/pkg"},
+					},
+				},
+				{
+					PackageEcosystem: "pip",
+					Directory:        "/services",
+					Interval:         "weekly",
+				},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "monthly",
+					Groups: map[string]Group{
+						"all": {Patterns: []string{"actions/*", "docker/*"}},
+					},
+				},
+			},
+			isChanged: true,
+		},
+		{
 			fileName: "subtractive-add-cooldown.yml",
 			ecosystems: []Ecosystem{
 				{

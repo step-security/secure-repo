@@ -293,6 +293,65 @@ func applyCommitMessageUpdate(cmNode *yaml.Node, cm *dependabot.CommitMessage, l
 	return insertedTotal, changed
 }
 
+// collectScalarStyles records, per scalar value, the quoting style the file used for it.
+//
+// Keyed by value rather than by path because the new list is built from Go structs and
+// has no path relationship to the old nodes: an entry may move position, and the fields
+// we emit are a subset of what the file may contain. Value keying means a scalar that
+// survives the update keeps the formatting the customer wrote, while a genuinely new
+// value falls through to the emitter's default.
+//
+// Only explicit styles are recorded. yaml.Style's zero value means "emitter decides", so
+// storing it would be indistinguishable from having no entry.
+func collectScalarStyles(node *yaml.Node, styles map[string]yaml.Style) {
+	if node == nil {
+		return
+	}
+	if node.Kind == yaml.ScalarNode {
+		if node.Style != 0 {
+			styles[node.Value] = node.Style
+		}
+		return
+	}
+	for _, child := range node.Content {
+		collectScalarStyles(child, styles)
+	}
+}
+
+// applyScalarStyles re-applies recorded styles to scalars carrying the same value.
+func applyScalarStyles(node *yaml.Node, styles map[string]yaml.Style) {
+	if node == nil {
+		return
+	}
+	if node.Kind == yaml.ScalarNode {
+		if style, ok := styles[node.Value]; ok {
+			node.Style = style
+		}
+		return
+	}
+	for _, child := range node.Content {
+		applyScalarStyles(child, styles)
+	}
+}
+
+// styledNodeFor encodes items into a yaml.Node and restores the scalar quoting used by
+// existing, the node the items are replacing.
+func styledNodeFor(items interface{}, existing *yaml.Node) (*yaml.Node, error) {
+	var node yaml.Node
+	if err := node.Encode(items); err != nil {
+		return nil, err
+	}
+	styles := make(map[string]yaml.Style)
+	collectScalarStyles(existing, styles)
+	if len(styles) == 0 {
+		// Nothing in the file was explicitly quoted, so the emitter's default already
+		// matches. Returning the node unchanged keeps behaviour identical here.
+		return &node, nil
+	}
+	applyScalarStyles(&node, styles)
+	return &node, nil
+}
+
 // replaceObjectList replaces an existing YAML sequence of mapping items with new items.
 // Returns (net line count change, whether changed).
 func replaceObjectList(lines *[]string, seqNode *yaml.Node, items interface{}, lineOffset, indentStep int) (int, bool) {
@@ -307,7 +366,19 @@ func replaceObjectList(lines *[]string, seqNode *yaml.Node, items interface{}, l
 	var buf bytes.Buffer
 	enc := yaml.NewEncoder(&buf)
 	enc.SetIndent(indentStep)
-	_ = enc.Encode(items)
+	// Encode via a node so the quoting already present in the file is carried over.
+	// Encoding the Go values directly lets the emitter choose its own style, which
+	// rewrites a quoted scalar such as `- dependency-name: "some-org*/*"` to the plain
+	// `- dependency-name: some-org*/*`. The value is identical, so that rewrite is pure
+	// formatting churn: it lands as a modified line in the remediation PR and defeats
+	// the unchanged-block short-circuit below.
+	if styled, err := styledNodeFor(items, seqNode); err == nil {
+		_ = enc.Encode(styled)
+	} else {
+		// Style preservation is best-effort. On any encode failure fall back to the
+		// previous behaviour rather than skipping a legitimate content update.
+		_ = enc.Encode(items)
+	}
 	_ = enc.Close()
 	raw := strings.TrimRight(buf.String(), "\n")
 	rawLines := strings.Split(raw, "\n")
