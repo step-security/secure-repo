@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # block sequence + quoted scalar + quoted object-list value
+  - package-ecosystem: npm
+    directories:
+      - "/"
+      - "/app"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "some-org*/*"
+      - dependency-name: "another-org/pkg"
+  # single quotes must be preserved as single quotes
+  - package-ecosystem: pip
+    directory: '/services'
+    schedule:
+      interval: 'daily'
+    ignore:
+      - dependency-name: 'legacy-*'
+  # flow sequence inside a group
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      all:
+        patterns: ["actions/*", "step-security/*"]
