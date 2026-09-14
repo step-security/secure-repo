@@ -1,0 +1,12 @@
+name: "Bucket Minion"
+github-input:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    actions: write
+    actions-reason: to comment on issues and push it
+    checks: read
+    checks-reason:
+      to check issues and PRs
+      #Reference: https://github.com/Ash258/Scoop-GithubActions/blob/afe2968781fa18a4a120cc03bb53d8aba16d008c/src/Helpers.psm1#L100
+    # https://github.com/Ash258/Scoop-GithubActions/blob/afe2968781fa18a4a120cc03bb53d8aba16d008c/src/Helpers.psm1#L104
+    # https://github.com/Ash258/Scoop-GithubActions#readme

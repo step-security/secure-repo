@@ -1,0 +1,4 @@
+name: "Bucket Minion"
+github-input:
+  environment-variable-name: GITHUB_TOKEN
+  #Note: no permissions required
