@@ -1,0 +1,8 @@
+name: "Update Tag"
+github-token:
+  environment-variable-name: GITHUB_TOKEN
+  permissions:
+    contents: write
+    contents-reason: to create and modify tags
+    #refrences https://github.com/richardsimko/update-tag/blob/5bd0e05b035e02d5da3768dbdcfc4e5e0908623e/src/main.js#L40
+
