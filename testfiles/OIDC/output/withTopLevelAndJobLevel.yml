@@ -1,0 +1,28 @@
+name: Sample Workflow
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: read
+  contents: read
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+  job2:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      content: write
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::{OICD_ID}:role/my-github-actions-role
+          aws-region: us-east-1
