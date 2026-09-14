@@ -1,0 +1,11 @@
+name: 'rust-clippy-check'
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    checks: write
+    checks-reason: to run, create and update checks
+
+#Reference - https://github.com/actions-rs/clippy-check/blob/b5b5f21f4797c02da247df37026fcd0a5024aa4d/src/check.ts#L118
+#1071

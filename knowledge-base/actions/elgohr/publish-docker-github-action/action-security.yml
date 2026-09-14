@@ -1,0 +1,9 @@
+name: 'Publish Docker'
+github-token:
+  action-input:
+    input: password
+    is-default: false
+  permissions:
+    packages: write
+    packages-reason: to publish image to ghcr view here
+
