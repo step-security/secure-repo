@@ -1,0 +1,12 @@
+name: "Upstream Sync"
+github-token:
+  action-input:
+    input: target_repo_token
+    is-default: false
+  permissions:
+    pull-requests: write
+    pull-requests-reason: to pull commits agains upstream repo
+    actions: write
+    actions-reason: to disable persistent auth in the checkout step
+    # Reference: https://github.com/aormsby/Fork-Sync-With-Upstream-action/blob/48f332742cb9d99febdd7ec6fb39696ad5d186f4/action.yaml#L41
+    # https://github.com/aormsby/Fork-Sync-With-Upstream-action/blob/8bfb7e7a0dfc91410c1b223d9b1bc9d1dafcbc08/action.yaml#L15
