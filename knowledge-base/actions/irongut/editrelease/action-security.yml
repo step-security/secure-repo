@@ -1,9 +1,10 @@
-name: 'Edit Release'
-# irongut/EditRelease
+name: "Edit Release"
 github-token:
   action-input:
-    input: token
-    is-default: false
+   input: token
+   is-default: false
   permissions:
-    contents: write
-    contents-reason: to edit release details
+   contents: write
+   contents-reason: to edit release details
+    #Reference: https://github.com/irongut/EditRelease/blob/9cca065cfb86c7e0e250a87b9cc0b5ffac06e4a2/src/EditRelease/Options.cs
+    # https://github.com/irongut/EditRelease/blob/9cca065cfb86c7e0e250a87b9cc0b5ffac06e4a2/src/EditRelease/Program.cs
