@@ -1,0 +1,10 @@
+name: "Deployment Action"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    deployments: write
+    deployments-reason: to create Github Deployments
+    #Reference: https://github.com/chrnorm/deployment-action#readme
+    # https://github.com/chrnorm/deployment-action/blob/81b5fe715539b0ed9bfb8337b3508f15b288b4bd/lib/main.js
