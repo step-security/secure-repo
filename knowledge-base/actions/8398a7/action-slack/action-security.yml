@@ -1,0 +1,12 @@
+name: action-slack
+github-token:
+  action-input:
+    input: github_token
+    is-default: true
+  permissions:
+    actions: read
+    actions-reason: to list workflow runs #Checkout: https://github.com/8398a7/action-slack/blob/b88557f91bdbe37434043070c34568d9314b4223/src/fields.ts#L136
+    contents: read
+    contents-reason: to get commits #Checkout: https://github.com/8398a7/action-slack/blob/b88557f91bdbe37434043070c34568d9314b4223/src/fields.ts#L206
+    
+#Fixes #701
