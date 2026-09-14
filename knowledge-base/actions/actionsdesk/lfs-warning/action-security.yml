@@ -1,0 +1,15 @@
+name: "LFS-warning"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    pull-requests: read
+    pull-requests-reason: to check file size in PRs
+    contents: read
+    contents-reason: to fetch the repository
+    issues: write
+    issues-reason: to warn about large files
+    #Reference: -https://github.com/ActionsDesk/lfs-warning/blob/7b08791c6402020118f498601c8782fc66295651/src/index.ts#L180
+    # https://github.com/ActionsDesk/lfs-warning/blob/7b08791c6402020118f498601c8782fc66295651/src/index.ts#L206
+    # https://github.com/ActionsDesk/lfs-warning/blob/7b08791c6402020118f498601c8782fc66295651/src/index.ts#L102
