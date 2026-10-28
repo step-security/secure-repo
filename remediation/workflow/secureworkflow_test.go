@@ -690,3 +690,56 @@ jobs:
 		}
 	}
 }
+
+// skipImmutableReleaseTags leaves an action whose tag is an immutable GitHub
+// release as written; other actions are still pinned.
+func TestSecureWorkflow_SkipImmutableReleaseTags(t *testing.T) {
+	const workflow = `name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-node@v4.0.2
+`
+	const checkoutPin = "actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11"
+	const setupNodePin = "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
+	commitMap := map[string]string{
+		"actions/checkout@v4.1.1":   "b4ffde65f46336ab88eb53be808477a3936bae11",
+		"actions/setup-node@v4.0.2": "60edb5dd545a775178f52524783378180af0d1f8",
+	}
+
+	for _, tt := range []struct {
+		name            string
+		skip            string
+		wantCheckoutPin bool
+	}{
+		{name: "off pins everything", skip: "", wantCheckoutPin: true},
+		{name: "on keeps the immutable release tag", skip: "true", wantCheckoutPin: false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/releases/tags/v4.1.1",
+				httpmock.NewStringResponder(200, `{"tag_name":"v4.1.1","immutable":true}`))
+			httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/setup-node/releases/tags/v4.0.2",
+				httpmock.NewStringResponder(200, `{"tag_name":"v4.0.2","immutable":false}`))
+
+			params := map[string]string{"addHardenRunner": "false", "addPermissions": "false", "ignoreMissingKBs": "true"}
+			if tt.skip != "" {
+				params["skipImmutableReleaseTags"] = tt.skip
+			}
+			resp, err := SecureWorkflow(params, workflow, nil, nil, false, map[string]string{}, commitMap)
+			if err != nil {
+				t.Fatalf("SecureWorkflow() error = %v", err)
+			}
+			if got := strings.Contains(resp.FinalOutput, checkoutPin); got != tt.wantCheckoutPin {
+				t.Errorf("checkout pinned = %t, want %t:\n%s", got, tt.wantCheckoutPin, resp.FinalOutput)
+			}
+			if !strings.Contains(resp.FinalOutput, setupNodePin) {
+				t.Errorf("setup-node is not an immutable release and must be pinned:\n%s", resp.FinalOutput)
+			}
+		})
+	}
+}

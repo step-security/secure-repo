@@ -27,6 +27,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	addEmptyTopLevelPermissions := false
 	skipHardenRunnerForContainers := false
 	replaceActionByMajorTag := false
+	skipImmutableReleaseTags := false
 	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap, runnerLabelMap := []string{}, false, map[string]string{}, map[string]string{}, map[string]string{}
 	hardenRunnerConfig := hardenrunner.HardenRunnerConfig{}
 
@@ -102,6 +103,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if queryStringParams["replaceActionByMajorTag"] == "true" {
 		replaceActionByMajorTag = true
+	}
+	// skipImmutableReleaseTags leaves action references whose tag belongs to an
+	// immutable GitHub release unpinned. See pin.WithSkipImmutableReleaseTags.
+	if queryStringParams["skipImmutableReleaseTags"] == "true" {
+		skipImmutableReleaseTags = true
 	}
 
 	if enableLogging {
@@ -192,7 +198,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			log.Printf("Pinning GitHub Actions")
 		}
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap)
+		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap, pin.WithSkipImmutableReleaseTags(skipImmutableReleaseTags))
 		if err != nil {
 			if enableLogging {
 				log.Printf("Error pinning actions: %v", err)
