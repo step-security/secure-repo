@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
+func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string, opts ...Option) (string, bool, error) {
 	workflow := metadata.Workflow{}
 	updated := false
 	err := yaml.Unmarshal([]byte(inputYaml), &workflow)
@@ -29,7 +29,7 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool,
 		for _, step := range job.Steps {
 			if len(step.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated, err = PinActionWithPatFallback(step.Uses, out, exemptedActions, pinToImmutable, actionCommitMap)
+				out, localUpdated, err = PinActionWithPatFallback(step.Uses, out, exemptedActions, pinToImmutable, actionCommitMap, opts...)
 				if err != nil {
 					return out, updated, err
 				}
@@ -43,7 +43,7 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool,
 		for _, run := range workflow.Runs.Steps {
 			if len(run.Uses) > 0 {
 				localUpdated := false
-				out, localUpdated, err = PinActionWithPatFallback(run.Uses, out, exemptedActions, pinToImmutable, actionCommitMap)
+				out, localUpdated, err = PinActionWithPatFallback(run.Uses, out, exemptedActions, pinToImmutable, actionCommitMap, opts...)
 				if err != nil {
 					return out, updated, err
 				}
@@ -55,7 +55,7 @@ func PinActions(inputYaml string, exemptedActions []string, pinToImmutable bool,
 	return out, updated, nil
 }
 
-func PinActionWithPatFallback(action, inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
+func PinActionWithPatFallback(action, inputYaml string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string, opts ...Option) (string, bool, error) {
 	// use secure repo token
 	PAT := os.Getenv("SECURE_REPO_PAT")
 	if PAT == "" {
@@ -64,16 +64,16 @@ func PinActionWithPatFallback(action, inputYaml string, exemptedActions []string
 	} else {
 		log.Println("SECURE_REPO_PAT is set")
 	}
-	out, updated, err := PinAction(action, inputYaml, PAT, exemptedActions, pinToImmutable, actionCommitMap)
+	out, updated, err := PinAction(action, inputYaml, PAT, exemptedActions, pinToImmutable, actionCommitMap, opts...)
 	if err != nil && strings.Contains(err.Error(), "organization has an IP allow list enabled, and your IP address is not permitted to access this resource") {
 		PAT = os.Getenv("PAT")
 		log.Println("[RETRY] SECURE_REPO_PAT is not set, using PAT")
-		return PinAction(action, inputYaml, PAT, exemptedActions, pinToImmutable, actionCommitMap)
+		return PinAction(action, inputYaml, PAT, exemptedActions, pinToImmutable, actionCommitMap, opts...)
 	}
 	return out, updated, err
 }
 
-func PinAction(action, inputYaml, PAT string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string) (string, bool, error) {
+func PinAction(action, inputYaml, PAT string, exemptedActions []string, pinToImmutable bool, actionCommitMap map[string]string, opts ...Option) (string, bool, error) {
 	updated := false
 
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "docker://") {
@@ -94,6 +94,18 @@ func PinAction(action, inputYaml, PAT string, exemptedActions []string, pinToImm
 	splitOnSlash := strings.Split(leftOfAt[0], "/")
 	owner := splitOnSlash[0]
 	repo := splitOnSlash[1]
+
+	// When asked, leave a tag that belongs to an immutable GitHub release as
+	// written: the tag cannot be moved or deleted, so it is as fixed as a SHA.
+	// If the release cannot be read, pin as usual.
+	if applyOptions(opts).skipImmutableReleaseTags {
+		immutable, err := isImmutableReleaseTag(PAT, owner, repo, tagOrBranch)
+		if err != nil {
+			log.Printf("could not check whether %s is an immutable release, pinning it: %v", action, err)
+		} else if immutable {
+			return inputYaml, updated, nil
+		}
+	}
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
