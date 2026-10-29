@@ -1,0 +1,28 @@
+name: skip immutable release tags
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Immutable release
+      uses: test-org/locked@v1.2.3
+    - name: Immutable release, sub-path action
+      uses: test-org/locked/sub/path@v1.2.3
+    - name: Mutable release
+      uses: test-org/mutable@v2.0.0
+    - name: Tag without a release
+      uses: test-org/norelease@v3.1.0
+    - name: Release lookup fails
+      uses: test-org/broken@v1.0.0
+    - name: Exempted, never looked up
+      uses: test-org/exempted@v4.0.0
+    - name: Already pinned
+      uses: test-org/mutable@1111111111111111111111111111111111111111 # v2.0.0
+    - name: Local action
+      uses: ./local-action
+    - name: Docker action
+      uses: docker://alpine:3.20
