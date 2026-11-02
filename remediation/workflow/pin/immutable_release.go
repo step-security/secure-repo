@@ -45,7 +45,9 @@ func IsImmutableReleaseAction(action string) (bool, error) {
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "./") || strings.HasPrefix(action, "docker://") || isAbsolute(action) {
 		return false, nil
 	}
-	name, tag, _ := strings.Cut(action, "@")
+	// strings.SplitN rather than strings.Cut: this module builds with Go 1.17.
+	atParts := strings.SplitN(action, "@", 2)
+	name, tag := atParts[0], atParts[1]
 	parts := strings.Split(name, "/")
 	if tag == "" || len(parts) < 2 || parts[0] == "" || parts[1] == "" {
 		return false, nil
