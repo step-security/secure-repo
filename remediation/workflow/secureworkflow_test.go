@@ -12,6 +12,7 @@ import (
 	"github.com/step-security/secure-repo/remediation/workflow/maintainedactions"
 	metadata "github.com/step-security/secure-repo/remediation/workflow/metadata"
 	"github.com/step-security/secure-repo/remediation/workflow/permissions"
+	"github.com/step-security/secure-repo/remediation/workflow/pin"
 	"gopkg.in/yaml.v3"
 )
 
@@ -705,8 +706,9 @@ jobs:
 `
 	const checkoutPin = "actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11"
 	const setupNodePin = "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
+	// checkout is not in the map, so its release is checked and its commit read
+	// from GitHub. A mapped reference would be pinned whatever its release.
 	commitMap := map[string]string{
-		"actions/checkout@v4.1.1":   "b4ffde65f46336ab88eb53be808477a3936bae11",
 		"actions/setup-node@v4.0.2": "60edb5dd545a775178f52524783378180af0d1f8",
 	}
 
@@ -725,6 +727,10 @@ jobs:
 				httpmock.NewStringResponder(200, `{"tag_name":"v4.1.1","immutable":true}`))
 			httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/setup-node/releases/tags/v4.0.2",
 				httpmock.NewStringResponder(200, `{"tag_name":"v4.0.2","immutable":false}`))
+			httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/commits/v4.1.1",
+				httpmock.NewStringResponder(200, "b4ffde65f46336ab88eb53be808477a3936bae11"))
+			httpmock.RegisterResponder("GET", `=~^https://api\.github\.com/repos/actions/checkout/git/matching-refs/`,
+				httpmock.NewStringResponder(200, `[]`))
 
 			params := map[string]string{"addHardenRunner": "false", "addPermissions": "false", "ignoreMissingKBs": "true"}
 			if tt.skip != "" {
@@ -741,5 +747,88 @@ jobs:
 				t.Errorf("setup-node is not an immutable release and must be pinned:\n%s", resp.FinalOutput)
 			}
 		})
+	}
+}
+
+// TestSecureWorkflow_ImmutableReleaseCache checks that a cache passed in params is
+// shared across SecureWorkflow calls, so a tag used by two workflows in one run is
+// looked up once.
+func TestSecureWorkflow_ImmutableReleaseCache(t *testing.T) {
+	const workflow = `name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+`
+	// checkout is not in actionCommitMap: a mapped reference is pinned without a
+	// release lookup, so there would be nothing to cache.
+	const lookup = "GET https://api.github.com/repos/actions/checkout/releases/tags/v4.1.1"
+
+	for _, tt := range []struct {
+		name      string
+		cache     bool
+		wantCalls int
+	}{
+		{name: "without a cache every workflow looks it up", cache: false, wantCalls: 2},
+		{name: "with a cache it is looked up once", cache: true, wantCalls: 1},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/releases/tags/v4.1.1",
+				httpmock.NewStringResponder(200, `{"tag_name":"v4.1.1","immutable":true}`))
+
+			params := map[string]string{"addHardenRunner": "false", "addPermissions": "false", "ignoreMissingKBs": "true", "skipImmutableReleaseTags": "true"}
+			extra := []interface{}{nil, false, map[string]string{}, map[string]string{}}
+			if tt.cache {
+				// Placed last, after the positional params: it is matched by type.
+				extra = append(extra, pin.NewImmutableReleaseCache())
+			}
+			for i := 0; i < 2; i++ {
+				resp, err := SecureWorkflow(params, workflow, nil, extra...)
+				if err != nil {
+					t.Fatalf("SecureWorkflow() error = %v", err)
+				}
+				if !strings.Contains(resp.FinalOutput, "actions/checkout@v4.1.1") {
+					t.Errorf("immutable release tag should be left as written:\n%s", resp.FinalOutput)
+				}
+			}
+			if n := httpmock.GetCallCountInfo()[lookup]; n != tt.wantCalls {
+				t.Errorf("release lookups = %d, want %d", n, tt.wantCalls)
+			}
+		})
+	}
+}
+
+// TestSecureWorkflow_SkipImmutableReleaseTagsMappedAction checks that a reference
+// in actionCommitMap is pinned to its mapped SHA even when its tag is an
+// immutable release, and that no release lookup is made for it.
+func TestSecureWorkflow_SkipImmutableReleaseTagsMappedAction(t *testing.T) {
+	const workflow = `name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+`
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/actions/checkout/releases/tags/v4.1.1",
+		httpmock.NewStringResponder(200, `{"tag_name":"v4.1.1","immutable":true}`))
+
+	params := map[string]string{"addHardenRunner": "false", "addPermissions": "false", "ignoreMissingKBs": "true", "skipImmutableReleaseTags": "true"}
+	commitMap := map[string]string{"actions/checkout@v4.1.1": "b4ffde65f46336ab88eb53be808477a3936bae11"}
+	resp, err := SecureWorkflow(params, workflow, nil, nil, false, map[string]string{}, commitMap, pin.NewImmutableReleaseCache())
+	if err != nil {
+		t.Fatalf("SecureWorkflow() error = %v", err)
+	}
+	if !strings.Contains(resp.FinalOutput, "actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11") {
+		t.Errorf("mapped reference should be pinned to its mapped SHA:\n%s", resp.FinalOutput)
+	}
+	if n := httpmock.GetTotalCallCount(); n != 0 {
+		t.Errorf("API calls = %d, want 0 for a mapped reference", n)
 	}
 }
