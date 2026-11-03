@@ -31,6 +31,16 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap, runnerLabelMap := []string{}, false, map[string]string{}, map[string]string{}, map[string]string{}
 	hardenRunnerConfig := hardenrunner.HardenRunnerConfig{}
 
+	// An immutable-release cache can be passed anywhere in params. It is matched
+	// by type rather than position, so callers do not need placeholder values for
+	// the positional params before it.
+	var immutableReleaseCache *pin.ImmutableReleaseCache
+	for _, param := range params {
+		if v, ok := param.(*pin.ImmutableReleaseCache); ok {
+			immutableReleaseCache = v
+		}
+	}
+
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
 			exemptedActions = v
@@ -198,7 +208,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			log.Printf("Pinning GitHub Actions")
 		}
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap, pin.WithSkipImmutableReleaseTags(skipImmutableReleaseTags))
+		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap, pin.WithSkipImmutableReleaseTags(skipImmutableReleaseTags), pin.WithImmutableReleaseCache(immutableReleaseCache))
 		if err != nil {
 			if enableLogging {
 				log.Printf("Error pinning actions: %v", err)

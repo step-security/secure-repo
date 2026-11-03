@@ -95,18 +95,6 @@ func PinAction(action, inputYaml, PAT string, exemptedActions []string, pinToImm
 	owner := splitOnSlash[0]
 	repo := splitOnSlash[1]
 
-	// When asked, leave a tag that belongs to an immutable GitHub release as
-	// written: the tag cannot be moved or deleted, so it is as fixed as a SHA.
-	// If the release cannot be read, pin as usual.
-	if applyOptions(opts).skipImmutableReleaseTags {
-		immutable, err := isImmutableReleaseTag(PAT, owner, repo, tagOrBranch)
-		if err != nil {
-			log.Printf("could not check whether %s is an immutable release, pinning it: %v", action, err)
-		} else if immutable {
-			return inputYaml, updated, nil
-		}
-	}
-
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: PAT},
@@ -131,6 +119,20 @@ func PinAction(action, inputYaml, PAT string, exemptedActions []string, pinToImm
 				}
 				break
 			}
+		}
+	}
+
+	// When asked, leave a tag that belongs to an immutable GitHub release as
+	// written: the tag cannot be moved or deleted, so it is as fixed as a SHA.
+	// A reference in actionCommitMap is pinned to its mapped SHA regardless, as
+	// the map is an explicit instruction, and needs no release lookup. If the
+	// release cannot be read, pin as usual.
+	if o := applyOptions(opts); commitSHA == "" && o.skipImmutableReleaseTags {
+		immutable, err := lookupImmutableRelease(o.immutableReleaseCache, PAT, owner, repo, tagOrBranch)
+		if err != nil {
+			log.Printf("could not check whether %s is an immutable release, pinning it: %v", action, err)
+		} else if immutable {
+			return inputYaml, updated, nil
 		}
 	}
 
