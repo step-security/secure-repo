@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"sync"
+
+	"golang.org/x/sync/singleflight"
 )
 
 // Option configures PinActions, PinActionWithPatFallback and PinAction.
@@ -41,9 +43,15 @@ func WithImmutableReleaseCache(cache *ImmutableReleaseCache) Option {
 // shares its repository's entry. It is meant to live for one remediation run,
 // created by the caller and passed to every pinning call in that run: a tag that
 // has no release now can get one later, so results are not kept across runs.
-// Only answers are kept; a failed lookup is retried. Safe for concurrent use.
+// Each owner/repo@tag is looked up once per run, also when several goroutines
+// ask for it at the same time: concurrent callers wait for the lookup already
+// in flight instead of starting their own. Only answers are kept; a failed
+// lookup is returned to the callers waiting on it and retried by the next one.
+// Safe for concurrent use.
 type ImmutableReleaseCache struct {
 	results sync.Map
+	// inFlight coalesces concurrent lookups of the same key into one request.
+	inFlight singleflight.Group
 }
 
 // NewImmutableReleaseCache returns an empty cache for one remediation run.
@@ -65,12 +73,23 @@ func lookupImmutableRelease(cache *ImmutableReleaseCache, token, owner, repo, ta
 	if immutable, ok := cache.results.Load(key); ok {
 		return immutable.(bool), nil
 	}
-	immutable, err := isImmutableReleaseTag(token, owner, repo, tag)
+	result, err, _ := cache.inFlight.Do(key, func() (interface{}, error) {
+		// Another caller may have stored the answer between the Load above and
+		// this lookup becoming the one in flight.
+		if immutable, ok := cache.results.Load(key); ok {
+			return immutable, nil
+		}
+		immutable, err := isImmutableReleaseTag(token, owner, repo, tag)
+		if err != nil {
+			return false, err
+		}
+		cache.results.Store(key, immutable)
+		return immutable, nil
+	})
 	if err != nil {
 		return false, err
 	}
-	cache.results.Store(key, immutable)
-	return immutable, nil
+	return result.(bool), nil
 }
 
 func applyOptions(opts []Option) options {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -216,5 +217,102 @@ func TestImmutableReleaseCache(t *testing.T) {
 	}
 	if n := calls["GET https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0"]; n != 2 {
 		t.Errorf("test-org/broken@v1.0.0 looked up %d times, want 2 (a failed lookup is retried)", n)
+	}
+}
+
+// TestImmutableReleaseCache_ConcurrentLookups starts many lookups of the same
+// uncached tag at once and checks they share one request. The release endpoint
+// blocks until every goroutine has started, so callers that arrive while the
+// request is in flight wait for it, and any that arrive after it finished read
+// the stored answer: either way there is exactly one request.
+func TestImmutableReleaseCache_ConcurrentLookups(t *testing.T) {
+	const callers = 20
+	const lookup = "GET https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	release := make(chan struct{})
+	blocked := func(req *http.Request) (*http.Response, error) {
+		<-release
+		return httpmock.NewStringResponse(200, `{"tag_name":"v1.2.3","immutable":true}`), nil
+	}
+	// Whichever caller wins makes the one request with its own spelling of the
+	// owner and repository, so both spellings are mocked.
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3", blocked)
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/Test-Org/Locked/releases/tags/v1.2.3", blocked)
+
+	cache := NewImmutableReleaseCache()
+	var started, done sync.WaitGroup
+	started.Add(callers)
+	done.Add(callers)
+	results := make([]bool, callers)
+	errs := make([]error, callers)
+	for i := 0; i < callers; i++ {
+		go func(i int) {
+			defer done.Done()
+			started.Done()
+			// Sub-path and differently cased references share the entry too.
+			action := []string{"test-org/locked@v1.2.3", "test-org/locked/sub/path@v1.2.3", "Test-Org/Locked@v1.2.3"}[i%3]
+			results[i], errs[i] = IsImmutableReleaseAction(action, WithImmutableReleaseCache(cache))
+		}(i)
+	}
+	started.Wait()
+	close(release)
+	done.Wait()
+
+	for i := range results {
+		if errs[i] != nil || !results[i] {
+			t.Errorf("caller %d: got %t, %v, want true, nil", i, results[i], errs[i])
+		}
+	}
+	calls := httpmock.GetCallCountInfo()
+	if n := calls[lookup] + calls["GET https://api.github.com/repos/Test-Org/Locked/releases/tags/v1.2.3"]; n != 1 {
+		t.Errorf("release lookups = %d, want 1 for %d concurrent callers", n, callers)
+	}
+}
+
+// TestImmutableReleaseCache_ConcurrentFailure checks that when the shared
+// lookup fails, every caller waiting on it gets the error, nothing is stored,
+// and the next lookup retries.
+func TestImmutableReleaseCache_ConcurrentFailure(t *testing.T) {
+	const callers = 10
+	const lookup = "GET https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	release := make(chan struct{})
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0",
+		func(req *http.Request) (*http.Response, error) {
+			<-release
+			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"message":"boom"}`), nil
+		})
+
+	cache := NewImmutableReleaseCache()
+	var started, done sync.WaitGroup
+	started.Add(callers)
+	done.Add(callers)
+	errs := make([]error, callers)
+	for i := 0; i < callers; i++ {
+		go func(i int) {
+			defer done.Done()
+			started.Done()
+			_, errs[i] = IsImmutableReleaseAction("test-org/broken@v1.0.0", WithImmutableReleaseCache(cache))
+		}(i)
+	}
+	started.Wait()
+	close(release)
+	done.Wait()
+
+	for i, err := range errs {
+		if err == nil {
+			t.Errorf("caller %d: got no error, want the failed lookup's error", i)
+		}
+	}
+	before := httpmock.GetCallCountInfo()[lookup]
+	if _, err := IsImmutableReleaseAction("test-org/broken@v1.0.0", WithImmutableReleaseCache(cache)); err == nil {
+		t.Errorf("retry: got no error, want the endpoint's error")
+	}
+	if after := httpmock.GetCallCountInfo()[lookup]; after != before+1 {
+		t.Errorf("a failed lookup must not be cached: retry made %d requests, want 1", after-before)
 	}
 }
