@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 )
 
 // Option configures PinActions, PinActionWithPatFallback and PinAction.
@@ -14,14 +15,62 @@ type Option func(*options)
 
 type options struct {
 	skipImmutableReleaseTags bool
+	immutableReleaseCache    *ImmutableReleaseCache
 }
 
 // WithSkipImmutableReleaseTags leaves an action reference unpinned when its tag
 // belongs to an immutable GitHub release, whose tag cannot be moved or deleted.
+// A reference listed in actionCommitMap is still pinned to its mapped SHA.
 func WithSkipImmutableReleaseTags(skip bool) Option {
 	return func(o *options) {
 		o.skipImmutableReleaseTags = skip
 	}
+}
+
+// WithImmutableReleaseCache shares immutable-release lookups through cache, so
+// each owner/repo@tag is looked up once however often it is referenced. Without
+// it every reference is looked up.
+func WithImmutableReleaseCache(cache *ImmutableReleaseCache) Option {
+	return func(o *options) {
+		o.immutableReleaseCache = cache
+	}
+}
+
+// ImmutableReleaseCache remembers whether a tag belongs to an immutable GitHub
+// release, keyed by owner/repo@tag, so a sub-path action ("owner/repo/sub@tag")
+// shares its repository's entry. It is meant to live for one remediation run,
+// created by the caller and passed to every pinning call in that run: a tag that
+// has no release now can get one later, so results are not kept across runs.
+// Only answers are kept; a failed lookup is retried. Safe for concurrent use.
+type ImmutableReleaseCache struct {
+	results sync.Map
+}
+
+// NewImmutableReleaseCache returns an empty cache for one remediation run.
+func NewImmutableReleaseCache() *ImmutableReleaseCache {
+	return &ImmutableReleaseCache{}
+}
+
+func immutableReleaseCacheKey(owner, repo, tag string) string {
+	// GitHub owner and repository names are case-insensitive; tags are not.
+	return strings.ToLower(owner) + "/" + strings.ToLower(repo) + "@" + tag
+}
+
+// lookupImmutableRelease reads a tag's release through cache when there is one.
+func lookupImmutableRelease(cache *ImmutableReleaseCache, token, owner, repo, tag string) (bool, error) {
+	if cache == nil {
+		return isImmutableReleaseTag(token, owner, repo, tag)
+	}
+	key := immutableReleaseCacheKey(owner, repo, tag)
+	if immutable, ok := cache.results.Load(key); ok {
+		return immutable.(bool), nil
+	}
+	immutable, err := isImmutableReleaseTag(token, owner, repo, tag)
+	if err != nil {
+		return false, err
+	}
+	cache.results.Store(key, immutable)
+	return immutable, nil
 }
 
 func applyOptions(opts []Option) options {
@@ -39,8 +88,9 @@ const githubAPIBaseURL = "https://api.github.com"
 // ("owner/repo[/path]@tag") uses a tag that belongs to an immutable GitHub
 // release. References that cannot be one (local actions, docker images, no ref,
 // or already pinned to a commit SHA) return false. It reads the release with the
-// token pinning uses (SECURE_REPO_PAT, else PAT).
-func IsImmutableReleaseAction(action string) (bool, error) {
+// token pinning uses (SECURE_REPO_PAT, else PAT). Pass WithImmutableReleaseCache
+// to share lookups across calls.
+func IsImmutableReleaseAction(action string, opts ...Option) (bool, error) {
 	action = strings.TrimSpace(action)
 	if !strings.Contains(action, "@") || strings.HasPrefix(action, "./") || strings.HasPrefix(action, "docker://") || isAbsolute(action) {
 		return false, nil
@@ -56,7 +106,7 @@ func IsImmutableReleaseAction(action string) (bool, error) {
 	if token == "" {
 		token = os.Getenv("PAT")
 	}
-	return isImmutableReleaseTag(token, parts[0], parts[1], tag)
+	return lookupImmutableRelease(applyOptions(opts).immutableReleaseCache, token, parts[0], parts[1], tag)
 }
 
 // isImmutableReleaseTag reads GET /repos/{owner}/{repo}/releases/tags/{tag} and
