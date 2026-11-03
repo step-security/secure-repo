@@ -1,15 +1,22 @@
 module github.com/step-security/secure-repo
 
-go 1.17
+go 1.27.3
 
 require (
+	github.com/PaesslerAG/gval v1.1.2
 	github.com/asottile/dockerfile v3.1.0+incompatible
 	github.com/aws/aws-lambda-go v1.30.0
 	github.com/aws/aws-sdk-go v1.43.45
+	github.com/generikvault/gvalstrings v0.0.0-20180926130504-471f38f0112a
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/go-containerregistry v0.8.0
+	github.com/google/go-github/v40 v40.0.0
+	github.com/jarcoal/httpmock v1.4.0
+	github.com/lestrrat-go/jwx v1.2.25
 	github.com/paulvollmer/dependabot-config-go v0.1.1
 	github.com/sirupsen/logrus v1.8.1
+	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	gotest.tools v2.2.0+incompatible
 )
 
 require (
@@ -22,8 +29,8 @@ require (
 	github.com/goccy/go-json v0.9.7 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.0 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
@@ -41,16 +48,4 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-)
-
-require (
-	github.com/PaesslerAG/gval v1.1.2
-	github.com/generikvault/gvalstrings v0.0.0-20180926130504-471f38f0112a
-	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/go-containerregistry v0.8.0
-	github.com/google/go-github/v40 v40.0.0
-	github.com/jarcoal/httpmock v1.4.0
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/lestrrat-go/jwx v1.2.25
-	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 )
