@@ -22,7 +22,7 @@ type options struct {
 
 // WithSkipImmutableReleaseTags leaves an action reference unpinned when its tag
 // belongs to an immutable GitHub release, whose tag cannot be moved or deleted.
-// A reference listed in actionCommitMap is still pinned to its mapped SHA.
+// This includes references listed in actionCommitMap.
 func WithSkipImmutableReleaseTags(skip bool) Option {
 	return func(o *options) {
 		o.skipImmutableReleaseTags = skip

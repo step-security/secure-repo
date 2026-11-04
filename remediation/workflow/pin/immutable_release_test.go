@@ -61,9 +61,9 @@ func TestIsImmutableReleaseAction(t *testing.T) {
 // belong to an immutable GitHub release stay as written; a mutable release, a
 // tag with no release, and a failed release lookup are all pinned. With it off
 // (donotskipimmutablereleasetags.yml), everything is pinned and no release is
-// looked up. A reference in actionCommitMap is pinned to its mapped SHA even
-// when its tag is an immutable release, with no release lookup
-// (skipimmutablereleasetagswithmap.yml).
+// looked up. A reference in actionCommitMap whose tag is an immutable release
+// also stays as written; a mapped mutable one is pinned to its mapped SHA
+// without a commit lookup (skipimmutablereleasetagswithmap.yml).
 func TestPinActions_SkipImmutableReleaseTags(t *testing.T) {
 	const inputDirectory = "../../../testfiles/pinactions/input"
 	const outputDirectory = "../../../testfiles/pinactions/output"
@@ -110,19 +110,23 @@ func TestPinActions_SkipImmutableReleaseTags(t *testing.T) {
 		cache           bool
 		actionCommitMap map[string]string
 		wantLookupCalls int
+		// wantNoCommitLookups asserts no commit was resolved from GitHub: every
+		// pinned reference took its SHA from actionCommitMap.
+		wantNoCommitLookups bool
 	}{
 		// locked (twice: top level and sub-path), mutable, norelease, broken.
 		{name: "on", fileName: "skipimmutablereleasetags.yml", skip: true, wantLookupCalls: 5},
 		// The sub-path action shares test-org/locked@v1.2.3 with the top-level one.
 		{name: "on with a cache", fileName: "skipimmutablereleasetags.yml", skip: true, cache: true, wantLookupCalls: 4},
 		{name: "off", fileName: "donotskipimmutablereleasetags.yml", skip: false, wantLookupCalls: 0},
-		// test-org/locked@v1.2.3 and test-org/mutable@v2.0.0 are mapped, so they
-		// are pinned to their mapped SHAs without a release lookup. The unmapped
-		// sub-path reference to the same immutable tag is the only one looked up.
-		{name: "on, mapped references always pinned", fileName: "skipimmutablereleasetagswithmap.yml", skip: true, actionCommitMap: map[string]string{
+		// The release check comes first, mapped or not: test-org/locked@v1.2.3 is
+		// mapped but immutable, so it stays as written, like its unmapped sub-path
+		// reference. test-org/mutable@v2.0.0 is mapped and mutable, so it is
+		// pinned to its mapped SHA without a commit lookup.
+		{name: "on, mapped immutable tag stays as written", fileName: "skipimmutablereleasetagswithmap.yml", skip: true, actionCommitMap: map[string]string{
 			"test-org/locked@v1.2.3":  "5555555555555555555555555555555555555555",
 			"test-org/mutable@v2.0.0": "6666666666666666666666666666666666666666",
-		}, wantLookupCalls: 1},
+		}, wantLookupCalls: 3, wantNoCommitLookups: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -155,6 +159,13 @@ func TestPinActions_SkipImmutableReleaseTags(t *testing.T) {
 
 			if n := releaseLookups(); n != tt.wantLookupCalls {
 				t.Errorf("release lookups = %d, want %d", n, tt.wantLookupCalls)
+			}
+			if tt.wantNoCommitLookups {
+				for call, count := range httpmock.GetCallCountInfo() {
+					if count > 0 && (strings.Contains(call, "/commits/") || strings.Contains(call, "/matching-refs/")) {
+						t.Errorf("%s called %d times, want no commit lookups for mapped references", call, count)
+					}
+				}
 			}
 		})
 	}
