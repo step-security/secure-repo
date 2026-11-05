@@ -1,0 +1,318 @@
+package pin
+
+import (
+	"net/http"
+	"os"
+	"path"
+	"strings"
+	"sync"
+	"testing"
+
+	"github.com/jarcoal/httpmock"
+)
+
+func TestIsImmutableReleaseAction(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3",
+		httpmock.NewStringResponder(200, `{"tag_name":"v1.2.3","immutable":true}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/mutable/releases/tags/v1.2.3",
+		httpmock.NewStringResponder(200, `{"tag_name":"v1.2.3","immutable":false}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/norelease/releases/tags/v1",
+		httpmock.NewStringResponder(http.StatusNotFound, `{"message":"Not Found"}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0",
+		httpmock.NewStringResponder(http.StatusInternalServerError, `{"message":"boom"}`))
+
+	tests := []struct {
+		action  string
+		want    bool
+		wantErr bool
+	}{
+		{action: "test-org/locked@v1.2.3", want: true},
+		{action: "test-org/locked/sub/path@v1.2.3", want: true},
+		{action: "test-org/mutable@v1.2.3", want: false},
+		{action: "test-org/norelease@v1", want: false},
+		{action: "test-org/broken@v1.0.0", wantErr: true},
+		{action: "test-org/locked@11bd71901bbe5b1630ceea73d27597364c9af683", want: false},
+		{action: "./local-action", want: false},
+		{action: "docker://alpine:3.20", want: false},
+		{action: "test-org/locked", want: false},
+	}
+	for _, tt := range tests {
+		got, err := IsImmutableReleaseAction(tt.action)
+		if (err != nil) != tt.wantErr || got != tt.want {
+			t.Errorf("IsImmutableReleaseAction(%q) = %t, %v, want %t, error %t", tt.action, got, err, tt.want, tt.wantErr)
+		}
+	}
+
+	// Each lookup calls the API: nothing is cached. SHA, local and docker
+	// references never call it.
+	if n := httpmock.GetCallCountInfo()["GET https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3"]; n != 2 {
+		t.Errorf("test-org/locked@v1.2.3 looked up %d times, want 2 (once per reference)", n)
+	}
+	if n := httpmock.GetTotalCallCount(); n != 5 {
+		t.Errorf("total API calls = %d, want 5", n)
+	}
+}
+
+// TestPinActions_SkipImmutableReleaseTags pins each input file in
+// testfiles/pinactions/input and compares it with the output file of the same
+// name. With the option on (skipimmutablereleasetags.yml), only tags that
+// belong to an immutable GitHub release stay as written; a mutable release, a
+// tag with no release, and a failed release lookup are all pinned. With it off
+// (donotskipimmutablereleasetags.yml), everything is pinned and no release is
+// looked up. A reference in actionCommitMap whose tag is an immutable release
+// also stays as written; a mapped mutable one is pinned to its mapped SHA
+// without a commit lookup (skipimmutablereleasetagswithmap.yml).
+func TestPinActions_SkipImmutableReleaseTags(t *testing.T) {
+	const inputDirectory = "../../../testfiles/pinactions/input"
+	const outputDirectory = "../../../testfiles/pinactions/output"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3",
+		httpmock.NewStringResponder(200, `{"tag_name":"v1.2.3","immutable":true}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/mutable/releases/tags/v2.0.0",
+		httpmock.NewStringResponder(200, `{"tag_name":"v2.0.0","immutable":false}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/norelease/releases/tags/v3.1.0",
+		httpmock.NewStringResponder(http.StatusNotFound, `{"message":"Not Found"}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0",
+		httpmock.NewStringResponder(http.StatusInternalServerError, `{"message":"boom"}`))
+
+	// References not in actionCommitMap resolve their commit from GitHub. No tag
+	// list is returned, so the version comment is the tag as written.
+	for ref, sha := range map[string]string{
+		"locked/commits/v1.2.3":    "4444444444444444444444444444444444444444",
+		"mutable/commits/v2.0.0":   "1111111111111111111111111111111111111111",
+		"norelease/commits/v3.1.0": "2222222222222222222222222222222222222222",
+		"broken/commits/v1.0.0":    "3333333333333333333333333333333333333333",
+	} {
+		httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/"+ref, httpmock.NewStringResponder(200, sha))
+	}
+	httpmock.RegisterResponder("GET", `=~^https://api\.github\.com/repos/test-org/[^/]+/git/matching-refs/`,
+		httpmock.NewStringResponder(200, `[]`))
+
+	// releaseLookups counts only the release lookups, not the commit lookups.
+	releaseLookups := func() int {
+		n := 0
+		for call, count := range httpmock.GetCallCountInfo() {
+			if strings.Contains(call, "/releases/tags/") {
+				n += count
+			}
+		}
+		return n
+	}
+
+	tests := []struct {
+		name            string
+		fileName        string
+		skip            bool
+		cache           bool
+		actionCommitMap map[string]string
+		wantLookupCalls int
+		// wantNoCommitLookups asserts no commit was resolved from GitHub: every
+		// pinned reference took its SHA from actionCommitMap.
+		wantNoCommitLookups bool
+	}{
+		// locked (twice: top level and sub-path), mutable, norelease, broken.
+		{name: "on", fileName: "skipimmutablereleasetags.yml", skip: true, wantLookupCalls: 5},
+		// The sub-path action shares test-org/locked@v1.2.3 with the top-level one.
+		{name: "on with a cache", fileName: "skipimmutablereleasetags.yml", skip: true, cache: true, wantLookupCalls: 4},
+		{name: "off", fileName: "donotskipimmutablereleasetags.yml", skip: false, wantLookupCalls: 0},
+		// The release check comes first, mapped or not: test-org/locked@v1.2.3 is
+		// mapped but immutable, so it stays as written, like its unmapped sub-path
+		// reference. test-org/mutable@v2.0.0 is mapped and mutable, so it is
+		// pinned to its mapped SHA without a commit lookup.
+		{name: "on, mapped immutable tag stays as written", fileName: "skipimmutablereleasetagswithmap.yml", skip: true, actionCommitMap: map[string]string{
+			"test-org/locked@v1.2.3":  "5555555555555555555555555555555555555555",
+			"test-org/mutable@v2.0.0": "6666666666666666666666666666666666666666",
+		}, wantLookupCalls: 3, wantNoCommitLookups: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			httpmock.ZeroCallCounters()
+
+			input, err := os.ReadFile(path.Join(inputDirectory, tt.fileName))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			opts := []Option{WithSkipImmutableReleaseTags(tt.skip)}
+			if tt.cache {
+				opts = append(opts, WithImmutableReleaseCache(NewImmutableReleaseCache()))
+			}
+			output, updated, err := PinActions(string(input), []string{"test-org/exempted"}, false, tt.actionCommitMap, opts...)
+			if err != nil {
+				t.Fatalf("PinActions() error = %v", err)
+			}
+			if !updated {
+				t.Errorf("PinActions() updated = false, want true")
+			}
+
+			want, err := os.ReadFile(path.Join(outputDirectory, tt.fileName))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if output != string(want) {
+				t.Errorf("output did not match %s\n%s", tt.fileName, output)
+			}
+
+			if n := releaseLookups(); n != tt.wantLookupCalls {
+				t.Errorf("release lookups = %d, want %d", n, tt.wantLookupCalls)
+			}
+			if tt.wantNoCommitLookups {
+				for call, count := range httpmock.GetCallCountInfo() {
+					if count > 0 && (strings.Contains(call, "/commits/") || strings.Contains(call, "/matching-refs/")) {
+						t.Errorf("%s called %d times, want no commit lookups for mapped references", call, count)
+					}
+				}
+			}
+		})
+	}
+}
+
+// TestImmutableReleaseCache checks that a cache shared across lookups calls the
+// API once per owner/repo@tag, that sub-path actions and differently cased owners
+// share an entry, that a tag with no release is remembered too, and that a failed
+// lookup is not remembered.
+func TestImmutableReleaseCache(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3",
+		httpmock.NewStringResponder(200, `{"tag_name":"v1.2.3","immutable":true}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/Test-Org/Locked/releases/tags/v1.2.3",
+		httpmock.NewStringResponder(200, `{"tag_name":"v1.2.3","immutable":true}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/norelease/releases/tags/v1",
+		httpmock.NewStringResponder(http.StatusNotFound, `{"message":"Not Found"}`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0",
+		httpmock.NewStringResponder(http.StatusInternalServerError, `{"message":"boom"}`))
+
+	cache := NewImmutableReleaseCache()
+	for _, tt := range []struct {
+		action  string
+		want    bool
+		wantErr bool
+	}{
+		{action: "test-org/locked@v1.2.3", want: true},
+		{action: "test-org/locked@v1.2.3", want: true},
+		{action: "test-org/locked/sub/path@v1.2.3", want: true},
+		{action: "Test-Org/Locked@v1.2.3", want: true},
+		{action: "test-org/norelease@v1", want: false},
+		{action: "test-org/norelease@v1", want: false},
+		{action: "test-org/broken@v1.0.0", wantErr: true},
+		{action: "test-org/broken@v1.0.0", wantErr: true},
+	} {
+		got, err := IsImmutableReleaseAction(tt.action, WithImmutableReleaseCache(cache))
+		if (err != nil) != tt.wantErr || got != tt.want {
+			t.Errorf("IsImmutableReleaseAction(%q) = %t, %v, want %t, error %t", tt.action, got, err, tt.want, tt.wantErr)
+		}
+	}
+
+	calls := httpmock.GetCallCountInfo()
+	if n := calls["GET https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3"] + calls["GET https://api.github.com/repos/Test-Org/Locked/releases/tags/v1.2.3"]; n != 1 {
+		t.Errorf("test-org/locked@v1.2.3 looked up %d times, want 1", n)
+	}
+	if n := calls["GET https://api.github.com/repos/test-org/norelease/releases/tags/v1"]; n != 1 {
+		t.Errorf("test-org/norelease@v1 looked up %d times, want 1 (a missing release is an answer)", n)
+	}
+	if n := calls["GET https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0"]; n != 2 {
+		t.Errorf("test-org/broken@v1.0.0 looked up %d times, want 2 (a failed lookup is retried)", n)
+	}
+}
+
+// TestImmutableReleaseCache_ConcurrentLookups starts many lookups of the same
+// uncached tag at once and checks they share one request. The release endpoint
+// blocks until every goroutine has started, so callers that arrive while the
+// request is in flight wait for it, and any that arrive after it finished read
+// the stored answer: either way there is exactly one request.
+func TestImmutableReleaseCache_ConcurrentLookups(t *testing.T) {
+	const callers = 20
+	const lookup = "GET https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	release := make(chan struct{})
+	blocked := func(req *http.Request) (*http.Response, error) {
+		<-release
+		return httpmock.NewStringResponse(200, `{"tag_name":"v1.2.3","immutable":true}`), nil
+	}
+	// Whichever caller wins makes the one request with its own spelling of the
+	// owner and repository, so both spellings are mocked.
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/locked/releases/tags/v1.2.3", blocked)
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/Test-Org/Locked/releases/tags/v1.2.3", blocked)
+
+	cache := NewImmutableReleaseCache()
+	var started, done sync.WaitGroup
+	started.Add(callers)
+	done.Add(callers)
+	results := make([]bool, callers)
+	errs := make([]error, callers)
+	for i := 0; i < callers; i++ {
+		go func(i int) {
+			defer done.Done()
+			started.Done()
+			// Sub-path and differently cased references share the entry too.
+			action := []string{"test-org/locked@v1.2.3", "test-org/locked/sub/path@v1.2.3", "Test-Org/Locked@v1.2.3"}[i%3]
+			results[i], errs[i] = IsImmutableReleaseAction(action, WithImmutableReleaseCache(cache))
+		}(i)
+	}
+	started.Wait()
+	close(release)
+	done.Wait()
+
+	for i := range results {
+		if errs[i] != nil || !results[i] {
+			t.Errorf("caller %d: got %t, %v, want true, nil", i, results[i], errs[i])
+		}
+	}
+	calls := httpmock.GetCallCountInfo()
+	if n := calls[lookup] + calls["GET https://api.github.com/repos/Test-Org/Locked/releases/tags/v1.2.3"]; n != 1 {
+		t.Errorf("release lookups = %d, want 1 for %d concurrent callers", n, callers)
+	}
+}
+
+// TestImmutableReleaseCache_ConcurrentFailure checks that when the shared
+// lookup fails, every caller waiting on it gets the error, nothing is stored,
+// and the next lookup retries.
+func TestImmutableReleaseCache_ConcurrentFailure(t *testing.T) {
+	const callers = 10
+	const lookup = "GET https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	release := make(chan struct{})
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/test-org/broken/releases/tags/v1.0.0",
+		func(req *http.Request) (*http.Response, error) {
+			<-release
+			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"message":"boom"}`), nil
+		})
+
+	cache := NewImmutableReleaseCache()
+	var started, done sync.WaitGroup
+	started.Add(callers)
+	done.Add(callers)
+	errs := make([]error, callers)
+	for i := 0; i < callers; i++ {
+		go func(i int) {
+			defer done.Done()
+			started.Done()
+			_, errs[i] = IsImmutableReleaseAction("test-org/broken@v1.0.0", WithImmutableReleaseCache(cache))
+		}(i)
+	}
+	started.Wait()
+	close(release)
+	done.Wait()
+
+	for i, err := range errs {
+		if err == nil {
+			t.Errorf("caller %d: got no error, want the failed lookup's error", i)
+		}
+	}
+	before := httpmock.GetCallCountInfo()[lookup]
+	if _, err := IsImmutableReleaseAction("test-org/broken@v1.0.0", WithImmutableReleaseCache(cache)); err == nil {
+		t.Errorf("retry: got no error, want the endpoint's error")
+	}
+	if after := httpmock.GetCallCountInfo()[lookup]; after != before+1 {
+		t.Errorf("a failed lookup must not be cached: retry made %d requests, want 1", after-before)
+	}
+}

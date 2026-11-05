@@ -27,8 +27,19 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 	addEmptyTopLevelPermissions := false
 	skipHardenRunnerForContainers := false
 	replaceActionByMajorTag := false
+	skipImmutableReleaseTags := false
 	exemptedActions, pinToImmutable, maintainedActionsMap, actionCommitMap, runnerLabelMap := []string{}, false, map[string]string{}, map[string]string{}, map[string]string{}
 	hardenRunnerConfig := hardenrunner.HardenRunnerConfig{}
+
+	// An immutable-release cache can be passed anywhere in params. It is matched
+	// by type rather than position, so callers do not need placeholder values for
+	// the positional params before it.
+	var immutableReleaseCache *pin.ImmutableReleaseCache
+	for _, param := range params {
+		if v, ok := param.(*pin.ImmutableReleaseCache); ok {
+			immutableReleaseCache = v
+		}
+	}
 
 	if len(params) > 0 {
 		if v, ok := params[0].([]string); ok {
@@ -102,6 +113,11 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 
 	if queryStringParams["replaceActionByMajorTag"] == "true" {
 		replaceActionByMajorTag = true
+	}
+	// skipImmutableReleaseTags leaves action references whose tag belongs to an
+	// immutable GitHub release unpinned. See pin.WithSkipImmutableReleaseTags.
+	if queryStringParams["skipImmutableReleaseTags"] == "true" {
+		skipImmutableReleaseTags = true
 	}
 
 	if enableLogging {
@@ -192,7 +208,7 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 			log.Printf("Pinning GitHub Actions")
 		}
 		pinnedAction, pinnedDocker := false, false
-		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap)
+		secureWorkflowReponse.FinalOutput, pinnedAction, err = pin.PinActions(secureWorkflowReponse.FinalOutput, exemptedActions, pinToImmutable, actionCommitMap, pin.WithSkipImmutableReleaseTags(skipImmutableReleaseTags), pin.WithImmutableReleaseCache(immutableReleaseCache))
 		if err != nil {
 			if enableLogging {
 				log.Printf("Error pinning actions: %v", err)

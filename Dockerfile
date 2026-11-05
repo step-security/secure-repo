@@ -1,4 +1,4 @@
-FROM golang:1.17@sha256:bfb57478eb0b381f242b3ab27b373bca5516eb9d35eef98a41a0ba2742ab517d as build
+FROM golang:1.27.3@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b AS build
 
 WORKDIR /app
 
@@ -8,7 +8,9 @@ RUN go mod download
 
 # build
 ADD . .
-RUN go build -o /main
+# Static binary: the runtime image (Amazon Linux 2) has an older glibc than the
+# build image, so a binary linked against the build image's glibc would not start.
+RUN CGO_ENABLED=0 go build -o /main
 
 COPY knowledge-base /knowledge-base
 
