@@ -39,8 +39,8 @@ updates:
       - /.github
     groups:
       actions:
-          patterns:
-              - actions/*
+        patterns:
+          - actions/*
 
 registries:
   github-npm:

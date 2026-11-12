@@ -2,6 +2,7 @@ package dependabot
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -275,9 +276,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		var finalOutput strings.Builder
 		finalOutput.WriteString("version: 2\nupdates:")
 		for _, eco := range updateDependabotConfigRequest.Ecosystems {
-			item := ecosystemToExtendedUpdate(eco)
-			items := []ExtendedUpdate{item}
-			addedItem, err := yaml.Marshal(items)
+			addedItem, err := encodeNewUpdateEntry(ecosystemToExtendedUpdate(eco), newEntryIndent, true)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal update items: %v", err)
 			}
@@ -366,9 +365,7 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 		}
 
 		for _, eco := range newEntries {
-			item := ecosystemToExtendedUpdate(eco)
-			items := []ExtendedUpdate{item}
-			addedItem, err := yaml.Marshal(items)
+			addedItem, err := encodeNewUpdateEntry(ecosystemToExtendedUpdate(eco), newEntryIndent, true)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal update items: %v", err)
 			}
@@ -393,6 +390,60 @@ func UpdateDependabotConfig(dependabotConfig string) (*UpdateDependabotConfigRes
 	}
 
 	return response, nil
+}
+
+// newEntryIndent is the indentation step for entries written into a new
+// dependabot.yml or appended to an existing one. Two spaces matches Prettier's
+// default, which repositories commonly enforce in CI.
+const newEntryIndent = 2
+
+// encodeNewUpdateEntry renders one updates entry as a single-item YAML sequence,
+// ready for addIndentation, indenting every level by indentStep. yaml.Marshal
+// would indent nested blocks (groups, cooldown lists) by four spaces regardless.
+// With doubleQuote, strings that have to be quoted (e.g. "*") are double-quoted,
+// as Prettier writes them, instead of the single quotes yaml.v3 picks.
+func encodeNewUpdateEntry(item ExtendedUpdate, indentStep int, doubleQuote bool) (string, error) {
+	var node yaml.Node
+	if err := node.Encode([]ExtendedUpdate{item}); err != nil {
+		return "", err
+	}
+	if doubleQuote {
+		doubleQuoteQuotedStrings(&node)
+	}
+
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(indentStep)
+	if err := enc.Encode(&node); err != nil {
+		return "", err
+	}
+	if err := enc.Close(); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+// doubleQuoteQuotedStrings switches every string scalar that has to be quoted to
+// double quotes, leaving plain scalars plain. Encoding into a node already marks
+// such strings single-quoted. Only entries StepSecurity generates pass through
+// here, so existing customer formatting is never changed.
+func doubleQuoteQuotedStrings(node *yaml.Node) {
+	if node == nil {
+		return
+	}
+	if node.Kind == yaml.ScalarNode && node.Tag == "!!str" {
+		switch node.Style {
+		case yaml.SingleQuotedStyle:
+			node.Style = yaml.DoubleQuotedStyle
+		case 0:
+			if quoted := marshalYAMLValue(node.Value); strings.HasPrefix(quoted, "'") || strings.HasPrefix(quoted, "\"") {
+				node.Style = yaml.DoubleQuotedStyle
+			}
+		}
+	}
+	for _, child := range node.Content {
+		doubleQuoteQuotedStrings(child)
+	}
 }
 
 // addIndentation adds a certain number of spaces to the start of each line in the input string.

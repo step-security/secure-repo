@@ -52,12 +52,12 @@ updates:
     assignees:
       - ci-bot
     commit-message:
-      prefix: '[CI]'
+      prefix: "[CI]"
       include: scope
     ignore:
       - dependency-name: actions/checkout
         versions:
-          - '>= 5'
+          - ">= 5"
     labels:
       - ci
       - github-actions
