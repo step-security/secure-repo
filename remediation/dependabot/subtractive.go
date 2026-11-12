@@ -920,15 +920,13 @@ func updateSubtractiveFields(content string, ecosystems []Ecosystem, cfg Config,
 	// updates section, so sibling top-level keys like registries stay in place.
 	updatesLastLine := findLastLine(updatesNode) + lineOffset
 	for _, eco := range toAdd {
-		item := ecosystemToExtendedUpdate(eco)
-		items := []ExtendedUpdate{item}
-		var itemBuf bytes.Buffer
-		itemEnc := yaml.NewEncoder(&itemBuf)
-		itemEnc.SetIndent(indent)
-		if err := itemEnc.Encode(items); err != nil {
+		// Same encoding as the additive path, at the file's own indentation step.
+		// Quoting is left as before here.
+		encoded, err := encodeNewUpdateEntry(ecosystemToExtendedUpdate(eco), indent, false)
+		if err != nil {
 			return "", false, fmt.Errorf("failed to marshal update items: %w", err)
 		}
-		data, err := addIndentation(itemBuf.String(), indent+1)
+		data, err := addIndentation(encoded, indent+1)
 		if err != nil {
 			return "", false, fmt.Errorf("failed to add indentation: %w", err)
 		}
