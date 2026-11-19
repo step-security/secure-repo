@@ -61,15 +61,13 @@ func TestNewDependabotEntriesMatchPrettierFormat(t *testing.T) {
 			ecosystems:  []Ecosystem{githubActionsWithGroupAndCooldown},
 		},
 		{
-			// The one case that exercises everything at once. The existing file is
-			// not in Prettier's format: four-space indentation and a mix of single
-			// and double quotes. Its npm entry is requested again and a new
-			// github-actions entry is added with groups, cooldown and a value that
-			// needs quoting. The existing lines must come back untouched, whatever
-			// their style, and only the new entry is written, with two-space steps
-			// and double quotes, at the list indentation the file already uses.
-			fileName:    "prettier-append-existing-mixed-style.yml",
-			description: "existing dependabot.yml in another style: its lines are kept as written and the new entry is in Prettier's format",
+			// The existing file already has an npm entry with groups and cooldown.
+			// That entry is requested again and a github-actions entry is added
+			// with groups, cooldown and a value that needs quoting. The npm entry
+			// is neither duplicated nor rewritten, and the whole file is still in
+			// Prettier's format afterwards.
+			fileName:    "prettier-append-to-groups-cooldown.yml",
+			description: "existing dependabot.yml with groups and cooldown: the existing entry is kept and the new one is appended in the same format",
 			ecosystems: []Ecosystem{
 				{PackageEcosystem: "npm", Directory: "/", Interval: "weekly"},
 				{
