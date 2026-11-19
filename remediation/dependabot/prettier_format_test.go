@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	dependabotconfig "github.com/paulvollmer/dependabot-config-go"
@@ -60,6 +61,30 @@ func TestNewDependabotEntriesMatchPrettierFormat(t *testing.T) {
 			ecosystems:  []Ecosystem{githubActionsWithGroupAndCooldown},
 		},
 		{
+			// The one case that exercises everything at once. The existing file is
+			// not in Prettier's format: four-space indentation and a mix of single
+			// and double quotes. Its npm entry is requested again and a new
+			// github-actions entry is added with groups, cooldown and a value that
+			// needs quoting. The existing lines must come back untouched, whatever
+			// their style, and only the new entry is written, with two-space steps
+			// and double quotes, at the list indentation the file already uses.
+			fileName:    "prettier-append-existing-mixed-style.yml",
+			description: "existing dependabot.yml in another style: its lines are kept as written and the new entry is in Prettier's format",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "npm", Directory: "/", Interval: "weekly"},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "weekly",
+					CommitMessage:    &dependabotconfig.CommitMessage{Prefix: "[CI]", Include: "scope"},
+					Groups: map[string]Group{
+						"all-github-actions": {AppliesTo: "version-updates", Patterns: []string{"*"}},
+					},
+					CoolDown: &CoolDown{DefaultDays: 5, Include: []string{"*"}},
+				},
+			},
+		},
+		{
 			fileName:    "prettier-new-file-quoted-values.yml",
 			description: "values that need quoting are double-quoted",
 			ecosystems: []Ecosystem{
@@ -102,6 +127,11 @@ func TestNewDependabotEntriesMatchPrettierFormat(t *testing.T) {
 			}
 			if output.FinalOutput != string(expected) {
 				t.Errorf("%s\n--- got ---\n%s\n--- want ---\n%s", test.description, output.FinalOutput, expected)
+			}
+			// Whatever was already in the file is never rewritten: the result
+			// starts with the input, byte for byte.
+			if !strings.HasPrefix(output.FinalOutput, strings.TrimRight(string(input), "\n")) {
+				t.Errorf("existing content was modified\n--- input ---\n%s\n--- got ---\n%s", input, output.FinalOutput)
 			}
 		})
 	}
