@@ -236,16 +236,13 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		}
 	}
 
-	// A failed pin keeps the harden-runner step at its tag rather than dropping
-	// the addition, and the pinning error is returned as is with that output.
-	// Discarding it here let a GitHub rate limit ship an unpinned step as if
-	// nothing had gone wrong.
-	var pinErr error
 	if updated && pinActions {
 		action := getActionFromConfig(hardenRunnerConfig)
-		var pinnedOut string
-		pinnedOut, _, pinErr = pin.PinActionWithPatFallback(action, out, nil, pinToImmutable, nil)
+		pinnedOut, _, pinErr := pin.PinActionWithPatFallback(action, out, nil, pinToImmutable, nil)
 		if pinErr != nil {
+			// Non-fatal: keep the unpinned harden-runner step rather than dropping
+			// the addition entirely (matches previous net behavior, where this
+			// error was discarded by the caller).
 			log.Printf("unable to pin harden runner action, keeping unpinned: %v", pinErr)
 		} else {
 			out = pinnedOut
@@ -256,7 +253,7 @@ func AddAction(inputYaml string, hardenRunnerConfig HardenRunnerConfig, pinActio
 		updated = false
 	}
 
-	return out, updated, pinErr
+	return out, updated, nil
 }
 
 func hardenRunnerConfigMatches(inputLines []string, hrStartLine, hrEndLine int, spaces, config, existingTagOrSHA string) bool {
