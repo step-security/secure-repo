@@ -234,17 +234,18 @@ func SecureWorkflow(queryStringParams map[string]string, inputYaml string, svc d
 				log.Printf("Harden runner action is exempted from pinning")
 			}
 		}
-		// Do not discard AddAction's error: a parse failure used to silently
-		// blank FinalOutput here, wiping the customer's workflow file in the
-		// generated PR. On error, keep the last good FinalOutput.
+		// Return AddAction's error, like the pinning error above, and keep the
+		// last good FinalOutput. Logging it and carrying on reported success for
+		// a file that did not get Harden Runner, or got it unpinned when the
+		// commit lookup was rate-limited, so the caller shipped it as complete.
 		hardenedOutput, added, err := hardenrunner.AddAction(secureWorkflowReponse.FinalOutput, hardenRunnerConfig, pinHardenRunner, pinToImmutable, skipHardenRunnerForContainers)
 		if err != nil {
 			log.Printf("Error adding harden runner action: %v", err)
 			secureWorkflowReponse.HasErrors = true
-		} else {
-			secureWorkflowReponse.FinalOutput = hardenedOutput
-			addedHardenRunner = added
+			return secureWorkflowReponse, err
 		}
+		secureWorkflowReponse.FinalOutput = hardenedOutput
+		addedHardenRunner = added
 		if enableLogging {
 			log.Printf("Added harden runner: %v", addedHardenRunner)
 		}

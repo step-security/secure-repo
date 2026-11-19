@@ -664,6 +664,15 @@ jobs:
 		"addPermissions":   "false",
 		"ignoreMissingKBs": "true",
 	}
+	// addHardenRunner defaults to true and the added step is pinned, which
+	// looks up its commit on GitHub. Mock it: a lookup failure is now returned
+	// rather than discarded, and this test is about the anchored steps.
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/commits/v2",
+		httpmock.NewStringResponder(200, `ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5`))
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/step-security/harden-runner/git/matching-refs/tags/v2.",
+		httpmock.NewStringResponder(200, `[{"ref":"refs/tags/v2.10.1","object":{"sha":"ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5","type":"commit"}}]`))
 	resp, err := SecureWorkflow(queryParams, input, nil, []string{}, false)
 	if err != nil {
 		t.Fatalf("SecureWorkflow() error = %v, want nil", err)
