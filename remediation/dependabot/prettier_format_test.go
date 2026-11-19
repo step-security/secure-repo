@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	dependabotconfig "github.com/paulvollmer/dependabot-config-go"
@@ -60,6 +61,28 @@ func TestNewDependabotEntriesMatchPrettierFormat(t *testing.T) {
 			ecosystems:  []Ecosystem{githubActionsWithGroupAndCooldown},
 		},
 		{
+			// The existing file already has an npm entry with groups and cooldown.
+			// That entry is requested again and a github-actions entry is added
+			// with groups, cooldown and a value that needs quoting. The npm entry
+			// is neither duplicated nor rewritten, and the whole file is still in
+			// Prettier's format afterwards.
+			fileName:    "prettier-append-to-groups-cooldown.yml",
+			description: "existing dependabot.yml with groups and cooldown: the existing entry is kept and the new one is appended in the same format",
+			ecosystems: []Ecosystem{
+				{PackageEcosystem: "npm", Directory: "/", Interval: "weekly"},
+				{
+					PackageEcosystem: "github-actions",
+					Directory:        "/",
+					Interval:         "weekly",
+					CommitMessage:    &dependabotconfig.CommitMessage{Prefix: "[CI]", Include: "scope"},
+					Groups: map[string]Group{
+						"all-github-actions": {AppliesTo: "version-updates", Patterns: []string{"*"}},
+					},
+					CoolDown: &CoolDown{DefaultDays: 5, Include: []string{"*"}},
+				},
+			},
+		},
+		{
 			fileName:    "prettier-new-file-quoted-values.yml",
 			description: "values that need quoting are double-quoted",
 			ecosystems: []Ecosystem{
@@ -102,6 +125,11 @@ func TestNewDependabotEntriesMatchPrettierFormat(t *testing.T) {
 			}
 			if output.FinalOutput != string(expected) {
 				t.Errorf("%s\n--- got ---\n%s\n--- want ---\n%s", test.description, output.FinalOutput, expected)
+			}
+			// Whatever was already in the file is never rewritten: the result
+			// starts with the input, byte for byte.
+			if !strings.HasPrefix(output.FinalOutput, strings.TrimRight(string(input), "\n")) {
+				t.Errorf("existing content was modified\n--- input ---\n%s\n--- got ---\n%s", input, output.FinalOutput)
 			}
 		})
 	}
