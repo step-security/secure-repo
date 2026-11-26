@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	dependabotconfig "github.com/paulvollmer/dependabot-config-go"
+	"gopkg.in/yaml.v3"
 )
 
 // Entries StepSecurity writes into dependabot.yml must already be in the format
@@ -132,5 +133,42 @@ func TestNewDependabotEntriesMatchPrettierFormat(t *testing.T) {
 				t.Errorf("existing content was modified\n--- input ---\n%s\n--- got ---\n%s", input, output.FinalOutput)
 			}
 		})
+	}
+}
+
+// doubleQuoteQuotedStrings only changes string scalars that need quoting, at
+// any depth, and leaves everything else as it is. Encoding an entry marks
+// such strings with no style, but a node can also arrive already single-quoted.
+func TestDoubleQuoteQuotedStrings(t *testing.T) {
+	doubleQuoteQuotedStrings(nil) // must not panic
+
+	needsQuotes := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "*"}
+	singleQuoted := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "actions/*", Style: yaml.SingleQuotedStyle}
+	plain := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "weekly"}
+	number := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: "5"}
+	root := &yaml.Node{Kind: yaml.SequenceNode, Content: []*yaml.Node{
+		{Kind: yaml.MappingNode, Content: []*yaml.Node{
+			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "patterns"},
+			{Kind: yaml.SequenceNode, Content: []*yaml.Node{needsQuotes, singleQuoted}},
+			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "interval"},
+			plain,
+			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "default-days"},
+			number,
+		}},
+	}}
+
+	doubleQuoteQuotedStrings(root)
+
+	if needsQuotes.Style != yaml.DoubleQuotedStyle {
+		t.Errorf("%q needs quoting: style = %v, want double-quoted", needsQuotes.Value, needsQuotes.Style)
+	}
+	if singleQuoted.Style != yaml.DoubleQuotedStyle {
+		t.Errorf("single-quoted %q: style = %v, want double-quoted", singleQuoted.Value, singleQuoted.Style)
+	}
+	if plain.Style != 0 {
+		t.Errorf("%q needs no quoting: style = %v, want plain", plain.Value, plain.Style)
+	}
+	if number.Style != 0 {
+		t.Errorf("non-string %q: style = %v, want unchanged", number.Value, number.Style)
 	}
 }
