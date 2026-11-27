@@ -1,0 +1,9 @@
+name: "cargo-deny"
+github-token:
+  action-input:
+    input: credentials
+    is-default: true
+  permissions:
+    packages: write
+    packages-reason: to deny cargo crate dependencies
+
