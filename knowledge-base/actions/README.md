@@ -204,3 +204,4 @@ github-token:
     pull-requests-if: ${{ !contains(with, 'process-only') || with['process-only'] == 'prs' }}
     pull-requests-reason: to lock PRs
 ```
+#NOTE : If the permission is only 'contents: read' then write '#No permissions needed'
