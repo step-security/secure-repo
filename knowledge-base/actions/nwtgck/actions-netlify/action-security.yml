@@ -1,0 +1,13 @@
+name: 'Netlify Actions'
+github-token:
+  action-input:
+    input: github-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to create, update & list issues #Checkout: https://github.com/nwtgck/actions-netlify/blob/99552499dc4207a31e262620f263e7cfdf39cf59/src/main.ts#L176
+  
+    contents: write
+    contents-reason: to create deployment & comment on commits #Checkout: https://github.com/nwtgck/actions-netlify/blob/99552499dc4207a31e262620f263e7cfdf39cf59/src/main.ts#L60
+
+#Fix #703
