@@ -1,0 +1,9 @@
+name: "copy-issue-labels"
+github-token:
+  action-input:
+    input: repo-token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to copy labels from linked issues
+    #Reference: https://github.com/michalvankodev/copy-issue-labels/blob/1411bf6a61f0f07c90016f5a590e57d74c6e0a20/src/index.ts#L61
