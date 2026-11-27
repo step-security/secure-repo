@@ -1,0 +1,9 @@
+name: "Changed Files Exporter"
+github-token:
+  action-input:
+    input: repo_token
+    is-default: false
+  permissions:
+    checks: read
+    checks-reason: to check created, modified and deleted files
+#Refernce: https://github.com/umani/changed-files/blob/96d5fd702a6479d573287ef07381ad59acc390ed/src/main.ts#L42
