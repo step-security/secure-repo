@@ -1,0 +1,9 @@
+name: "Yarn Audit"
+github-token:
+  action-input:
+    input: token
+    is-default: false
+  permissions:
+    issues: write
+    issues-reason: to create issue with security vulnerabilities
+    #Reference: https://github.com/pragatheeswarans/yarn-audit-action/blob/f3ab4c055f4b8f1db1b1ae0e32bab690c9050603/index.js
